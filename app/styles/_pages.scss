@@ -1,0 +1,297 @@
+// GLOBAL
+
+.page {
+  position: relative;
+	padding-bottom: 4rem;
+  > * {
+    position: relative;
+    z-index: 2;
+  }
+}
+
+.page .prose {
+	@include span-columns(12 of 12);
+  @include media(small-up) {
+    @include span-columns(10 of 12);
+    @include shift(1);
+  }
+  @include media(large-up) {
+    @include span-columns(8 of 12);
+    @include shift(2);
+  }
+}
+
+.page-header {
+  padding: 6rem 0 2rem 0;
+  background: $primary-color url(../graphics/layout/pages-hdr.svg) right center no-repeat;
+  background-size: 64%;
+  color: $base-color;
+  @include transform(translateZ(0));
+  @include animation(header-bg 2s ease 0s 1);
+  > .inner {
+    position: relative;
+    z-index: 3;
+    @extend .row;
+    .stories.single & {
+      padding-top: 1rem;
+    }
+  }
+  &:after {
+    position: absolute;
+    z-index: 2;
+    background: $brdr-ghost;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    content: "";
+  }
+}
+
+.page-headline {
+  float: left;
+  width: 48rem;
+  @include animation(fade-in 2s ease 0s 1);
+}
+
+.page-title {
+  @include heading(1.5rem, xlarge-up);
+  margin-bottom: 0;
+}
+
+.page-suptitle {
+  position: absolute;
+  text-transform: uppercase;
+  font-weight: $base-font-regular;
+  font-size: 1rem;
+  line-height: 1;
+  top: 0;
+  @include font-feature-settings("sups" 0);
+}
+
+.page-actions {
+  float: right;
+  @include animation(fade-in 2s ease 0s 1);
+  @extend .no-print;
+}
+
+.actions-menu {
+  padding-top: 0.25rem;
+  @extend .clearfix;
+  li {
+    float: left;
+    &:last-child {
+      margin-right: -0.75rem;
+    }
+  }
+  a {
+    display: block;
+    color: inherit;
+    &:before {
+      display: block;
+      height: 2rem;
+      width: 2rem;
+      line-height: 2;
+      text-align: center;
+    }
+  }
+  span {
+    @extend .visually-hidden;
+  }
+  .all a:before { @extend .icon-grid-3x3; }
+  .prev a:before { @extend .icon-arr-left; }
+  .next a:before { @extend .icon-arr-right; }
+}
+
+.page-body {
+  padding-top: 4rem;
+  @include animation(fade-in 0.8s ease 0s 1);
+  > .inner {
+    @extend .row;
+    @extend .row-centered;
+    @extend .clearfix;
+  }
+  .hub.stories & {
+    padding-top: 0;
+  }
+}
+
+.page-footer {
+  margin-top: 3rem;
+  padding-top: 3rem;
+  box-shadow: inset 0 1px 0 0 $brdr-ghost;
+  > .inner {
+    @extend .row;
+    @extend .clearfix;
+  }
+  @extend .no-print;
+}
+
+.credits-list {
+  text-align: center;
+  li {
+    display: inline-block;
+    margin: 0 1rem;
+  }
+  a {
+    display: block;
+  }
+  span {
+    @extend .visually-hidden;
+  }
+}
+
+
+// SUMMARY
+
+.summary-list {
+  @extend .clearfix;
+  box-shadow: 0 1px 0 0 $brdr-ghost;
+	> * {
+    padding: 2rem;
+    float: left;
+    width: 50%;
+    min-height: 18rem;
+    position: relative;
+    box-shadow: 1px -1px 0 0 $brdr-ghost;
+	}
+}
+
+.summary-body {
+  margin-bottom: 1rem;
+}
+
+.summary-title {
+	@include heading(1.25rem, large-up);
+  a {
+    display: block;
+    color: inherit;
+  }
+}
+
+.summary-title,
+.summary-body {
+  max-width: 36rem;
+}
+
+.bttn-more {
+  display: inline-block;
+  font-weight: $base-font-bold;
+  font-size: 1rem;
+  &:after {
+    @extend .icon-s-arr-right;
+    vertical-align: middle;
+  }
+}
+
+// STORIES
+
+.election {
+  .mouse-catcher {
+    fill: none !important;
+  }
+  .light-curves {
+    position: relative;
+    display: block;
+    width: 100%;
+    background: transparent;
+    .bttn-expand {
+      display: none;
+    }
+  }
+
+  .delta .light-curves .line {
+    stroke: rgba(#af9, .48);
+  }
+}
+
+// ANIMATION
+
+@include keyframes(header-bg) {
+  from {
+    background-size: 128%;
+  }
+  to {
+    background-size: 64%;
+  }
+}
+
+@include keyframes(fade-in) {
+  from {
+    opacity: 0;
+  }
+  to {
+    background-size: 1;
+  }
+}
+
+// Diwali story
+.diwali {
+
+  #random-sample {
+    position: relative;
+  }
+
+  .year-switcher {
+    @extend .now-showing;
+    top: 0;
+    right: 0;
+    left: auto;
+    width: 12rem;
+    span {
+      float: left;
+      margin-right: 1rem;
+    }
+    a {
+      float: left;
+    }
+  }
+
+  .wider {
+    margin: 0 -15%;
+    width: 130%;
+  }
+
+  .caption {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+}
+
+// svg settings for diwali
+.diwali {
+  .envelope { fill: rgba($line-color, 0.2); }
+  .dot { fill: rgba($primary-color, 0.5); }
+  .axis {
+     fill: none;
+     stroke: rgba(#fff, 0.16);
+     stroke-width: 1px;
+   }
+}
+
+#small-multiples {
+  text-align: center;
+  > * {
+    display: inline-block;
+    margin: 0 1rem;
+  }
+}
+
+// image settings for rggvy
+#rggvy img {
+  max-width: 100%;
+}
+
+// image settings for About
+.about img {
+  max-width: 100%;
+}
+
+// STORY: Electricity Administration in Uttar Pradesh
+
+#story-election {
+  .page-body {
+    background: transparent url(../graphics/content/uttar-pradesh-india-reference-map.svg) top right no-repeat;
+    background-size: 64%;
+  }
+}

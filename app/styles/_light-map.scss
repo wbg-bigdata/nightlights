@@ -1,0 +1,42 @@
+// MAP
+
+
+.map-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+.light-map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  overflow: hidden;
+  canvas {
+    outline: none;
+  }
+
+  .loader {
+    z-index: 20;
+  }
+
+  // the little arrow
+  .mapboxgl-popup-tip {
+    border-top-color: rgba($base-color, 0.64);
+  }
+  // the content container
+  .mapboxgl-popup-content {
+    background: rgba($base-color, 0.84);
+    padding: 4px 6px 4px;
+  }
+  // the close button
+  .mapboxgl-popup-close-button { display: none; }
+}
+
+.mapboxgl-ctrl-attrib {
+  background: transparent;
+  opacity: 0.32;
+}

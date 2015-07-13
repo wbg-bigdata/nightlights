@@ -1,0 +1,156 @@
+// LIGHT CURVE PLOTS
+
+.light-curves {
+  @extend %base-box-skin;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  color: #fff;
+  overflow: hidden;
+
+  // It's important that a default height and .expanded height are
+  // set explicitly, because the d3 chart gets its height from this
+  // container.
+  transition: background-color 0.25s;
+  height: 10rem;
+  &.expanded {
+    height: 20rem;
+    background: rgba(darken($base-color, 4%), .9);
+
+    .line {
+      stroke-width: 1.6px;
+    }
+  }
+  .line {
+    fill: none;
+    stroke: $line-color;
+    stroke-width: 1.4px;
+    &.active {
+      stroke: $emphasis-color;
+    }
+  }
+  .legend-line {
+    fill: none;
+    // Helpful to up the opacity here, making it easier to see.
+    stroke: rgba($primary-color, .9);
+    stroke-width: 2px;
+  }
+  .legend-envelope {
+    fill: rgba($line-color, 0.25);
+    stroke: none;
+  }
+
+  &.district {
+    .line {
+      stroke: rgba($selected-color, .9);
+      &.active { stroke: $emphasis-color; }
+    }
+    .legend-line {
+      stroke: rgba($line-color, 1);
+    }
+    .village-line {
+      stroke: rgba($selected-color, .9);
+    }
+    .center {
+      .envelope {
+        fill: rgba($line-color, .2);
+        stroke: none;
+      }
+      .line {
+        stroke: rgba($line-color, 1);
+        stroke-width: 2px;
+      }
+    }
+  }
+
+  .axis {
+    fill: none;
+    stroke: rgba(#fff, 0.16);
+    stroke-width: 1px;
+  }
+  .axis.vertical {
+    display: none;
+  }
+  &.expanded .axis.vertical {
+    display: block;
+  }
+  text {
+    stroke: none;
+    fill: rgba(#fff, 0.48);
+    font-size: 0.875rem;
+    font-weight: $base-font-regular;
+  }
+
+  .markers {
+    fill: none;
+    stroke: rgba(#fff, .4);
+    stroke-width: 1px;
+  }
+  .marker.current {
+    stroke: rgba(#fff, 0.8);
+  }
+  .label.current {
+    fill: rgba(#fff, 0.8);
+    stroke: none;
+  }
+
+  .marker.cursor {
+    @include transition(opacity 0.16s ease 0s);
+    opacity: 0;
+    stroke: #fff;
+  }
+
+  &:hover .marker.cursor {
+    opacity: 1;
+  }
+
+  .label.cursor {
+    fill: #fff;
+  }
+}
+
+.bttn-expand {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+  height: 2rem;
+  line-height: 2;
+  width: 2rem;
+  text-align: center;
+  font-size: 1rem;
+  span {
+    @extend .visually-hidden;
+  }
+  &:visited, & {
+    color: inherit;
+  }
+  &:before {
+    display: block;
+    @extend .icon-expand-top-right;
+    @include transition(all 0.32s ease 0s);
+    .expanded & {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+.light-curves:not(.expanded) .api-url {
+  @extend .visually-hidden;
+}
+
+.light-curves.expanded .api-url {
+  position: absolute;
+  bottom: 0.125rem;
+  right: 36px;
+  z-index: 1;
+  line-height: 2;
+  text-align: right;
+  font-family: $code-font-family;
+  font-size: .75rem;
+  a {
+    color: rgba($base-font-color, .15);
+  }
+}
