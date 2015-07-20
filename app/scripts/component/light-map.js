@@ -138,13 +138,14 @@ class LightMap extends React.Component {
       minZoom: 2.5,
       maxZoom: 12.5,
       dragRotate: false,
+      doubleClickZoom: false,
       style: mainStyle
     });
     console.log('The Mapbox GL map is available as `window.glMap`');
     self.map.addClass('nation');
 
     self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
-    self.map.on('click', this.onClick.bind(this));
+    self.map.on('click', debounce(this.onClick.bind(this), 200));
 
     // Track which map sources have been loaded.
     self.map.on('source.load', function onSourceLoad ({source}) {
