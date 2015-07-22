@@ -154,7 +154,7 @@ class LightMap extends React.Component {
       doubleClickZoom: false,
       style: mainStyle
     });
-    console.log('The Mapbox GL map is available as `window.glMap`');
+    console.info('The Mapbox GL map is available as `window.glMap`');
     self.map.addClass('nation');
 
     // Interaction handlers
@@ -549,16 +549,10 @@ class LightMap extends React.Component {
    * check whether we're already at the given region.
    */
   flyToRegion (region) {
-    if (typeof this._flights === 'undefined') {
-      this._flights = 0;
-      this.map.on('moveend', () => {
-        this._flights -= 1;
-      });
-    }
+    if (typeof this._flights === 'undefined') { this._flights = 0; }
     this._flights += 1;
-    if (this._flights > 1) {
-      console.warn('Multiple flyTo calls.');
-    }
+    this.map.once('moveend', () => { this._flights -= 1; });
+    if (this._flights > 1) { console.warn('Multiple flyTo calls.'); }
 
     if (region.loading) { return; }
     // Fly to the current region.
