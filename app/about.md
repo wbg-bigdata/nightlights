@@ -11,6 +11,21 @@ The India Lights platform shows light output at night for 20 years for 600,000 v
 ## The Data
 The DMSP raster images have a resolution of 30 arc-seconds, equal to roughly 1 km<sup>2</sup> at the equator. Each pixel of the image is assigned a number on a relative scale from 0 to 63, with 0 indicating no light output and 63 indicating the highest level of output. This number is relative and may change depending on the gain settings of the satellite’s sensor, which constantly adjusts to current conditions as it takes pictures throughout the day and at night.
 
+Here's an example of what the data looks like, using imagery of Hardoi from March 26, 2006 as an example:
+
+*View of Hardoi region at night from the DMSP satellite the night of March 26, 2006:*
+![DMSP data, 2006-03-26](graphics/content/hardoi-DMSP-20060326.png)
+
+*Villages in the area are shown as yellow dots:*
+![Hardoi villages](graphics/content/hardoi-villages.png)
+
+*The same area during the day on March 26, 2006:*
+![Hardoi daytime, 2006-03-26](graphics/content/hardoi-daytime-20060326.png)
+
+*The nighttime data at 50% transparency on top of the daytime imagery:*
+![Hardoi combined imagery, 2006-03-26](graphics/content/hardoi-daytime-nighttime-combined.png)
+
+
 ## Methodology
 To derive a single measurement, the light output values were extracted from the raster image for each date for the pixels that correspond to each village's approximate latitude and longitude coordinates. We then processed the data through a series of filtering and aggregation steps.
 
