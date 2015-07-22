@@ -46,6 +46,7 @@ class LightMap extends React.Component {
      * the tooltip
      */
     this.showTooltip = debounce(function (pointOrFeature) {
+      // determine location for the popup
       let point;
       if (pointOrFeature.type === 'Feature') {
         let cent = centroid(pointOrFeature);
@@ -62,20 +63,22 @@ class LightMap extends React.Component {
         point = self.map.unproject(pointOrFeature);
       }
 
+      // remove old popup if it exists
       if (self._tooltip) {
         self._tooltip.remove();
         self._tooltip = null;
       }
 
-      self._tooltip = new mgl.Popup({
-        closeOnClick: false
-      })
+      // add tooltip
+      self._tooltip = new mgl.Popup({ closeOnClick: false })
       .setLatLng(point)
       .setHTML(React.renderToStaticMarkup(
         <Tooltip region={self.state.region} />
       ));
-
       self._tooltip.addTo(self.map);
+
+      // swallow scroll and mousewheel events to prevent the whole page
+      // (rather than the map) from getting weirdly zoomed
       let el = document.querySelector('.tooltip');
       el.addEventListener('wheel', pass, false);
       el.addEventListener('mousewheel', pass, false);
@@ -94,12 +97,21 @@ class LightMap extends React.Component {
     return !!this._mapLoaded;
   }
 
+  /*
+   * We're waiting for a few asynchronous things to land before we can
+   * treat the map as being actually loaded.  Once it *is* loaded, we
+   * need to handle our initial state (i.e. styles based on what region
+   * we're in, village dots, selected villages...).  So this method gets
+   * called at the end of each of the asychronous things we're waiting for;
+   * each time, check if they're all done, and if so, handle that initial
+   * state.
+   */
   mapMaybeLoaded () {
     let loaded = this.state.sourcesLoaded['india-boundaries'] &&
       this.state.sourcesLoaded['village-lights'] &&
       this.state.stylesLoaded;
 
-    if (loaded) {
+    if (loaded && !this.isMapLoaded()) {
       this._mapLoaded = true;
       this.setState({
         region: {loading: true},
@@ -144,6 +156,7 @@ class LightMap extends React.Component {
     console.log('The Mapbox GL map is available as `window.glMap`');
     self.map.addClass('nation');
 
+    // Interaction handlers
     self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
     self.map.on('click', debounce(this.onClick.bind(this), 200));
 
