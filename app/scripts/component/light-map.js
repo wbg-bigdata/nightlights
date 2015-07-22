@@ -334,10 +334,13 @@ class LightMap extends React.Component {
    */
   componentWillReceiveProps (newProps) {
     if (this.isMapLoaded()) {
-      this.setTime(this.state.region, newProps.time);
-      if (newProps.rggvyFocus !== this.props.rggvyFocus) {
-        this.setRggvyFocus(newProps.rggvyFocus);
-      }
+      let self = this;
+      this.map.batch(function (batch) {
+        self.setTime(batch, self.state.region, newProps.time);
+        if (newProps.rggvyFocus !== self.props.rggvyFocus) {
+          self.setRggvyFocus(batch, newProps.rggvyFocus);
+        }
+      });
     }
   }
 
@@ -387,23 +390,20 @@ class LightMap extends React.Component {
   /**
    * Set whether the RGGVY villages are focused.
    */
-  setRggvyFocus (focus) {
+  setRggvyFocus (batch, focus) {
     if (this.isMapLoaded() &&
       this.state.region &&
       !this.state.region.loading &&
       this.state.region.district) {
       // set filter based on whether we want to see all villages or just
       // rggvy ones
-      let map = this.map;
-      this.map.batch(function (batch) {
-        lightStyles.forEach('district-lights', stops, layer =>
-          showLayer(map, batch, layer, focus));
-        if (focus) {
-          batch.addClass('rggvy');
-        } else {
-          batch.removeClass('rggvy');
-        }
-      });
+      lightStyles.forEach('district-lights', stops, layer =>
+        showLayer(this.map, batch, layer, focus));
+      if (focus) {
+        batch.addClass('rggvy');
+      } else {
+        batch.removeClass('rggvy');
+      }
     }
   }
 
