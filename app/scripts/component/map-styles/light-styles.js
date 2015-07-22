@@ -1,4 +1,3 @@
-let {setFilterLazy, reloadSources} = require('../../lib/mgl-util');
 /**
  * Create a series of mapbox gl styles to use as a property-based color scale
  * for visualizing village lights
@@ -35,7 +34,6 @@ function create (idPrefix, source, sourceLayer, numStops) {
  * and stop values for the given property
  */
 function setFilters (map, idPrefix, stops, prop, filters) {
-  let sources = [];
   forEach(idPrefix, stops, function (layer, stopMin, stopMax) {
     let filter = [
       'all',
@@ -43,9 +41,8 @@ function setFilters (map, idPrefix, stops, prop, filters) {
       [ '<', prop, stopMax ]
     ]
     .concat(filters || []);
-    sources.push(setFilterLazy(map, layer, filter));
+    map.setFilter(layer, filter);
   });
-  reloadSources(map, sources);
 }
 
 /**

@@ -2,8 +2,21 @@ let uniq = require('uniq');
 
 module.exports = {
   reloadSources,
-  setFilterLazy
+  setFilterLazy,
+  showLayer
 };
+
+/**
+ * Set the visibility of the given layer.
+ */
+function showLayer (map, batch, layer, show) {
+  let currentVisibility = map.getLayoutProperty(layer, 'visibility');
+  if (show && currentVisibility !== 'visible') {
+    batch.setLayoutProperty(layer, 'visibility', 'visible');
+  } else if (!show && currentVisibility === 'visible') {
+    batch.setLayoutProperty(layer, 'visibility', 'none');
+  }
+}
 
 function reloadSources (map, sources) {
   try {
