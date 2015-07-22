@@ -81,7 +81,7 @@
     "lodash.difference": "^3.2.1",
     "lodash.throttle": "^3.0.3",
     "lodash.union": "^3.1.0",
-    "mapbox-gl": "mapbox/mapbox-gl-js#37145b8b9bb0de022811ad46f3e89a2714896b18",
+    "mapbox-gl": "mapbox/mapbox-gl-js#03b02a3b06f2b3462c5be6fd2e319a9c0f657dce",
     "nets": "^3.1.0",
     "numeral": "^1.5.3",
     "object-assign": "^2.0.0",
