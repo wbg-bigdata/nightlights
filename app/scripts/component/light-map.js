@@ -18,14 +18,15 @@ let emphasisStyles = require('./map-styles/emphasis.json');
 let selectedVillagesStyle = require('./map-styles/selected-villages.json');
 let lightStyles = require('./map-styles/light-styles');
 let unsupportedText = require('../config').unsupported;
+let config = require('../config');
 
-mgl.accessToken = 'pk.eyJ1IjoiZGV2c2VlZCIsImEiOiJnUi1mbkVvIn0.018aLhX0Mb0tdtaT2QNe2Q';
+mgl.accessToken = config.mapboxAccessToken;
 
 /**
  * The vis output values corresponding to the 10-value
  * brightness/color scale
  */
-const stops = [1, 2, 4, 6, 7, 8, 9, 10, 20, 30];
+const stops = config.villageLightStops;
 
 class LightMap extends React.Component {
   constructor () {
