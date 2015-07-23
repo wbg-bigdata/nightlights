@@ -43,8 +43,7 @@ class Modal extends React.Component {
           {title}
           {body}
           {this.props.isPermanent ? '' :
-            <span className='close-modal'
-              onClick={this.close.bind(this)}>&#x2716;</span>
+            <span className='close-modal' onClick={this.close.bind(this)} title="Close"><span>Close</span></span>
           }
         </div>
       </div>
