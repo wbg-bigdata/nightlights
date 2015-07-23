@@ -50,11 +50,23 @@
     }
 
     .close-modal {
-      cursor: pointer;
-      padding: 1em;
       position: absolute;
-      right: 0;
-      top: 0;
+      right: 1rem;
+      top: 1rem;
+      font-size: 1rem;
+      width: 2rem;
+      height: 2rem;
+      line-height: 2rem;
+      text-align: center;
+      cursor: pointer;
+      span {
+        @extend .visually-hidden;
+      }
+      &:before {
+        display: block;
+        @extend .icon-cancel;
+        opacity: 0.48;
+      }
     }
   }
 }
