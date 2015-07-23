@@ -13,16 +13,16 @@ The DMSP raster images have a resolution of 30 arc-seconds, equal to roughly 1 k
 
 Here's an example of what the data looks like, using imagery of Hardoi from March 26, 2006 as an example:
 
-*View of Hardoi region at night from the DMSP satellite the night of March 26, 2006:*
-![DMSP data, 2006-03-26](graphics/content/hardoi-DMSP-20060326.png)
+*Where the below imagery is located within India:*
+![India overview](graphics/content/location-of-hardoi-imagery.png)
 
-*Villages in the area are shown as yellow dots:*
+*Nighttime imagery of Hardoi region from the DMSP satellite, with villages shown as yellow dots:*
 ![Hardoi villages](graphics/content/hardoi-villages.png)
 
-*The same area during the day on March 26, 2006:*
+*The same area during the day:*
 ![Hardoi daytime, 2006-03-26](graphics/content/hardoi-daytime-20060326.png)
 
-*The nighttime data at 50% transparency on top of the daytime imagery:*
+*The nighttime imagery at 50% transparency on top of the daytime imagery:*
 ![Hardoi combined imagery, 2006-03-26](graphics/content/hardoi-daytime-nighttime-combined.png)
 
 
