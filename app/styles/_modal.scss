@@ -1,5 +1,4 @@
 .modal {
-
   z-index: 105;
   position: absolute;
   left: 0;
@@ -19,11 +18,18 @@
   }
 
   .modal-content {
-    width: 40%;
-    margin: 15% auto 0;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32rem;
+    margin: 0;
     background: rgba(0,0,0,1);
     padding: 2rem;
-    position: relative;
+    @include transform(translate(-50%, -50%));
+
+    > *:last-child {
+      margin-bottom: 0;
+    }
 
     h1 {
       font-size: 1.25rem;
@@ -32,6 +38,15 @@
 
     p {
       font-size: 1.125rem;
+      margin-bottom: 1.5rem;
+    }
+
+    figure {
+      text-align: center;
+      margin: 0 -2rem -2rem -2rem;
+      img {
+        vertical-align: top;
+      }
     }
 
     .close-modal {
