@@ -1,11 +1,48 @@
 let React = require('react');
 let Markdown = require('./markdown');
 let fs = require('fs');
+let config = require('../config');
+
+/* global L */
+require('mapbox.js');
 
 let Data = React.createClass({
 
   componentDidMount () {
     document.body.className = document.body.className + ' light-theme';
+    L.mapbox.accessToken = config.mapboxAccessToken;
+
+    var daytime = 'devseed.00faaaae', nighttime = 'devseed.7cb95155';
+    var range = document.getElementById('range');
+    var southWest = L.latLng(27.21, 80.039),
+        northEast = L.latLng(27.42, 80.17),
+        bounds = L.latLngBounds(southWest, northEast);
+
+    var hardoi = L.mapbox.map('hardoi-interactive', daytime, {
+      minZoom: 13,
+      maxZoom: 16,
+      maxBounds: bounds,
+    }).setView([27.38, 80.1], 13);
+
+    hardoi.scrollWheelZoom.disable();
+
+    var overlay = L.mapbox
+      .tileLayer(nighttime)
+      .addTo(hardoi);
+
+    function clip() {
+      var nw = hardoi.containerPointToLayerPoint([0, 0]),
+          se = hardoi.containerPointToLayerPoint(hardoi.getSize()),
+          clipX = nw.x + (se.x - nw.x) * range.value;
+
+      overlay.getContainer().style.clip = 'rect(' +
+        [nw.y, clipX, se.y, nw.x].join('px,') + 'px)';
+    }
+
+    range['oninput' in range ? 'oninput' : 'onchange'] = clip;
+    hardoi.on('move', clip);
+
+    clip();
   },
 
   componentWillUnmount () {
@@ -62,9 +99,12 @@ Here's an example of what the data looks like, using imagery of Hardoi from Marc
     <figcaption>The same area during the day</figcaption>
   </figure>
 
+  <div className='hardoi-container'>
+    <div id='hardoi-interactive'></div>
+    <input id='range' class='range' max='1.0' min='0' step='any' type='range'/>
+  </div>
   <figure className="align-center">
-    <img src="graphics/content/hardoi-daytime-nighttime-combined.png" alt="Hardoi combined imagery, 2006-03-26" />
-    <figcaption>The nighttime imagery at 50% transparency on top of the daytime imagery</figcaption>
+    <figcaption>The nighttime imagery at 80% transparency on top of the daytime imagery</figcaption>
   </figure>
 <Markdown>{`
 
@@ -92,7 +132,7 @@ The India Lights project is a collaboration between [Development Seed](https://d
 Country borders or names do not necessarily reflect the World Bank Group's official position. [The map](#/) is for illustrative purposes and does not imply the expression of any opinion on the part of the World Bank, concerning the legal status of any country or territory or concerning the delimitation of frontiers or boundaries.
 
 `}</Markdown>
-              
+
             </div>
           </div>
         </div>
