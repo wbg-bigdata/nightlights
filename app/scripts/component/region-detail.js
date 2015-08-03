@@ -4,6 +4,7 @@ let titlecase = require('titlecase');
 let numeral = require('numeral');
 let Actions = require('../actions');
 let Link = Router.Link;
+let Search = require('./search');
 
 let RegionDetail = React.createClass({
   displayName: 'RegionDetail',
@@ -78,7 +79,9 @@ let RegionDetail = React.createClass({
           <p className='breadcrumbs'>{breadcrumbs}</p>
           <small>{loading ? '' : titlecase(level)}</small>
           <div className='title-wrapper'>
-            <h1 className='spane-title'>{name}</h1>
+            <Search initialValue={name === 'India' ? '' : name}>
+              <h1 className='spane-title'>{name}</h1>
+            </Search>
             <a className='bttn-center-map'
               onClick={Actions.recenterMap.bind(Actions)}
               title='Zoom to location bounds'>
