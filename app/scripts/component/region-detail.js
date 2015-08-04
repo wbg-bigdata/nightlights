@@ -76,8 +76,6 @@ let RegionDetail = React.createClass({
     return (
       <section className='spane region-detail'>
         <header className='spane-header'>
-          <p className='breadcrumbs'>{breadcrumbs}</p>
-          <small>{loading ? '' : titlecase(level)}</small>
           <div className='title-wrapper'>
             <Search initialValue={name === 'India' ? '' : name}>
               <h1 className='spane-title'>{name}</h1>

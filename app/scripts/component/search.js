@@ -66,12 +66,18 @@ let Search = React.createClass({
     if (this.state.active) {
       return (
         <div className='search'>
+          <label htmlFor="search-input"><span>Where</span></label>
           <Autosuggest suggestions={this.getSuggestions}
             suggestionRenderer={s => s.name}
             suggestionValue={s => s.name}
             onSuggestionSelected={s => this.go(s)}
             value={this.state.currentValue || this.props.initialValue}
             inputAttributes={{
+              id: 'search-input',
+              name: 'search-input',
+              placeholder: 'Enter region...',
+              type: 'search',
+              value: 'India',
               onKeyPress: this.onKeyPress,
               onChange: value => this.setState({ currentValue: value })
             }}
