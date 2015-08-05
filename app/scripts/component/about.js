@@ -15,14 +15,14 @@ let Data = React.createClass({
     var daytime = 'devseed.00faaaae', nighttime = 'devseed.7cb95155';
     var range = document.getElementById('range');
     var southWest = L.latLng(27.21, 80.039),
-        northEast = L.latLng(27.42, 80.17),
+        northEast = L.latLng(27.42, 80.16),
         bounds = L.latLngBounds(southWest, northEast);
 
     var hardoi = L.mapbox.map('hardoi-interactive', daytime, {
       minZoom: 13,
       maxZoom: 16,
       maxBounds: bounds,
-    }).setView([27.38, 80.1], 13);
+    }).setView([27.38, 80.1], 14);
 
     hardoi.scrollWheelZoom.disable();
 
