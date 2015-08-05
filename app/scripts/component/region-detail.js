@@ -42,7 +42,7 @@ let RegionDetail = React.createClass({
 
     // breadcrumbs
     let {year, month} = this.getParams();
-    let breadcrumbs = [];
+    /*let breadcrumbs = [];
     if (!loading) {
       if (level === 'state' || level === 'district') {
         breadcrumbs.push(
@@ -62,7 +62,7 @@ let RegionDetail = React.createClass({
           </Link>
         );
       }
-    }
+    }*/
 
     // RGGVY villages
     let {villages, rggvyVillages, rggvyFocus} = this.props;
@@ -90,6 +90,8 @@ let RegionDetail = React.createClass({
         </header>
         <div className='spane-body'>
           <dl className='spane-details'>
+            <dt>Level</dt>
+            <dd>{titlecase(level)}</dd>
             <dt>Population</dt>
             <dd>{properties ? population : 'Unknown'}</dd>
 
