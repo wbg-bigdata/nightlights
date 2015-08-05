@@ -11,9 +11,8 @@
 }
 
 .spane-header {
+  position: relative;
   margin: -1rem;
-  // padding: 1rem;
-  // min-height: 5.25rem;
   > *:last-child {
     margin-bottom: 0;
   }
@@ -21,8 +20,6 @@
 
 .title-wrapper {
   position: relative;
-  // padding-right: 2rem;
-  // margin: 0 -0.5rem 0 -0.5rem;
 }
 
 .spane-title {
@@ -30,6 +27,10 @@
   margin-bottom: 0;
   small {
     @extend .hd-sup;
+  }
+
+  .region-detail & {
+    @extend .visually-hidden;
   }
 }
 
@@ -227,6 +228,10 @@
       opacity: 0.64;
     }
   }
+
+  &.no-results {
+    @include animation(bounce-x 0.25s ease-in-out 0s);
+  }
 }
 
 #search-input {
@@ -281,6 +286,9 @@
     list-style-type: none;
     border: 1px solid $border-color;
     z-index: 2;
+
+    height: 200px;
+    overflow: auto;
 
     &-section {
       &:first-child {

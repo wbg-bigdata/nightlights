@@ -164,3 +164,13 @@ a:active{
     }
   }
 }
+
+/* Keyframes animations */
+
+@include keyframes(bounce-x) {
+  0% { @include transform(translateX(0)); }
+  25% { @include transform(translateX(0.5rem)); }
+  50% { @include transform(translateX(-0.5rem)); }
+  75% { @include transform(translateX(0.25rem)); }
+  100% { @include transform(translateX(0)); }
+}

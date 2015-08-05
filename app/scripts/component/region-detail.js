@@ -76,16 +76,17 @@ let RegionDetail = React.createClass({
     return (
       <section className='spane region-detail'>
         <header className='spane-header'>
-          <div className='title-wrapper'>
-            <Search initialValue={name === 'India' ? '' : name}>
-              <h1 className='spane-title'>{name}</h1>
-            </Search>
-            <a className='bttn-center-map'
-              onClick={Actions.recenterMap.bind(Actions)}
-              title='Zoom to location bounds'>
-              <span>Zoom to location bounds</span>
-            </a>
-          </div>
+
+          <h1 className='spane-title'>{name}</h1>
+
+          <a className='bttn-center-map'
+            onClick={Actions.recenterMap.bind(Actions)}
+            title='Zoom to location bounds'>
+            <span>Zoom to location bounds</span>
+          </a>
+
+          <Search initialValue={name} />
+
         </header>
         <div className='spane-body'>
           <dl className='spane-details'>

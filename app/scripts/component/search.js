@@ -14,7 +14,7 @@ let Search = React.createClass({
   mixins: [Router.State, Router.Navigation],
 
   getInitialState () {
-    return assign({ active: false }, RegionListStore.getInitialState());
+    return assign({ active: true, currentValue: '' }, RegionListStore.getInitialState());
   },
   componentDidMount () {
     this.unsubscribe = [];
@@ -24,12 +24,23 @@ let Search = React.createClass({
   onClick () {
     this.setState({active: true});
   },
+  componentWillReceiveProps (nextProps) {
+    this.setState({currentValue: nextProps.initialValue});
+  },
 
   onKeyPress (event) {
     if (event.which === 13) {
       // enter key
       let best = this.getSuggestions(this.state.currentValue)[0];
-      if (!best.name) return;
+      if (!best || !best.name) {
+        var node = React.findDOMNode(this.refs.search);
+        console.log(node);
+        // Remove error class.
+        node.className = node.className.replace(/ ?no-results/, '');
+        // Add it back on next tick.
+        setTimeout(function() { node.className += ' no-results'; }, 1);
+        return; 
+      }
       // if the value in the search box exactly equals the best suggestion
       // then just go there.
       if (this.state.currentValue === best.name) {
@@ -45,6 +56,7 @@ let Search = React.createClass({
   getSuggestions (input, callback) {
     const regex = new RegExp('^' + input, 'i');
     const suggestions = this.state.regions.filter(r => regex.test(r.name));
+
     if (callback) {
       callback(null, suggestions);
     }
@@ -63,31 +75,24 @@ let Search = React.createClass({
   },
 
   render () {
-    if (this.state.active) {
-      return (
-        <div className='search'>
-          <label htmlFor="search-input"><span>Where</span></label>
-          <Autosuggest suggestions={this.getSuggestions}
-            suggestionRenderer={s => s.name}
-            suggestionValue={s => s.name}
-            onSuggestionSelected={s => this.go(s)}
-            value={this.state.currentValue || this.props.initialValue}
-            inputAttributes={{
-              id: 'search-input',
-              name: 'search-input',
-              placeholder: 'Enter region...',
-              type: 'search',
-              value: 'India',
-              onKeyPress: this.onKeyPress,
-              onChange: value => this.setState({ currentValue: value })
-            }}
-            />
-        </div>
-      );
-    }
     return (
-      <div className='search' onClick={this.onClick}>
-        {this.props.children}
+      <div className='search' ref="search">
+        <label htmlFor="search-input"><span>Where</span></label>
+        <Autosuggest suggestions={this.getSuggestions}
+          suggestionRenderer={s => s.name}
+          suggestionValue={s => s.name}
+          onSuggestionSelected={s => this.go(s)}
+          value={this.state.currentValue}
+          scrollBar={true}
+          inputAttributes={{
+            id: 'search-input',
+            name: 'search-input',
+            placeholder: 'Enter region...',
+            type: 'search',
+            onKeyPress: this.onKeyPress,
+            onChange: value => this.setState({ currentValue: value })
+          }}
+          />
       </div>
     );
   }
