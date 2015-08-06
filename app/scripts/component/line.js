@@ -58,7 +58,6 @@ class Line extends React.Component {
         <path className={klass}
           data-hook={this.props.seriesKey}
           onMouseEnter={this._action.bind(this, 'emphasize')}
-          onClick={this._action.bind(this, 'select')}
           d={linestring} />
       </g>
     );

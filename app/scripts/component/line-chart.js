@@ -55,10 +55,7 @@ class LineChart extends React.Component {
     });
 
     s.on('click', function () {
-      // If the target is a path, then the target is a light curve and we
-      // want to zoom to it.
-      // https://github.com/developmentseed/india-lights/issues/61
-      if (d3.event.target.nodeName !== 'path' && self.props.onCursorClick) {
+      if (self.props.onCursorClick) {
         self.props.onCursorClick(self.state.cursor.dataCoordinates);
       }
     });
