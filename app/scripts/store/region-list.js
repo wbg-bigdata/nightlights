@@ -6,7 +6,13 @@ let titlecase = require('titlecase');
 
 module.exports = Reflux.createStore({
   init () {
-    this._data = { regions: [] };
+    this._data = {
+      regions: [{
+        name: 'India',
+        type: 'nation'
+      }]
+    };
+
     ajax({ url: url.resolve(apiUrl, 'districts') }, (err, result) => {
       if (err) { throw err; }
       result.regions = result.regions
@@ -24,7 +30,7 @@ module.exports = Reflux.createStore({
         }
 
         this._data.regions.push({
-          name: region.state_name + ' - ' + region.district_name,
+          name: region.state_name + ' / ' + region.district_name,
           key: region.district_key,
           type: 'district',
           state: region.state_key

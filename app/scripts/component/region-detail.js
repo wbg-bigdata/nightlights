@@ -29,7 +29,14 @@ let RegionDetail = React.createClass({
 
     level = level || 'nation';
     properties = properties || {};
-    let name = loading ? '' : titlecase(properties.name);
+
+    // region name for search box
+    let name = loading ? '' : properties.name;
+    if (!loading && level === 'district') {
+      let state = this.props.region.state;
+      name = state.replace(/-/g, ' ') + ' / ' + name;
+    }
+    name = titlecase(name.toLowerCase());
 
     // population
     let population = numeral(properties.tot_pop).format('0,0');
@@ -38,30 +45,6 @@ let RegionDetail = React.createClass({
     let regionMedian;
     if (this.props.regionMedian) {
       regionMedian = numeral(this.props.regionMedian).format('0.00');
-    }
-
-    // breadcrumbs
-    let {year, month} = this.getParams();
-    let breadcrumbs = [];
-    if (!loading) {
-      if (level === 'state' || level === 'district') {
-        breadcrumbs.push(
-          <Link key={['breadcrumb-nation', year, month].join('')}
-            to='nation' params={{ year, month }}>
-          India
-          </Link>
-        );
-      }
-
-      if (level === 'district') {
-        let state = this.props.region.state;
-        breadcrumbs.push(
-          <Link key={['breadcrumb-state', state, year, month].join('')}
-            to='state' params={{ year, month, state }}>
-          {titlecase(state.replace(/-/g, ' '))}
-          </Link>
-        );
-      }
     }
 
     // RGGVY villages
@@ -76,21 +59,22 @@ let RegionDetail = React.createClass({
     return (
       <section className='spane region-detail'>
         <header className='spane-header'>
-          <p className='breadcrumbs'>{breadcrumbs}</p>
-          <small>{loading ? '' : titlecase(level)}</small>
-          <div className='title-wrapper'>
-            <Search initialValue={name === 'India' ? '' : name}>
-              <h1 className='spane-title'>{name}</h1>
-            </Search>
-            <a className='bttn-center-map'
-              onClick={Actions.recenterMap.bind(Actions)}
-              title='Zoom to location bounds'>
-              <span>Zoom to location bounds</span>
-            </a>
-          </div>
+
+          <h1 className='spane-title'>{name}</h1>
+
+          <a className='bttn-center-map'
+            onClick={Actions.recenterMap.bind(Actions)}
+            title='Zoom to location bounds'>
+            <span>Zoom to location bounds</span>
+          </a>
+
+          <Search initialValue={name} />
+
         </header>
         <div className='spane-body'>
           <dl className='spane-details'>
+            <dt>Level</dt>
+            <dd>{titlecase(level)}</dd>
             <dt>Population</dt>
             <dd>{properties ? population : 'Unknown'}</dd>
 

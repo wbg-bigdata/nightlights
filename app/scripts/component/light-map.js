@@ -447,14 +447,14 @@ class LightMap extends React.Component {
     this.map.batch(function (batch) {
       self.setEmphasized(batch, region);
       self.setTime(batch, region, time);
-      if (!region.loading && region.level !== self.state.currentLevel) {
+      if (!region.loading && region.key !== self.state.currentRegionKey) {
         self.setRegionStyles(batch, region);
       }
     });
 
-    if (!region.loading && region.level !== this.state.currentLevel) {
-      this.flyToRegion(region);
-      this.setState({ currentLevel: region.level });
+    if (!region.loading && region.key !== self.state.currentRegionKey) {
+      self.flyToRegion(region);
+      self.setState({ currentRegionKey: region.key });
     }
   }
 
