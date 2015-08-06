@@ -37,7 +37,8 @@ class LightMap extends React.Component {
       selectedVillagesSource: null,
       sourcesLoaded: {},
       stylesLoaded: false,
-      stateBoundaries: {}
+      stateBoundaries: {},
+      currentRegionKey: 'never been set'
     };
 
     let self = this;
