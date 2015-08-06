@@ -279,10 +279,6 @@ class LightMap extends React.Component {
         currentRegionHover
       });
 
-      if(!currentRegionHover) {
-        console.log('nope', features)
-      }
-
       if (subregionFeatures.length > 0) {
         this.showTooltip(e.point);
       }
