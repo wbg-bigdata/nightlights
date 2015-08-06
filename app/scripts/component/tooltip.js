@@ -8,7 +8,8 @@ class Tooltip extends React.Component {
     let name = '';
     if (!region.loading && region.emphasized && region.emphasized.length > 0) {
       if (region.level === 'district') {
-        name = 'Census codes: ' + region.emphasized.join(', ');
+        name = 'Census codes: ' + region.emphasized.slice(0, 3).join(', ');
+        if (region.emphasized.length > 3) { name += '...'; }
       } else {
         let key = region.emphasized[0];
         let info = region.subregions[key] || {properties: {}};
