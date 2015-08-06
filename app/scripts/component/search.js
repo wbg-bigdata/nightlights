@@ -1,8 +1,12 @@
 let React = require('react');
 let Router = require('react-router');
-let assign = require('object-assign');
 import Autosuggest from 'react-autosuggest';
 let RegionListStore = require('../store/region-list');
+let Fuse = require('fuse.js');
+
+let fuseOptions = {
+  keys: ['name']
+};
 
 let Search = React.createClass({
   displayName: 'Search',
@@ -14,11 +18,18 @@ let Search = React.createClass({
   mixins: [Router.State, Router.Navigation],
 
   getInitialState () {
-    return assign({ active: true, currentValue: '' }, RegionListStore.getInitialState());
+    return {
+      active: true,
+      currentValue: '',
+      fuse: new Fuse(RegionListStore.getInitialState().regions, fuseOptions)
+    };
   },
   componentDidMount () {
     this.unsubscribe = [];
-    this.unsubscribe.push(RegionListStore.listen(this.setState.bind(this)));
+    this.unsubscribe.push(RegionListStore.listen(data => {
+      /* eslint react/no-did-mount-set-state: [2, "allow-in-func"] */
+      this.setState({ fuse: new Fuse(data.regions, fuseOptions) });
+    }));
   },
   componentDidUnmount () { this.unsubscribe.forEach(u => u()); },
   onClick () {
@@ -38,8 +49,8 @@ let Search = React.createClass({
         // Remove error class.
         node.className = node.className.replace(/ ?no-results/, '');
         // Add it back on next tick.
-        setTimeout(function() { node.className += ' no-results'; }, 1);
-        return; 
+        setTimeout(function () { node.className += ' no-results'; }, 1);
+        return;
       }
       // if the value in the search box exactly equals the best suggestion
       // then just go there.
@@ -54,8 +65,7 @@ let Search = React.createClass({
   },
 
   getSuggestions (input, callback) {
-    const regex = new RegExp('^' + input, 'i');
-    const suggestions = this.state.regions.filter(r => regex.test(r.name));
+    const suggestions = this.state.fuse.search(input);
 
     if (callback) {
       callback(null, suggestions);
@@ -76,8 +86,8 @@ let Search = React.createClass({
 
   render () {
     return (
-      <div className='search' ref="search">
-        <label htmlFor="search-input"><span>Where</span></label>
+      <div className='search' ref='search'>
+        <label htmlFor='search-input'><span>Where</span></label>
         <Autosuggest suggestions={this.getSuggestions}
           suggestionRenderer={s => s.name}
           suggestionValue={s => s.name}
