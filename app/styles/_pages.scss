@@ -282,9 +282,32 @@
   max-width: 100%;
 }
 
-// image settings for About
+// ABOUT
+// image settings
 .about img {
   max-width: 100%;
+}
+
+// Hardoi interactive map settings
+.hardoi-container {
+  position: relative;
+  height: 500px;
+  width:100%;
+}
+
+#hardoi-interactive {
+  position:absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#range {
+  width: 100%;
+  position: relative;
+  top: 50%;
+  cursor: col-resize;
 }
 
 // STORY: Electricity Administration in Uttar Pradesh
