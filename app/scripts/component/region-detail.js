@@ -29,7 +29,13 @@ let RegionDetail = React.createClass({
 
     level = level || 'nation';
     properties = properties || {};
+
+    // region name for search box
     let name = loading ? '' : titlecase(properties.name);
+    if (!loading && level === 'district') {
+      let state = this.props.region.state;
+      name = titlecase(state.replace(/-/g, ' ')) + ' / ' + name;
+    }
 
     // population
     let population = numeral(properties.tot_pop).format('0,0');
@@ -39,30 +45,6 @@ let RegionDetail = React.createClass({
     if (this.props.regionMedian) {
       regionMedian = numeral(this.props.regionMedian).format('0.00');
     }
-
-    // breadcrumbs
-    let {year, month} = this.getParams();
-    /*let breadcrumbs = [];
-    if (!loading) {
-      if (level === 'state' || level === 'district') {
-        breadcrumbs.push(
-          <Link key={['breadcrumb-nation', year, month].join('')}
-            to='nation' params={{ year, month }}>
-          India
-          </Link>
-        );
-      }
-
-      if (level === 'district') {
-        let state = this.props.region.state;
-        breadcrumbs.push(
-          <Link key={['breadcrumb-state', state, year, month].join('')}
-            to='state' params={{ year, month, state }}>
-          {titlecase(state.replace(/-/g, ' '))}
-          </Link>
-        );
-      }
-    }*/
 
     // RGGVY villages
     let {villages, rggvyVillages, rggvyFocus} = this.props;

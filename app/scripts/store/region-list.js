@@ -30,7 +30,7 @@ module.exports = Reflux.createStore({
         }
 
         this._data.regions.push({
-          name: region.state_name + ' - ' + region.district_name,
+          name: region.state_name + ' / ' + region.district_name,
           key: region.district_key,
           type: 'district',
           state: region.state_key
