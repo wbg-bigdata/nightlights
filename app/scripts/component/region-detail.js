@@ -31,11 +31,12 @@ let RegionDetail = React.createClass({
     properties = properties || {};
 
     // region name for search box
-    let name = loading ? '' : titlecase(properties.name);
+    let name = loading ? '' : properties.name;
     if (!loading && level === 'district') {
       let state = this.props.region.state;
-      name = titlecase(state.replace(/-/g, ' ')) + ' / ' + name;
+      name = state.replace(/-/g, ' ') + ' / ' + name;
     }
+    name = titlecase(name.toLowerCase());
 
     // population
     let population = numeral(properties.tot_pop).format('0,0');

@@ -5,7 +5,11 @@ let RegionListStore = require('../store/region-list');
 let Fuse = require('fuse.js');
 
 function fuse (data) {
-  return new Fuse(data.regions, { keys: ['name'] });
+  return new Fuse(data.regions, {
+    keys: ['name'],
+    maxPatternLength: 64,
+    includeScore: true
+  });
 }
 
 let Search = React.createClass({
@@ -64,7 +68,12 @@ let Search = React.createClass({
   },
 
   getSuggestions (input, callback) {
-    const suggestions = this.state.fuse.search(input);
+    let suggestions = this.state.fuse.search(input);
+    suggestions.sort((a, b) => {
+      let diff = a.score - b.score;
+      return diff ? diff : (a.item.name < b.item.name ? -1 : 1);
+    });
+    suggestions = suggestions.map(s => s.item);
 
     if (callback) {
       callback(null, suggestions);
