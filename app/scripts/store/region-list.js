@@ -6,7 +6,13 @@ let titlecase = require('titlecase');
 
 module.exports = Reflux.createStore({
   init () {
-    this._data = { regions: [] };
+    this._data = {
+      regions: [{
+        name: 'India',
+        type: 'nation'
+      }]
+    };
+
     ajax({ url: url.resolve(apiUrl, 'districts') }, (err, result) => {
       if (err) { throw err; }
       result.regions = result.regions

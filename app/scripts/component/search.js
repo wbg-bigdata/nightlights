@@ -4,9 +4,9 @@ import Autosuggest from 'react-autosuggest';
 let RegionListStore = require('../store/region-list');
 let Fuse = require('fuse.js');
 
-let fuseOptions = {
-  keys: ['name']
-};
+function fuse (data) {
+  return new Fuse(data.regions, { keys: ['name'] });
+}
 
 let Search = React.createClass({
   displayName: 'Search',
@@ -21,14 +21,14 @@ let Search = React.createClass({
     return {
       active: true,
       currentValue: '',
-      fuse: new Fuse(RegionListStore.getInitialState().regions, fuseOptions)
+      fuse: fuse(RegionListStore.getInitialState())
     };
   },
   componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionListStore.listen(data => {
       /* eslint react/no-did-mount-set-state: [2, "allow-in-func"] */
-      this.setState({ fuse: new Fuse(data.regions, fuseOptions) });
+      this.setState({ fuse: fuse(data) });
     }));
   },
   componentDidUnmount () { this.unsubscribe.forEach(u => u()); },
@@ -45,10 +45,9 @@ let Search = React.createClass({
       let best = this.getSuggestions(this.state.currentValue)[0];
       if (!best || !best.name) {
         var node = React.findDOMNode(this.refs.search);
-        console.log(node);
         // Remove error class.
         node.className = node.className.replace(/ ?no-results/, '');
-        // Add it back on next tick.
+        // Add it back on next tick so that css animation is triggered.
         setTimeout(function () { node.className += ' no-results'; }, 1);
         return;
       }
