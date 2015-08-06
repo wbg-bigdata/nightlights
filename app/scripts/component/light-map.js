@@ -303,6 +303,7 @@ class LightMap extends React.Component {
           self.postFlight(() => Actions.selectParent());
           self.updateMap({
             level: 'state',
+            key: region.state,
             state: region.state,
             boundary: self.state.stateBoundaries[region.state].geometry
           }, self.props.time);
@@ -322,6 +323,7 @@ class LightMap extends React.Component {
           level: region.level === 'nation' ? 'state' : 'district',
           state: region.state || key,
           district: region.state ? key : undefined,
+          key: key,
           boundary: self.state.hoverFeature.geometry
         }, self.props.time);
       } else {
