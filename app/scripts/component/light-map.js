@@ -84,6 +84,12 @@ class LightMap extends React.Component {
       let el = document.querySelector('.tooltip');
       el.addEventListener('wheel', pass, false);
       el.addEventListener('mousewheel', pass, false);
+      el.addEventListener('click', () => {
+        if (!this.state.region.district && this.state.region.emphasized &&
+          this.state.region.emphasized.length > 0) {
+          Actions.select(this.state.region.emphasized[0]);
+        }
+      });
       function pass (e) { e.preventDefault(); }
     }, 300);
   }
