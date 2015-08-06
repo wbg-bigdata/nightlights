@@ -278,6 +278,11 @@ class LightMap extends React.Component {
         hoverFeature: subregionFeatures[0],
         currentRegionHover
       });
+
+      if(!currentRegionHover) {
+        console.log('nope', features)
+      }
+
       if (subregionFeatures.length > 0) {
         this.showTooltip(e.point);
       }
@@ -311,7 +316,9 @@ class LightMap extends React.Component {
           Actions.selectParent();
         }
       }
-    } else if (region.level === 'state' && emphasized.length === 0) {
+    } else if (region.level === 'state'
+    && !self.state.currentRegionHover
+    && emphasized.length === 0) {
       self.postFlight(() => Actions.selectParent());
       self.updateMap({ level: 'nation' }, self.props.time);
     } else if (emphasized.length) {
