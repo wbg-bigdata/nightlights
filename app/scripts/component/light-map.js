@@ -212,7 +212,7 @@ class LightMap extends React.Component {
 
         // 1. the 'lightsX' layers, which style the vector tile village points
         // used in national and state view.
-        lightStyles.create('lights', 'village-lights', '10percgeojson', stops.length)
+        lightStyles.create('lights', 'village-lights', 'sample', stops.length)
           .forEach(layer => batch.addLayer(layer, 'cities'));
 
         // 2. the 'district-lightsX' layers, which will style the geojson source
