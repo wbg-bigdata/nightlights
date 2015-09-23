@@ -3,7 +3,7 @@ module.exports = {
   mapboxAccessToken: 'pk.eyJ1IjoiZGV2c2VlZCIsImEiOiJnUi1mbkVvIn0.018aLhX0Mb0tdtaT2QNe2Q',
   apiUrl: process.env.API_URL || 'http://api.nightlights.io',
   interval: '1993.01-2013.12',
-  villageLightStops: [1, 2, 4, 6, 7, 8, 9, 10, 20, 30],
+  villageLightStops: [-64, 2, 4, 6, 7, 8, 9, 10, 20, 30],
   satelliteAdjustment: {
     'F12': 1.24454,
     'F16': 0.68629,
