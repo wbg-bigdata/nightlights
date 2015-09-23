@@ -21,7 +21,7 @@ function create (idPrefix, source, sourceLayer, numStops) {
     paint: {
       'icon-color': '#efc20d',
       'icon-size': '@village-size',
-      'icon-opacity': i / numStops
+      'icon-opacity': (i + 1) / numStops
     },
     'paint.district': {
       'icon-size': '@district-village-size'
