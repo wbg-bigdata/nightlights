@@ -16,10 +16,11 @@ module.exports = {
     20,
     30
   ],
+  interpolation: 'basis',
   satelliteAdjustment: {
-    'F12': 1.24454,
-    'F16': 0.68629,
-    'F18': 1.18883
+    // 'F12': 1.24454,
+    // 'F16': 0.68629,
+    // 'F18': 1.18883
   },
   dataThreshold: 400,
   welcome: {

@@ -2,6 +2,7 @@ let React = require('react');
 let d3 = require('d3');
 let classnames = require('classnames');
 let AccessorType = require('../lib/accessor-type');
+let config = require('../config');
 
 class Line extends React.Component {
   constructor (props) {
@@ -23,7 +24,7 @@ class Line extends React.Component {
 
   maybeUpdateLine ({x, y, data}) {
     if (data !== this.state.data || x !== this.props.x || y !== this.props.y) {
-      let line = d3.svg.line().x(x).y(y);
+      let line = d3.svg.line().interpolate(config.interpolation).x(x).y(y);
       let linestring = line(data);
       this.setState({ data, linestring });
     }
@@ -44,6 +45,7 @@ class Line extends React.Component {
     let area, areaPath, areaKlass;
     if (this.props.envelope) {
       area = d3.svg.area()
+        .interpolate(config.interpolation)
         .x(this.props.x)
         .y0(this.props.envelope[0])
         .y1(this.props.envelope[1]);

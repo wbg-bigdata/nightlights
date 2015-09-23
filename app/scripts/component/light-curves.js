@@ -219,10 +219,15 @@ class LightCurves extends React.Component {
       .clamp(true);
 
     let domainY = d3.extent(ydata);
+
+    // TODO: remove this hacked upper y limit
+    if (!centerline) {
+      domainY[1] = Math.min(15, domainY[1]);
+    }
+
     let scaleY = d3.scale.linear()
       .domain(domainY)
-      .range([height - margins.top, margins.bottom])
-      .clamp(true);
+      .range([height - margins.top, margins.bottom]);
 
     return {
       scales: { x: scaleX, y: scaleY },
