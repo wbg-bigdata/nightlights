@@ -24,7 +24,9 @@ class Line extends React.Component {
 
   maybeUpdateLine ({x, y, data}) {
     if (data !== this.state.data || x !== this.props.x || y !== this.props.y) {
-      let line = d3.svg.line().interpolate(config.interpolation).x(x).y(y);
+      let line = d3.svg.line()
+        .interpolate(config.interpolation)
+        .x(x).y(y);
       let linestring = line(data);
       this.setState({ data, linestring });
     }

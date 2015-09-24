@@ -152,7 +152,7 @@ let DataExplorer = React.createClass({
           month={month}
           timeSeries={timeSeries}
           villageCurves={villageCurves}
-          smoothing={false}
+          smoothing={true}
           region={region}
           margins={{left: 36, right: 36, top: 48, bottom: 48}}
         />

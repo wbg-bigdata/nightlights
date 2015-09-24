@@ -17,6 +17,7 @@ module.exports = {
     30
   ],
   interpolation: 'basis',
+  movingAverageWindow: 3,
   satelliteAdjustment: {
     // 'F12': 1.24454,
     // 'F16': 0.68629,
