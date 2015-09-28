@@ -62,7 +62,7 @@
       "type": "geojson"
     },
     "village-lights": {
-      "url": "mapbox://devseed.nightlights-v4",
+      "url": "mapbox://devseed.xnut0529",
       "type": "vector"
     }
   },
