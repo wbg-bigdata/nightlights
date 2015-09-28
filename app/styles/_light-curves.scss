@@ -67,7 +67,7 @@
 
   .axis {
     fill: none;
-    stroke: rgba(#fff, 0.16);
+    stroke: rgba(#fff, 0.5);
     stroke-width: 1px;
   }
   .axis.vertical {
@@ -75,6 +75,10 @@
   }
   &.expanded .axis.vertical {
     display: block;
+  }
+  .tick {
+    stroke: rgba(#fff, 0.2);
+    stroke-width: 1px;
   }
   text {
     stroke: none;

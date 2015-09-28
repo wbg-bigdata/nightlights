@@ -77,7 +77,7 @@ class LightCurves extends React.Component {
       data: null,
       centerline: null,
       series: [],
-      scales: { x: (x) => x, y: (x) => x},
+      scales: {x: (x) => x, y: (x) => x},
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
@@ -99,7 +99,7 @@ class LightCurves extends React.Component {
         width: node.offsetWidth,
         height: node.offsetHeight
       })));
-    };
+    }
 
     this.handleResize = debounce(handleResize, 100);
 
@@ -350,7 +350,7 @@ class LightCurves extends React.Component {
       </div>
     );
   }
-};
+}
 
 LightCurves.displayName = 'LightCurves';
 LightCurves.propTypes = {
