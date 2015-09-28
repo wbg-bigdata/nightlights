@@ -194,6 +194,7 @@ class LightCurves extends React.Component {
   _calcScales ({data, centerline, width, height}) {
     // set up scales
     let {margins} = this.props;
+    let {expanded} = this.state;
 
     let allData = (data || []).concat(centerline || []);
     let ydata = [];
@@ -220,9 +221,14 @@ class LightCurves extends React.Component {
 
     let domainY = d3.extent(ydata);
 
-    // TODO: remove this hacked upper y limit
+    // TODO: remove these hacked y limits.  We're including them right now
+    // as a stopgap to make the updated data we're using for the WB demo
+    // look okay
     if (!centerline) {
       domainY[1] = Math.min(15, domainY[1]);
+    }
+    if (expanded) {
+      domainY[1] = Math.max(10, domainY[1]);
     }
 
     let scaleY = d3.scale.linear()
