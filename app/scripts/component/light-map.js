@@ -52,14 +52,12 @@ class LightMap extends React.Component {
       let point;
       if (pointOrFeature.type === 'Feature') {
         let cent = centroid(pointOrFeature);
-        point = cent.geometry.coordinates.reverse();
-      } else if (pointOrFeature.type === 'FeatureCollection'
-      && (pointOrFeature.features || []).length > 0) {
+        point = cent.geometry.coordinates;
+      } else if (pointOrFeature.type === 'FeatureCollection' && (pointOrFeature.features || []).length > 0) {
         let cent = centroid(pointOrFeature);
-        point = cent.geometry.coordinates.reverse();
+        point = cent.geometry.coordinates;
       } else {
-        if (!self.state.region.emphasized
-        || self.state.region.emphasized.length === 0) {
+        if (!self.state.region.emphasized || self.state.region.emphasized.length === 0) {
           return;
         }
         point = self.map.unproject(pointOrFeature);
@@ -73,7 +71,7 @@ class LightMap extends React.Component {
 
       // add tooltip
       self._tooltip = new mgl.Popup({ closeOnClick: false })
-      .setLatLng(point)
+      .setLngLat(point)
       .setHTML(React.renderToStaticMarkup(
         <Tooltip region={self.state.region} />
       ));
@@ -153,7 +151,7 @@ class LightMap extends React.Component {
 
     window.glMap = self.map = new mgl.Map({
       container: React.findDOMNode(this).querySelector('.map-inner'),
-      center: [20.018, 79.667],
+      center: [79.667, 20.018],
       zoom: 2.5,
       minZoom: 2.5,
       maxZoom: 12.5,
@@ -265,7 +263,10 @@ class LightMap extends React.Component {
       'district': /^(district-lights|rggvy-lights)/
     })[region.level] || /x^/;
 
-    this.map.featuresAt(e.point, { radius: 10 }, (err, features) => {
+    this.map.featuresAt(e.point, {
+      radius: 10,
+      includeGeometry: true
+    }, (err, features) => {
       if (err) { return console.error(err); }
       if (this.isInFlight()) { return; } // double check to avoid race
       let subregionFeatures = features
@@ -318,9 +319,7 @@ class LightMap extends React.Component {
           Actions.selectParent();
         }
       }
-    } else if (region.level === 'state'
-    && !self.state.currentRegionHover
-    && emphasized.length === 0) {
+    } else if (region.level === 'state' && !self.state.currentRegionHover && emphasized.length === 0) {
       self.postFlight(() => Actions.selectParent());
       self.updateMap({ level: 'nation' }, self.props.time);
     } else if (emphasized.length) {
@@ -362,10 +361,7 @@ class LightMap extends React.Component {
    */
   onRegion (regionState) {
     let stateBoundaries = this.state.stateBoundaries;
-    if (regionState.level === 'nation'
-    && !regionState.loading
-    && regionState.subregions
-    && Object.keys(stateBoundaries).length === 0
+    if (regionState.level === 'nation' && !regionState.loading && regionState.subregions && Object.keys(stateBoundaries).length === 0
     ) {
       stateBoundaries = assign({}, regionState.subregions);
     }
@@ -584,7 +580,7 @@ class LightMap extends React.Component {
 
   flyToFeature (feature) {
     let [minx, miny, maxx, maxy] = extent(feature);
-    this.map.fitBounds([[miny, minx], [maxy, maxx]], {
+    this.map.fitBounds([[minx, miny], [maxx, maxy]], {
       speed: 1.2,
       curve: 1.42
     });
@@ -592,7 +588,7 @@ class LightMap extends React.Component {
 
   flyToNation () {
     this.map.flyTo({
-      center: [20.018, 79.667],
+      center: [79.667, 20.018],
       zoom: 3.5,
       speed: 1.2,
       curve: 1.42
@@ -616,8 +612,8 @@ class LightMap extends React.Component {
       !this.state.region || !this.state.villages ||
       this.state.region.loading ||
       this.state.villages.loading;
-    let errors = (!this.state.region || !this.state.villages) ? [] :
-      [this.state.region, this.state.villages].map(s => s.error);
+    let errors = (!this.state.region || !this.state.villages) ? []
+      : [this.state.region, this.state.villages].map(s => s.error);
 
     return (
       <div className='light-map'>

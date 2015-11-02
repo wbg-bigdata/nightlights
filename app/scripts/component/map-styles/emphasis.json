@@ -4,8 +4,24 @@
     "type": "line",
     "source": "emphasis-features",
     "paint": {
-      "line-color": "@emphasis-color",
-      "line-width": "@emphasis-line-width"
+      "line-color": "#fff",
+      "line-width": {
+        "base": 1,
+        "stops": [
+          [
+            1,
+            0.5
+          ],
+          [
+            6,
+            1
+          ],
+          [
+            12,
+            1.5
+          ]
+        ]
+      }
     }
   },
   {
@@ -15,13 +31,15 @@
     "layout": {
       "icon-image": "dot.sdf",
       "icon-allow-overlap": true,
-      "icon-max-size": "@village-size",
+      "icon-size": {
+        "base": 1,
+        "stops": [ [1, 0.5], [4, 1], [8, 1], [9, 1.25], [10, 2], [12, 3] ]
+      },
       "visibility": "visible"
     },
     "paint": {
-      "icon-color": "@emphasis-color",
-      "icon-size": "@district-village-size",
-      "icon-halo-color": "@emphasis-color",
+      "icon-color": "#fff",
+      "icon-halo-color": "#fff",
       "icon-halo-width": 4
     }
   }

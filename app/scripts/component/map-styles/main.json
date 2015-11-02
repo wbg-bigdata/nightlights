@@ -1,57 +1,11 @@
 {
-  "version": 7,
+  "version": 8,
   "name": "India Boundaries",
-  "constants": {
-    "@sans_md": "Open Sans Semibold, Arial Unicode MS Bold",
-    "@district-line-color": "rgba(166,132,103,1.000)",
-    "@district-line-width": 1,
-    "@emphasis-color": "#fff",
-    "@selected-color": "#e64b3b",
-    "@emphasis-line-width": {
-      "base": 1,
-      "stops": [
-        [
-          1,
-          0.5
-        ],
-        [
-          6,
-          1
-        ],
-        [
-          12,
-          1.5
-        ]
-      ]
-    },
-    "@village-size": {
-      "base": 1,
-      "stops": [
-        [4, 1],
-        [6, 2],
-        [8, 4],
-        [10, 8],
-        [12, 16]
-      ],
-    },
-    "@district-village-size": {
-      "base": 1,
-      "stops": [
-        [1, 1],
-        [8, 1],
-        [9, 2],
-        [10, 4],
-        [12, 8]
-      ],
-    },
-    "@base-color": "000",
-    "@land": "@land"
-  },
   "sources": {
     "mapbox://mapbox.satellite": {
       "url": "mapbox://mapbox.satellite",
       "type": "raster",
-      "tileSize": 192,
+      "tileSize": 192
     },
     "india-boundaries": {
       "url": "mapbox://devseed.ae90f5d7",
@@ -67,7 +21,7 @@
     }
   },
   "sprite": "https://www.mapbox.com/mapbox-gl-styles/sprites/sprite",
-  "glyphs": "mapbox://fontstack/{fontstack}/{range}.pbf",
+  "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
   "layers": [
     {
       "id": "mapbox-mapbox-satellite",
@@ -107,9 +61,9 @@
         "visibility": "visible"
       },
       "paint": {
-        "line-width": "@district-line-width",
+        "line-width": 1,
         "line-opacity": 0.1,
-        "line-color": "@district-line-color"
+        "line-color": "rgba(166,132,103,1.000)"
       }
     },
     {
@@ -139,13 +93,13 @@
       "interactive": true,
       "paint": { "line-width": 0 },
       "paint.district": {
-        "line-width": "@district-line-width",
-        "line-color": "@district-line-color",
+        "line-width": 1,
+        "line-color": "rgba(166,132,103,1.000)",
         "line-opacity": 1
       },
       "paint.state": {
-        "line-width": "@district-line-width",
-        "line-color": "@district-line-color",
+        "line-width": 1,
+        "line-color": "rgba(166,132,103,1.000)",
         "line-opacity": 1
       }
     },
@@ -156,16 +110,10 @@
       "filter": [ "<=", "scalerank", 3 ],
       "layout": {
         "text-field": "{name}",
-        "text-font": "Source Sans Pro Semibold, Arial Unicode MS Bold",
+        "text-font": ["Source Sans Pro Semibold, Arial Unicode MS Bold"],
         "text-max-width": 10,
         "text-transform": "none",
-        "symbol-avoid-edges": true
-      },
-      "paint": {
-        "text-opacity": 1,
-        "text-halo-color": "rgba(0,0,0,0.480)",
-        "text-halo-width": 1.5,
-        "text-halo-blur": 0,
+        "symbol-avoid-edges": true,
         "text-size": {
           "stops": [
             [
@@ -177,7 +125,13 @@
               16
             ]
           ]
-        },
+        }
+      },
+      "paint": {
+        "text-opacity": 1,
+        "text-halo-color": "rgba(0,0,0,0.480)",
+        "text-halo-width": 1.5,
+        "text-halo-blur": 0,
         "text-color": "#aaa"
       }
     }

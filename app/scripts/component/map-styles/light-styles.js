@@ -13,18 +13,17 @@ function create (idPrefix, source, sourceLayer, numStops) {
     source: source,
     'source-layer': sourceLayer,
     layout: {
-        'icon-image': 'dot.sdf',
-        'icon-allow-overlap': true,
-        'icon-max-size': '@village-size',
-        'visibility': 'visible'
+      'icon-image': 'dot.sdf',
+      'icon-size': {
+        'base': 1,
+        'stops': [ [1, 0.5], [4, 1], [8, 1], [9, 1.25], [10, 2], [12, 3] ]
+      },
+      'icon-allow-overlap': true,
+      'visibility': 'visible'
     },
     paint: {
       'icon-color': '#efc20d',
-      'icon-size': '@village-size',
       'icon-opacity': (i + 1) / numStops
-    },
-    'paint.district': {
-      'icon-size': '@district-village-size'
     }
   }));
 }
