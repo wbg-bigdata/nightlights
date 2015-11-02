@@ -91,6 +91,7 @@
     "react-router": "^0.13.3",
     "reflux": "^0.2.7",
     "remarkable": "^1.6.0",
+    "simple-statistics": "^1.0.0",
     "titlecase": "^1.0.2",
     "turf-centroid": "^1.1.2",
     "turf-extent": "^1.0.4",

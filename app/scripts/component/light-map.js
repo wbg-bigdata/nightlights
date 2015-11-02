@@ -5,6 +5,8 @@ let centroid = require('turf-centroid');
 let assign = require('object-assign');
 let throttle = require('lodash.throttle');
 let debounce = require('lodash.debounce');
+let ss = require('simple-statistics');
+
 let {showLayer} = require('../lib/mgl-util');
 let Actions = require('../actions');
 let RegionStore = require('../store/region');
@@ -383,12 +385,17 @@ class LightMap extends React.Component {
   onVillages (villagesState) {
     if (!villagesState.loading && this.isMapLoaded()) {
       this.state.districtVillagesSource.setData(villagesState.data);
-      this.map.batch(function (batch) {
-        lightStyles.setFilters(batch, 'district-lights', stops, 'vis_median',
-          [[ '==', 'rggvy', false ]]);
-        lightStyles.setFilters(batch, 'rggvy-lights', stops, 'vis_median',
-          [[ '==', 'rggvy', true ]]);
-      });
+      if (villagesState.data.features.length > 0) {
+        let s = stops.map((d, i) => i / (stops.length - 1));
+        let quantiles = ss.quantile(villagesState.data.features
+          .map(feat => feat.properties.vis_median), s);
+        this.map.batch(function (batch) {
+          lightStyles.setFilters(batch, 'district-lights', quantiles, 'vis_median',
+            [[ '==', 'rggvy', false ]]);
+          lightStyles.setFilters(batch, 'rggvy-lights', quantiles, 'vis_median',
+            [[ '==', 'rggvy', true ]]);
+        });
+      }
     }
     this.setState({villages: villagesState});
     if (this.state.pendingVillageCurves) {
