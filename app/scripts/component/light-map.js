@@ -240,14 +240,12 @@ class LightMap extends React.Component {
         });
 
         // Add style for selected villages
-        var selectedVillages = assign({}, base._layer, {
-          id: 'selected-villages',
-          source: 'selected-villages-source'
-        });
-        selectedVillages.paint = assign({}, selectedVillages.paint, {
-          'circle-color': '#e64b3b',
-          'circle-opacity': 1
-        });
+        var selectedVillages = cloneVillageLayer(
+          base._layer,
+          'selected-villages',
+          'selected-villages-source',
+          '#e64b3b'
+        );
         batch.addLayer(selectedVillages, 'cities');
 
         // Add style for emphasized features
@@ -263,14 +261,13 @@ class LightMap extends React.Component {
             }
           }
         }, 'cities');
-        var emVillages = assign({}, base._layer, {
-          id: 'emphasis-villages',
-          source: 'emphasis-features'
-        });
-        emVillages.paint = assign({}, emVillages.paint, {
-          'circle-color': '#fff',
-          'circle-opacity': 1
-        });
+
+        var emVillages = cloneVillageLayer(
+          base._layer,
+          'emphasis-villages',
+          'emphasis-features',
+          '#fff'
+        );
         batch.addLayer(emVillages, 'cities');
       });
 
@@ -673,3 +670,19 @@ LightMap.propTypes = {
 };
 
 module.exports = LightMap;
+
+function cloneVillageLayer (base, id, source, color) {
+  var layer = assign({}, base, {
+    id: id,
+    source: source
+  });
+  layer.paint = assign({}, layer.paint, {
+    'circle-color': color,
+    'circle-opacity': 1,
+    'circle-blur': 0
+  });
+  layer.paint['circle-radius'] = assign({}, layer.paint['circle-radius']);
+  layer.paint['circle-radius'].stops = layer.paint['circle-radius'].stops
+    .map(stop => [stop[0], stop[1] * 0.667]);
+  return layer;
+}
