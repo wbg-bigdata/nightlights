@@ -34,6 +34,7 @@ class LightMap extends React.Component {
       emphasizedFeatureSource: null,
       districtVillagesSource: null,
       selectedVillagesSource: null,
+      sourcesPending: [],
       sourcesLoaded: {},
       stylesLoaded: false,
       stateBoundaries: {},
@@ -112,8 +113,10 @@ class LightMap extends React.Component {
    * state.
    */
   mapMaybeLoaded () {
-    let loaded = this.state.sourcesLoaded['india-boundaries'] &&
-      this.state.stylesLoaded;
+    if (this.isMapLoaded()) { return; }
+
+    let loaded = this.state.stylesLoaded &&
+      this.state.sourcesPending.every(s => this.state.sourcesLoaded[s]);
 
     if (loaded && !this.isMapLoaded()) {
       this._mapLoaded = true;
@@ -165,13 +168,18 @@ class LightMap extends React.Component {
 
     // Track which map sources have been loaded.
     self.map.on('source.load', function onSourceLoad ({source}) {
+      console.log('source.load', source);
       self.setState({
         sourcesLoaded: assign(self.state.sourcesLoaded, { [source.id]: true })
       });
       self.mapMaybeLoaded();
     });
 
+    // suppress 'undefined' message
+    self.map.off('tile.error', self.map.onError);
+
     self.map.once('style.load', () => {
+      console.log('style.load');
       let emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource;
@@ -270,6 +278,7 @@ class LightMap extends React.Component {
 
       self.setState({
         stylesLoaded: true,
+        sourcesPending: [ 'villages-base', 'states' ].map(l => self.map.getLayer(l).source),
         emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource
