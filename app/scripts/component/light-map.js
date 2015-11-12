@@ -15,10 +15,7 @@ let VillageCurveStore = require('../store/village-curve');
 let Loading = require('./loading');
 let Tooltip = require('./tooltip');
 let Modal = require('./modal');
-let mainStyle = require('./map-styles/main.json');
-let emphasisStyles = require('./map-styles/emphasis.json');
-let selectedVillagesStyle = require('./map-styles/selected-villages.json');
-let lightStyles = require('./map-styles/light-styles');
+let lightStyles = require('../lib/light-styles');
 let unsupportedText = require('../config').unsupported;
 let config = require('../config');
 
@@ -116,7 +113,6 @@ class LightMap extends React.Component {
    */
   mapMaybeLoaded () {
     let loaded = this.state.sourcesLoaded['india-boundaries'] &&
-      this.state.sourcesLoaded['village-lights'] &&
       this.state.stylesLoaded;
 
     if (loaded && !this.isMapLoaded()) {
@@ -159,10 +155,9 @@ class LightMap extends React.Component {
       maxZoom: 12.5,
       dragRotate: false,
       doubleClickZoom: false,
-      style: mainStyle
+      style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
     console.info('The Mapbox GL map is available as `window.glMap`');
-    self.map.addClass('nation');
 
     // Interaction handlers
     self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
@@ -210,34 +205,67 @@ class LightMap extends React.Component {
         // `setFilters` makes it so that each one only applies to points with
         // the relevant range of `vis_median` values.
 
+        let base = self.map.getLayer('villages-base');
+        showLayer(self.map, batch, 'villages-base', false);
+
         // 1. the 'lightsX' layers, which style the vector tile village points
         // used in national and state view.
-        lightStyles.create('lights', 'village-lights', 'sample', stops.length)
-          .forEach(layer => batch.addLayer(layer, 'cities'));
+        lightStyles.create(base, 'lights', {}, stops.length)
+        .forEach(layer => batch.addLayer(layer, 'cities'));
 
         // 2. the 'district-lightsX' layers, which will style the geojson source
         // of villages in district view.
-        lightStyles
-          .create('district-lights', 'district-villages', undefined, stops.length)
-          .forEach((layer) => {
-            layer.interactive = true;
-            batch.addLayer(layer, 'cities');
-          });
+        lightStyles.create(base, 'district-lights', {
+          source: 'district-villages'
+        }, stops.length)
+        .forEach((layer) => {
+          layer.interactive = true;
+          batch.addLayer(layer, 'cities');
+        });
 
         // 3. the 'rggvy-lightsX' layers, which will style the same geojson
         // source as 2, but filtered only for rggvy villages.
-        lightStyles
-          .create('rggvy-lights', 'district-villages', undefined, stops.length)
-          .forEach((layer) => {
-            layer.interactive = true;
-            batch.addLayer(layer, 'cities');
-          });
+        lightStyles.create(base, 'rggvy-lights', {
+          source: 'district-villages'
+        }, stops.length)
+        .forEach((layer) => {
+          layer.interactive = true;
+          batch.addLayer(layer, 'cities');
+        });
 
         // Add style for selected villages
-        batch.addLayer(selectedVillagesStyle, 'cities');
+        var selectedVillages = assign({}, base._layer, {
+          id: 'selected-villages',
+          source: 'selected-villages-source'
+        });
+        selectedVillages.paint = assign({}, selectedVillages.paint, {
+          'circle-color': '#e64b3b',
+          'circle-opacity': 1
+        });
+        batch.addLayer(selectedVillages, 'cities');
 
         // Add style for emphasized features
-        emphasisStyles.forEach(style => batch.addLayer(style, 'cities'));
+        batch.addLayer({
+          'id': 'emphasis',
+          'type': 'line',
+          'source': 'emphasis-features',
+          'paint': {
+            'line-color': '#fff',
+            'line-width': {
+              'base': 1,
+              'stops': [ [ 1, 0.5 ], [ 6, 1 ], [ 12, 1.5 ] ]
+            }
+          }
+        }, 'cities');
+        var emVillages = assign({}, base._layer, {
+          id: 'emphasis-villages',
+          source: 'emphasis-features'
+        });
+        emVillages.paint = assign({}, emVillages.paint, {
+          'circle-color': '#fff',
+          'circle-opacity': 1
+        });
+        batch.addLayer(emVillages, 'cities');
       });
 
       self.setState({
@@ -539,11 +567,15 @@ class LightMap extends React.Component {
   setRegionStyles (batch, region) {
     if (region.loading) { return; }
 
-    // Set the paint class for the current level
-    // TODO: hacking via private member because setClasses isn't exposed
-    // in the batch.
-    // https://github.com/mapbox/mapbox-gl-js/issues/1384
-    this.map._classes = { [region.level]: true };
+    let visibility = {
+      'current-state-districts': ['district', 'state'],
+      'states': ['nation', 'state']
+    };
+
+    for (let layer in visibility) {
+      let visible = visibility[layer].indexOf(region.level) >= 0;
+      showLayer(this.map, batch, layer, visible);
+    }
 
     // Distinguish districts of the current state, or just the current
     // district if we're in district view.

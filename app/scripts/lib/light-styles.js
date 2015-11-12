@@ -1,31 +1,17 @@
+let assign = require('object-assign');
 /**
  * Create a series of mapbox gl styles to use as a property-based color scale
  * for visualizing village lights
  *
- * @param {string} source - the source id
- * @param {string} sourceLayer - the layer in the source
  * @param {number} numStops - the number of colors in the scale
  */
-function create (idPrefix, source, sourceLayer, numStops) {
-  return (Array.apply(null, {length: numStops})).map((_, i) => ({
-    id: idPrefix + i,
-    type: 'symbol',
-    source: source,
-    'source-layer': sourceLayer,
-    layout: {
-      'icon-image': 'dot.sdf',
-      'icon-size': {
-        'base': 1,
-        'stops': [ [1, 0.5], [4, 1], [8, 1], [9, 1.25], [10, 2], [12, 3] ]
-      },
-      'icon-allow-overlap': true,
-      'visibility': 'visible'
-    },
-    paint: {
-      'icon-color': '#efc20d',
-      'icon-opacity': (i + 1) / numStops
-    }
-  }));
+function create (baseStyle, idPrefix, layerProperties, numStops) {
+  return (Array.apply(null, {length: numStops})).map(function (_, i) {
+    let style = assign({}, baseStyle._layer, { id: idPrefix + i }, layerProperties);
+    style.paint = assign({}, style.paint);
+    assign(style.paint, {'circle-opacity': (i + 1) / numStops});
+    return style;
+  });
 }
 
 /**
