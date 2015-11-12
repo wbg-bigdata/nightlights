@@ -43,7 +43,10 @@ module.exports = Reflux.createStore({
 
   onEmphasize (key) {
     if (!Array.isArray(key)) { key = [key]; }
-    this._region.emphasized = key;
+    console.log(this._region);
+    this._region.emphasized = key.filter(k => this._region.level === 'district' ||
+      !this._region.subregions ||
+      this._region.subregions[k]);
     this.trigger(this._region);
   },
 

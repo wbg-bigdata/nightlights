@@ -168,7 +168,6 @@ class LightMap extends React.Component {
 
     // Track which map sources have been loaded.
     self.map.on('source.load', function onSourceLoad ({source}) {
-      console.log('source.load', source);
       self.setState({
         sourcesLoaded: assign(self.state.sourcesLoaded, { [source.id]: true })
       });
@@ -179,7 +178,6 @@ class LightMap extends React.Component {
     self.map.off('tile.error', self.map.onError);
 
     self.map.once('style.load', () => {
-      console.log('style.load');
       let emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource;
@@ -338,10 +336,6 @@ class LightMap extends React.Component {
     let region = self.state.region;
     let emphasized = region.emphasized || [];
 
-    // At region level the emphasized array only tells us what villages
-    // we are hovering. We use map.featuresAt to know if a click is:
-    // 1. over the chosen district => do nothing
-    // 2. out of the district => zoom to parent
     if (region.level === 'district') {
       if (emphasized.length) {
         Actions.selectVillages(emphasized);
