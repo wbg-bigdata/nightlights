@@ -73,7 +73,9 @@ class LightMap extends React.Component {
       let content = React.renderToStaticMarkup(
         <Tooltip region={self.state.region} villages={self.state.villages} />
       );
-      console.log('tooltip content', content);
+      if (!/tooltip/.test(content)) {
+        return;
+      }
       self._tooltip = new mgl.Popup({ closeOnClick: false })
       .setLngLat(point)
       .setHTML(content);
