@@ -48,6 +48,7 @@ module.exports = Reflux.createStore({
           type: 'Feature',
           properties: {
             key: village.villagecode,
+            name: village.name,
             vis_median: +village.vis_median,
             energ_date: village.energ_date,
             rggvy: (village.energ_date !== null)

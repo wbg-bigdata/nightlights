@@ -70,11 +70,13 @@ class LightMap extends React.Component {
       }
 
       // add tooltip
+      let content = React.renderToStaticMarkup(
+        <Tooltip region={self.state.region} villages={self.state.villages} />
+      );
+      console.log('tooltip content', content);
       self._tooltip = new mgl.Popup({ closeOnClick: false })
       .setLngLat(point)
-      .setHTML(React.renderToStaticMarkup(
-        <Tooltip region={self.state.region} />
-      ));
+      .setHTML(content);
       self._tooltip.addTo(self.map);
 
       // swallow scroll and mousewheel events to prevent the whole page

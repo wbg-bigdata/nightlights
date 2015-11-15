@@ -2,6 +2,7 @@ let url = require('url');
 let Reflux = require('reflux');
 let assign = require('object-assign');
 let titlecase = require('titlecase');
+let topojson = require('topojson');
 let TimeSeriesStore = require('./time-series');
 let VillageStore = require('./village');
 let Actions = require('../actions');
@@ -43,7 +44,6 @@ module.exports = Reflux.createStore({
 
   onEmphasize (key) {
     if (!Array.isArray(key)) { key = [key]; }
-    console.log(this._region);
     this._region.emphasized = key.filter(k => this._region.level === 'district' ||
       !this._region.subregions ||
       this._region.subregions[k]);
@@ -52,6 +52,7 @@ module.exports = Reflux.createStore({
 
   setState (newState) {
     this._region = assign({}, this._region, newState);
+    console.log(this._region);
     this.trigger(assign({}, this._region));
   },
 
@@ -66,9 +67,8 @@ module.exports = Reflux.createStore({
         district === this._region.district;
 
     let loadingMessage = 'Loading light curves';
-    if (this._region.subregions
-    && this._region.subregions[key]
-    && this._region.subregions[key].properties) {
+    if (this._region.subregions && this._region.subregions[key] &&
+      this._region.subregions[key].properties) {
       let name = this._region.subregions[key].properties.name;
       loadingMessage += ' for ' + titlecase(name.toLowerCase());
     } else {
@@ -101,15 +101,19 @@ module.exports = Reflux.createStore({
       self._mostRecentRequest = boundariesApi;
       ajax({ url: boundariesApi }, function (err, result) {
         if (err) { return self.trigger(err); }
-        if (boundariesApi !== self._mostRecentRequest) {
-          return;
+        if (boundariesApi !== self._mostRecentRequest) { return; }
+
+        let boundary, properties, subregions;
+        if (key && result.objects[key]) {
+          let fc = topojson.feature(result, result.objects[key]);
+          boundary = fc.features[0].geometry;
+          properties = fc.features[0].properties;
         }
 
-        let boundary, properties;
-        if (key && result[key]) {
-          boundary = result[key].geometry;
-          properties = result[key].properties;
-          delete result[key];
+        if (result.objects.subregions) {
+          let fc = topojson.feature(result, result.objects.subregions);
+          subregions = {};
+          fc.features.forEach(feat => subregions[feat.properties.key] = feat);
         }
 
         // Add up states' populations to get a total for the nation
@@ -135,7 +139,7 @@ module.exports = Reflux.createStore({
           district,
           boundary,
           count,
-          subregions: result,
+          subregions,
           loading: false
         });
       });

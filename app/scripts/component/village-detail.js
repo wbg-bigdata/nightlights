@@ -1,10 +1,12 @@
 let React = require('react');
 let Actions = require('../actions');
 let classnames = require('classnames');
+let titlecase = require('titlecase');
 
 class VillageDetail extends React.Component {
   render () {
     let villages = this.props.villages || [];
+    let villageNames = this.props.villageNames || [];
     let region = this.props.region;
     let emphasized = region.emphasized || [];
 
@@ -14,13 +16,13 @@ class VillageDetail extends React.Component {
     let unselect = (villages) => () => Actions.unselectVillages(villages);
     return (
       <div className='village-detail'>
-        <h1>Selected Villages (census codes) </h1>
+        <h1>Selected Villages</h1>
         <ul>
-          {villages.map(village =>
+          {villages.map((village, i) =>
             <li key={village} onMouseEnter={emphasize(village)}
               className={classnames({active: emphasized.indexOf(village) >= 0})}
             >
-              {village}
+              {titlecase(villageNames[i].toLowerCase())}
               <a className='bttn-cancel'
                 onClick={unselect([village])} >
                 <span>Remove Village</span>
@@ -38,6 +40,7 @@ class VillageDetail extends React.Component {
 VillageDetail.displayName = 'VillageDetail';
 VillageDetail.propTypes = {
   villages: React.PropTypes.array.isRequired,
+  villageNames: React.PropTypes.array.isRequired,
   region: React.PropTypes.object
 };
 
