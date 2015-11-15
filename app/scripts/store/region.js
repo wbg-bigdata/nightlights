@@ -114,15 +114,17 @@ module.exports = Reflux.createStore({
           let fc = topojson.feature(result, result.objects.subregions);
           subregions = {};
           fc.features.forEach(feat => subregions[feat.properties.key] = feat);
-        }
 
-        // Add up states' populations to get a total for the nation
-        if (level === 'nation') {
-          properties = {
-            name: 'India',
-            tot_pop: Object.keys(result).reduce((memo, feat) =>
-              memo + (result[feat].properties || {}).tot_pop, 0)
-          };
+          // Add up states' populations to get a total for the nation
+          if (level === 'nation') {
+            properties = {
+              name: 'India',
+              tot_pop: fc.features.reduce((memo, feat) =>
+                memo + (+feat.properties.tot_pop), 0)
+            };
+
+            console.log(properties);
+          }
         }
 
         let admin = level === 'nation' ? 'nation' : key;
