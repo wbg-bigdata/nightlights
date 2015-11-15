@@ -52,7 +52,6 @@ module.exports = Reflux.createStore({
 
   setState (newState) {
     this._region = assign({}, this._region, newState);
-    console.log(this._region);
     this.trigger(assign({}, this._region));
   },
 
@@ -122,8 +121,6 @@ module.exports = Reflux.createStore({
               tot_pop: fc.features.reduce((memo, feat) =>
                 memo + (+feat.properties.tot_pop), 0)
             };
-
-            console.log(properties);
           }
         }
 
