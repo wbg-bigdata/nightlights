@@ -140,8 +140,10 @@ Country borders or names do not necessarily reflect the World Bank Group's offic
         <footer className='page-footer'>
           <div className='inner'>
             <ul className='credits-list'>
-              <li className='wbg-logo-wrapper'><a href='http://www.worldbank.org/' title='Visit The World Bank'><img alt='The World Bank logo' src='graphics/layout/wbg-logo-neg.svg' width='160' height='32' /><span>The World Bank</span></a></li>
-              <li className='ds-logo-wrapper'><a href='https://developmentseed.org/' title='Visit Development Seed'><img alt='Development Seed logo' src='graphics/layout/ds-logo-neg.svg' width='188' height='32' /><span>Development Seed</span></a></li>
+              <li className='umich-logo-wrapper'><a href='http://umich.edu' title='Visit the University of Michigan'><img alt='The University of Michigan logo' src='graphics/layout/umich-logo.png' height='48' /><span>University of Michigan</span></a></li>
+              <li className='wbg-logo-wrapper'><a href='http://www.worldbank.org/' title='Visit The World Bank'><img alt='The World Bank logo' src='graphics/layout/wbg-logo-neg.svg' width='160' height='48' /><span>The World Bank</span></a></li>
+              <li className='ds-logo-wrapper'><a href='https://developmentseed.org/' title='Visit Development Seed'><img alt='Development Seed logo' src='graphics/layout/ds-logo-neg.svg' width='188' height='48' /><span>Development Seed</span></a></li>
+              <li className='noaa-logo-wrapper'><a href='http://www.noaa.gov/' title='Visit NOAA'><img alt='NOAA logo' src='graphics/layout/NOAA-logo.svg' height='64' /><span>NOAA</span></a></li>
             </ul>
           </div>
         </footer>
