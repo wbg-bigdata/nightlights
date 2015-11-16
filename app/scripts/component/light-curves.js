@@ -174,8 +174,8 @@ class LightCurves extends React.Component {
       centerline = null;
     }
 
-    let newScaleState = shouldUpdateScales ?
-      this._calcScales({
+    let newScaleState = shouldUpdateScales
+      ? this._calcScales({
         margins,
         width: this.state.width,
         height: this.state.height,
@@ -308,13 +308,18 @@ class LightCurves extends React.Component {
 
     return (
       <div className={classnames('light-curves', region.level, {expanded})}>
-        {apiUrl ? <div className='api-url'>
-          <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
-        </div> : []}
+        <div className='footer'>
+          {apiUrl ? <div className='api-url'>
+            <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
+          </div> : []}
+          <div className='attribution'>
+            Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
+          </div>
+        </div>
         <a href='#' className='bttn-expand' onClick={this.toggle.bind(this)}><span>Expand/Collapse</span></a>
 
-        {loading ? <Loading message={region.loadingMessage} errors={errors} /> :
-        <svg style={{width, height}}>
+        {loading ? <Loading message={region.loadingMessage} errors={errors} />
+        : <svg style={{width, height}}>
 
           <g transform={`translate(${margins.left}, ${margins.top})`}
             className='data-availability'>

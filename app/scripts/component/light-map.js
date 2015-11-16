@@ -162,6 +162,7 @@ class LightMap extends React.Component {
       maxZoom: 12.5,
       dragRotate: false,
       doubleClickZoom: false,
+      attributionControl: false,
       style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
     console.info('The Mapbox GL map is available as `window.glMap`');

@@ -1,6 +1,5 @@
 let React = require('react');
 let Markdown = require('./markdown');
-let fs = require('fs');
 let config = require('../config');
 
 /* global L */
@@ -12,16 +11,17 @@ let Data = React.createClass({
     document.body.className = document.body.className + ' light-theme';
     L.mapbox.accessToken = config.mapboxAccessToken;
 
-    var daytime = 'devseed.00faaaae', nighttime = 'devseed.7cb95155';
+    var daytime = 'devseed.00faaaae';
+    var nighttime = 'devseed.7cb95155';
     var range = document.getElementById('range');
-    var southWest = L.latLng(27.21, 80.039),
-        northEast = L.latLng(27.42, 80.16),
-        bounds = L.latLngBounds(southWest, northEast);
+    var southWest = L.latLng(27.21, 80.039);
+    var northEast = L.latLng(27.42, 80.16);
+    var bounds = L.latLngBounds(southWest, northEast);
 
     var hardoi = L.mapbox.map('hardoi-interactive', daytime, {
       minZoom: 13,
       maxZoom: 16,
-      maxBounds: bounds,
+      maxBounds: bounds
     }).setView([27.38, 80.1], 14);
 
     hardoi.scrollWheelZoom.disable();
@@ -30,10 +30,10 @@ let Data = React.createClass({
       .tileLayer(nighttime)
       .addTo(hardoi);
 
-    function clip() {
-      var nw = hardoi.containerPointToLayerPoint([0, 0]),
-          se = hardoi.containerPointToLayerPoint(hardoi.getSize()),
-          clipX = nw.x + (se.x - nw.x) * range.value;
+    function clip () {
+      var nw = hardoi.containerPointToLayerPoint([0, 0]);
+      var se = hardoi.containerPointToLayerPoint(hardoi.getSize());
+      var clipX = nw.x + (se.x - nw.x) * range.value;
 
       overlay.getContainer().style.clip = 'rect(' +
         [nw.y, clipX, se.y, nw.x].join('px,') + 'px)';
@@ -72,9 +72,9 @@ The data from this platform is open-source. It can be accessed from the [India L
 The India Lights platform shows light output at night for 20 years for 600,000 villages across India. The Defense Meteorological Satellite Program (DMSP) has taken pictures of the Earth every night from 1993 to 2013. Researchers at the University of Michigan, in collaboration with the World Bank, used the DMSP images to extract the data you see on the India Lights platform. Each point you see on the map represents the light output of a specific village at a specific point in time. On the district level, the map also allows you to filter to view villages that have participated in India’s flagship electrification program (you can read more about it [here](#/stories/rggvy)). This tremendous trove of data can be used to look at changes in light output, which can be used to complement research about electrification in the country.
 
 `}</Markdown>
-  <figure className="align-center">
-    <img src="graphics/content/india-composite.png" alt="Composite night lights photo, 2013" />
-    <figcaption>Composite of night light imagery from <a href="http://ngdc.noaa.gov/eog/dmsp/downloadV4composites.html">DMSP</a>, 2013</figcaption>
+  <figure className='align-center'>
+    <img src='graphics/content/india-composite.png' alt='Composite night lights photo, 2013' />
+    <figcaption>Composite of night light imagery from <a href='http://ngdc.noaa.gov/eog/dmsp/downloadV4composites.html'>DMSP</a>, 2013</figcaption>
   </figure>
 <Markdown>{`
 
@@ -84,26 +84,26 @@ The DMSP raster images have a resolution of 30 arc-seconds, equal to roughly 1 k
 Here's an example of what the data looks like, using imagery of Hardoi from March 26, 2006 as an example:
 
 `}</Markdown>
-  <figure className="align-center">
-    <img src="graphics/content/location-of-hardoi-imagery.png" alt="India overview" />
+  <figure className='align-center'>
+    <img src='graphics/content/location-of-hardoi-imagery.png' alt='India overview' />
     <figcaption>Where the below imagery is located within India</figcaption>
   </figure>
 
-  <figure className="align-center">
-    <img src="graphics/content/hardoi-villages.png" alt="Hardoi villages" />
+  <figure className='align-center'>
+    <img src='graphics/content/hardoi-villages.png' alt='Hardoi villages' />
     <figcaption>Nighttime imagery of Hardoi region from the DMSP satellite, with villages shown as yellow dots</figcaption>
   </figure>
 
-  <figure className="align-center">
-    <img src="graphics/content/hardoi-daytime-20060326.png" alt="Hardoi daytime, 2006-03-26" />
+  <figure className='align-center'>
+    <img src='graphics/content/hardoi-daytime-20060326.png' alt='Hardoi daytime, 2006-03-26' />
     <figcaption>The same area during the day</figcaption>
   </figure>
 
   <div className='hardoi-container'>
     <div id='hardoi-interactive'></div>
-    <input id='range' class='range' max='1.0' min='0' step='any' type='range'/>
+    <input id='range' className='range' max='1.0' min='0' step='any' type='range'/>
   </div>
-  <figure className="align-center">
+  <figure className='align-center'>
     <figcaption>The nighttime imagery at 80% transparency on top of the daytime imagery</figcaption>
   </figure>
 <Markdown>{`
@@ -118,6 +118,7 @@ To generate the map and light curve visualizations that are presented on this si
 ## Acknowledgments
 The India Lights project is a collaboration between [Development Seed](https://developmentseed.org), [The World Bank](http://www.worldbank.org/), and [Dr. Brian Min](http://www-personal.umich.edu/~brianmin/) at the University of Michigan.
 
+ - Satellite base map © [Mapbox](https://mapbox.com).
  - India village locations derived from India VillageMap © 2011-2015 ML Infomap.
  - India population data and district boundaries © 2011-2015 ML Infomap.
  - Data for reference map of Uttar Pradesh, India, from [Natural Earth Data](www.naturalearthdata.com/downloads/)

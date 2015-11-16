@@ -141,20 +141,26 @@
   }
 }
 
-.light-curves:not(.expanded) .api-url {
-  @extend .visually-hidden;
-}
-
-.light-curves.expanded .api-url {
+.light-curves .footer {
+  width: 100%;
   position: absolute;
   bottom: 0.125rem;
-  right: 36px;
+  padding: 0 36px;
   z-index: 1;
   line-height: 2;
   text-align: right;
   font-family: $code-font-family;
   font-size: .75rem;
-  a {
+  *, a {
     color: rgba($base-font-color, .15);
   }
 }
+
+.light-curves.expanded .api-url {
+  float: left;
+}
+
+.light-curves:not(.expanded) .api-url {
+  @extend .visually-hidden;
+}
+
