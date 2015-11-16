@@ -79,7 +79,7 @@ The India Lights platform shows light output at night for 20 years for 600,000 v
 <Markdown>{`
 
 ## The Data
-The DMSP raster images have a resolution of 30 arc-seconds, equal to roughly 1 km<sup>2</sup> at the equator. Each pixel of the image is assigned a number on a relative scale from 0 to 63, with 0 indicating no light output and 63 indicating the highest level of output. This number is relative and may change depending on the gain settings of the satellite’s sensor, which constantly adjusts to current conditions as it takes pictures throughout the day and at night.
+The DMSP raster images have a resolution of 30 arc-seconds, equal to roughly 1 square kilometer at the equator. Each pixel of the image is assigned a number on a relative scale from 0 to 63, with 0 indicating no light output and 63 indicating the highest level of output. This number is relative and may change depending on the gain settings of the satellite’s sensor, which constantly adjusts to current conditions as it takes pictures throughout the day and at night.
 
 Here's an example of what the data looks like, using imagery of Hardoi from March 26, 2006 as an example:
 
