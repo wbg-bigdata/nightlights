@@ -77,7 +77,7 @@ class LightCurves extends React.Component {
       data: null,
       centerline: null,
       series: [],
-      scales: { x: (x) => x, y: (x) => x},
+      scales: {x: (x) => x, y: (x) => x},
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
@@ -99,7 +99,7 @@ class LightCurves extends React.Component {
         width: node.offsetWidth,
         height: node.offsetHeight
       })));
-    };
+    }
 
     this.handleResize = debounce(handleResize, 100);
 
@@ -174,8 +174,8 @@ class LightCurves extends React.Component {
       centerline = null;
     }
 
-    let newScaleState = shouldUpdateScales ?
-      this._calcScales({
+    let newScaleState = shouldUpdateScales
+      ? this._calcScales({
         margins,
         width: this.state.width,
         height: this.state.height,
@@ -194,6 +194,7 @@ class LightCurves extends React.Component {
   _calcScales ({data, centerline, width, height}) {
     // set up scales
     let {margins} = this.props;
+    let {expanded} = this.state;
 
     let allData = (data || []).concat(centerline || []);
     let ydata = [];
@@ -219,10 +220,20 @@ class LightCurves extends React.Component {
       .clamp(true);
 
     let domainY = d3.extent(ydata);
+
+    // TODO: remove these hacked y limits.  We're including them right now
+    // as a stopgap to make the updated data we're using for the WB demo
+    // look okay
+    if (!centerline) {
+      domainY[1] = Math.min(15, domainY[1]);
+    }
+    if (expanded) {
+      domainY[1] = Math.max(10, domainY[1]);
+    }
+
     let scaleY = d3.scale.linear()
       .domain(domainY)
-      .range([height - margins.top, margins.bottom])
-      .clamp(true);
+      .range([height - margins.top, margins.bottom]);
 
     return {
       scales: { x: scaleX, y: scaleY },
@@ -297,13 +308,18 @@ class LightCurves extends React.Component {
 
     return (
       <div className={classnames('light-curves', region.level, {expanded})}>
-        {apiUrl ? <div className='api-url'>
-          <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
-        </div> : []}
+        <div className='footer'>
+          {apiUrl ? <div className='api-url'>
+            <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
+          </div> : []}
+          <div className='attribution'>
+            Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
+          </div>
+        </div>
         <a href='#' className='bttn-expand' onClick={this.toggle.bind(this)}><span>Expand/Collapse</span></a>
 
-        {loading ? <Loading message={region.loadingMessage} errors={errors} /> :
-        <svg style={{width, height}}>
+        {loading ? <Loading message={region.loadingMessage} errors={errors} />
+        : <svg style={{width, height}}>
 
           <g transform={`translate(${margins.left}, ${margins.top})`}
             className='data-availability'>
@@ -339,7 +355,7 @@ class LightCurves extends React.Component {
       </div>
     );
   }
-};
+}
 
 LightCurves.displayName = 'LightCurves';
 LightCurves.propTypes = {

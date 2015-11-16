@@ -39,7 +39,10 @@ let RegionDetail = React.createClass({
     name = titlecase(name.toLowerCase());
 
     // population
-    let population = numeral(properties.tot_pop).format('0,0');
+    let population = 'Unknown';
+    if (!isNaN(properties.tot_pop)) {
+      population = numeral(properties.tot_pop).format('0,0');
+    }
 
     // region light output for current month
     let regionMedian;
@@ -76,7 +79,7 @@ let RegionDetail = React.createClass({
             <dt>Level</dt>
             <dd>{titlecase(level)}</dd>
             <dt>Population</dt>
-            <dd>{properties ? population : 'Unknown'}</dd>
+            <dd>{population}</dd>
 
             {regionMedian ? [
               <dt key='median-label'>Median Light Output (0-63)</dt>,

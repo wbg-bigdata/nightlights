@@ -5,6 +5,8 @@ let centroid = require('turf-centroid');
 let assign = require('object-assign');
 let throttle = require('lodash.throttle');
 let debounce = require('lodash.debounce');
+let ss = require('simple-statistics');
+
 let {showLayer} = require('../lib/mgl-util');
 let Actions = require('../actions');
 let RegionStore = require('../store/region');
@@ -13,10 +15,7 @@ let VillageCurveStore = require('../store/village-curve');
 let Loading = require('./loading');
 let Tooltip = require('./tooltip');
 let Modal = require('./modal');
-let mainStyle = require('./map-styles/main.json');
-let emphasisStyles = require('./map-styles/emphasis.json');
-let selectedVillagesStyle = require('./map-styles/selected-villages.json');
-let lightStyles = require('./map-styles/light-styles');
+let lightStyles = require('../lib/light-styles');
 let unsupportedText = require('../config').unsupported;
 let config = require('../config');
 
@@ -35,6 +34,7 @@ class LightMap extends React.Component {
       emphasizedFeatureSource: null,
       districtVillagesSource: null,
       selectedVillagesSource: null,
+      sourcesPending: [],
       sourcesLoaded: {},
       stylesLoaded: false,
       stateBoundaries: {},
@@ -52,14 +52,12 @@ class LightMap extends React.Component {
       let point;
       if (pointOrFeature.type === 'Feature') {
         let cent = centroid(pointOrFeature);
-        point = cent.geometry.coordinates.reverse();
-      } else if (pointOrFeature.type === 'FeatureCollection'
-      && (pointOrFeature.features || []).length > 0) {
+        point = cent.geometry.coordinates;
+      } else if (pointOrFeature.type === 'FeatureCollection' && (pointOrFeature.features || []).length > 0) {
         let cent = centroid(pointOrFeature);
-        point = cent.geometry.coordinates.reverse();
+        point = cent.geometry.coordinates;
       } else {
-        if (!self.state.region.emphasized
-        || self.state.region.emphasized.length === 0) {
+        if (!self.state.region.emphasized || self.state.region.emphasized.length === 0) {
           return;
         }
         point = self.map.unproject(pointOrFeature);
@@ -72,11 +70,15 @@ class LightMap extends React.Component {
       }
 
       // add tooltip
+      let content = React.renderToStaticMarkup(
+        <Tooltip region={self.state.region} villages={self.state.villages} />
+      );
+      if (!/tooltip/.test(content)) {
+        return;
+      }
       self._tooltip = new mgl.Popup({ closeOnClick: false })
-      .setLatLng(point)
-      .setHTML(React.renderToStaticMarkup(
-        <Tooltip region={self.state.region} />
-      ));
+      .setLngLat(point)
+      .setHTML(content);
       self._tooltip.addTo(self.map);
 
       // swallow scroll and mousewheel events to prevent the whole page
@@ -115,9 +117,10 @@ class LightMap extends React.Component {
    * state.
    */
   mapMaybeLoaded () {
-    let loaded = this.state.sourcesLoaded['india-boundaries'] &&
-      this.state.sourcesLoaded['village-lights'] &&
-      this.state.stylesLoaded;
+    if (this.isMapLoaded()) { return; }
+
+    let loaded = this.state.stylesLoaded &&
+      this.state.sourcesPending.every(s => this.state.sourcesLoaded[s]);
 
     if (loaded && !this.isMapLoaded()) {
       this._mapLoaded = true;
@@ -153,16 +156,16 @@ class LightMap extends React.Component {
 
     window.glMap = self.map = new mgl.Map({
       container: React.findDOMNode(this).querySelector('.map-inner'),
-      center: [20.018, 79.667],
+      center: [79.667, 20.018],
       zoom: 2.5,
       minZoom: 2.5,
       maxZoom: 12.5,
       dragRotate: false,
       doubleClickZoom: false,
-      style: mainStyle
+      attributionControl: false,
+      style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
     console.info('The Mapbox GL map is available as `window.glMap`');
-    self.map.addClass('nation');
 
     // Interaction handlers
     self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
@@ -175,6 +178,9 @@ class LightMap extends React.Component {
       });
       self.mapMaybeLoaded();
     });
+
+    // suppress 'undefined' message
+    self.map.off('tile.error', self.map.onError);
 
     self.map.once('style.load', () => {
       let emphasizedFeatureSource,
@@ -210,38 +216,69 @@ class LightMap extends React.Component {
         // `setFilters` makes it so that each one only applies to points with
         // the relevant range of `vis_median` values.
 
+        let base = self.map.getLayer('villages-base');
+        showLayer(self.map, batch, 'villages-base', false);
+
         // 1. the 'lightsX' layers, which style the vector tile village points
         // used in national and state view.
-        lightStyles.create('lights', 'village-lights', '10percgeojson', stops.length)
-          .forEach(layer => batch.addLayer(layer, 'cities'));
+        lightStyles.create(base, 'lights', {}, stops.length)
+        .forEach(layer => batch.addLayer(layer, 'cities'));
 
         // 2. the 'district-lightsX' layers, which will style the geojson source
         // of villages in district view.
-        lightStyles
-          .create('district-lights', 'district-villages', undefined, stops.length)
-          .forEach((layer) => {
-            layer.interactive = true;
-            batch.addLayer(layer, 'cities');
-          });
+        lightStyles.create(base, 'district-lights', {
+          source: 'district-villages'
+        }, stops.length)
+        .forEach((layer) => {
+          layer.interactive = true;
+          batch.addLayer(layer, 'cities');
+        });
 
         // 3. the 'rggvy-lightsX' layers, which will style the same geojson
         // source as 2, but filtered only for rggvy villages.
-        lightStyles
-          .create('rggvy-lights', 'district-villages', undefined, stops.length)
-          .forEach((layer) => {
-            layer.interactive = true;
-            batch.addLayer(layer, 'cities');
-          });
+        lightStyles.create(base, 'rggvy-lights', {
+          source: 'district-villages'
+        }, stops.length)
+        .forEach((layer) => {
+          layer.interactive = true;
+          batch.addLayer(layer, 'cities');
+        });
 
         // Add style for selected villages
-        batch.addLayer(selectedVillagesStyle, 'cities');
+        var selectedVillages = cloneVillageLayer(
+          base._layer,
+          'selected-villages',
+          'selected-villages-source',
+          '#e64b3b'
+        );
+        batch.addLayer(selectedVillages, 'cities');
 
         // Add style for emphasized features
-        emphasisStyles.forEach(style => batch.addLayer(style, 'cities'));
+        batch.addLayer({
+          'id': 'emphasis',
+          'type': 'line',
+          'source': 'emphasis-features',
+          'paint': {
+            'line-color': '#fff',
+            'line-width': {
+              'base': 1,
+              'stops': [ [ 1, 0.5 ], [ 6, 1 ], [ 12, 1.5 ] ]
+            }
+          }
+        }, 'cities');
+
+        var emVillages = cloneVillageLayer(
+          base._layer,
+          'emphasis-villages',
+          'emphasis-features',
+          '#fff'
+        );
+        batch.addLayer(emVillages, 'cities');
       });
 
       self.setState({
         stylesLoaded: true,
+        sourcesPending: [ 'villages-base', 'states' ].map(l => self.map.getLayer(l).source),
         emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource
@@ -265,7 +302,10 @@ class LightMap extends React.Component {
       'district': /^(district-lights|rggvy-lights)/
     })[region.level] || /x^/;
 
-    this.map.featuresAt(e.point, { radius: 10 }, (err, features) => {
+    this.map.featuresAt(e.point, {
+      radius: 10,
+      includeGeometry: true
+    }, (err, features) => {
       if (err) { return console.error(err); }
       if (this.isInFlight()) { return; } // double check to avoid race
       let subregionFeatures = features
@@ -298,10 +338,6 @@ class LightMap extends React.Component {
     let region = self.state.region;
     let emphasized = region.emphasized || [];
 
-    // At region level the emphasized array only tells us what villages
-    // we are hovering. We use map.featuresAt to know if a click is:
-    // 1. over the chosen district => do nothing
-    // 2. out of the district => zoom to parent
     if (region.level === 'district') {
       if (emphasized.length) {
         Actions.selectVillages(emphasized);
@@ -318,9 +354,7 @@ class LightMap extends React.Component {
           Actions.selectParent();
         }
       }
-    } else if (region.level === 'state'
-    && !self.state.currentRegionHover
-    && emphasized.length === 0) {
+    } else if (region.level === 'state' && !self.state.currentRegionHover && emphasized.length === 0) {
       self.postFlight(() => Actions.selectParent());
       self.updateMap({ level: 'nation' }, self.props.time);
     } else if (emphasized.length) {
@@ -362,10 +396,7 @@ class LightMap extends React.Component {
    */
   onRegion (regionState) {
     let stateBoundaries = this.state.stateBoundaries;
-    if (regionState.level === 'nation'
-    && !regionState.loading
-    && regionState.subregions
-    && Object.keys(stateBoundaries).length === 0
+    if (regionState.level === 'nation' && !regionState.loading && regionState.subregions && Object.keys(stateBoundaries).length === 0
     ) {
       stateBoundaries = assign({}, regionState.subregions);
     }
@@ -387,12 +418,17 @@ class LightMap extends React.Component {
   onVillages (villagesState) {
     if (!villagesState.loading && this.isMapLoaded()) {
       this.state.districtVillagesSource.setData(villagesState.data);
-      this.map.batch(function (batch) {
-        lightStyles.setFilters(batch, 'district-lights', stops, 'vis_median',
-          [[ '==', 'rggvy', false ]]);
-        lightStyles.setFilters(batch, 'rggvy-lights', stops, 'vis_median',
-          [[ '==', 'rggvy', true ]]);
-      });
+      if (villagesState.data.features.length > 0) {
+        let s = stops.map((d, i) => i / (stops.length - 1));
+        let quantiles = ss.quantile(villagesState.data.features
+          .map(feat => feat.properties.vis_median), s);
+        this.map.batch(function (batch) {
+          lightStyles.setFilters(batch, 'district-lights', quantiles, 'vis_median',
+            [[ '==', 'rggvy', false ]]);
+          lightStyles.setFilters(batch, 'rggvy-lights', quantiles, 'vis_median',
+            [[ '==', 'rggvy', true ]]);
+        });
+      }
     }
     this.setState({villages: villagesState});
     if (this.state.pendingVillageCurves) {
@@ -536,11 +572,15 @@ class LightMap extends React.Component {
   setRegionStyles (batch, region) {
     if (region.loading) { return; }
 
-    // Set the paint class for the current level
-    // TODO: hacking via private member because setClasses isn't exposed
-    // in the batch.
-    // https://github.com/mapbox/mapbox-gl-js/issues/1384
-    this.map._classes = { [region.level]: true };
+    let visibility = {
+      'current-state-districts': ['district', 'state'],
+      'states': ['nation', 'state']
+    };
+
+    for (let layer in visibility) {
+      let visible = visibility[layer].indexOf(region.level) >= 0;
+      showLayer(this.map, batch, layer, visible);
+    }
 
     // Distinguish districts of the current state, or just the current
     // district if we're in district view.
@@ -584,7 +624,7 @@ class LightMap extends React.Component {
 
   flyToFeature (feature) {
     let [minx, miny, maxx, maxy] = extent(feature);
-    this.map.fitBounds([[miny, minx], [maxy, maxx]], {
+    this.map.fitBounds([[minx, miny], [maxx, maxy]], {
       speed: 1.2,
       curve: 1.42
     });
@@ -592,7 +632,7 @@ class LightMap extends React.Component {
 
   flyToNation () {
     this.map.flyTo({
-      center: [20.018, 79.667],
+      center: [79.667, 20.018],
       zoom: 3.5,
       speed: 1.2,
       curve: 1.42
@@ -616,8 +656,8 @@ class LightMap extends React.Component {
       !this.state.region || !this.state.villages ||
       this.state.region.loading ||
       this.state.villages.loading;
-    let errors = (!this.state.region || !this.state.villages) ? [] :
-      [this.state.region, this.state.villages].map(s => s.error);
+    let errors = (!this.state.region || !this.state.villages) ? []
+      : [this.state.region, this.state.villages].map(s => s.error);
 
     return (
       <div className='light-map'>
@@ -635,3 +675,19 @@ LightMap.propTypes = {
 };
 
 module.exports = LightMap;
+
+function cloneVillageLayer (base, id, source, color) {
+  var layer = assign({}, base, {
+    id: id,
+    source: source
+  });
+  layer.paint = assign({}, layer.paint, {
+    'circle-color': color,
+    'circle-opacity': 1,
+    'circle-blur': 0
+  });
+  layer.paint['circle-radius'] = assign({}, layer.paint['circle-radius']);
+  layer.paint['circle-radius'].stops = layer.paint['circle-radius'].stops
+    .map(stop => [stop[0], stop[1] * 0.667]);
+  return layer;
+}

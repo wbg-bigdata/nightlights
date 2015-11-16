@@ -9,7 +9,8 @@ class LineMarker extends React.Component {
     let {
       locations,
       classes,
-      height
+      y1,
+      y2
     } = this.props;
 
     return (
@@ -17,7 +18,7 @@ class LineMarker extends React.Component {
         {locations.map((loc, i) =>
           (<line key={loc} className={classes[i]}
             x1={loc} x2={loc}
-            y1={height} y2={0}
+            y1={y1} y2={y2}
            />))
         }
       </g>
@@ -29,7 +30,8 @@ LineMarker.displayName = 'LineMarker';
 LineMarker.propTypes = {
   locations: React.PropTypes.array.isRequired,
   classes: React.PropTypes.array.isRequired,
-  height: React.PropTypes.number.isRequired
+  y1: React.PropTypes.number.isRequired,
+  y2: React.PropTypes.number.isRequired
 };
 
 module.exports = LineMarker;

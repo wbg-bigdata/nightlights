@@ -89,6 +89,11 @@ class LineChart extends React.Component {
       markerClasses.push('marker cursor');
     }
 
+    let ticks = x.scale.ticks(5);
+    markerValues.push.apply(markerValues, ticks);
+    markerLocations.push.apply(markerLocations, ticks.map(x.scale));
+    markerClasses.push.apply(markerClasses, ticks.map(t => 'tick'));
+
     let envelope;
     if (this.props.envelope) {
       envelope = this.props.envelope.map((fn) => compose(y.scale)(fn));
@@ -100,27 +105,10 @@ class LineChart extends React.Component {
           style={{fill: 'rgba(0,0,0,.01)'}}
           x={0} y={0} width={10000} height={10000} />
 
-        <g transform={`translate(${x.scale(0)},0)`}>
-          <Axis orientation='vertical'
-            scale={y.scale}
-            domain={y.domain}
-            format={y.format}
-          />
-        </g>
-
-        <g transform={`translate(0,${y.scale(0)})`}>
-          <Axis orientation='horizontal'
-            scale={x.scale}
-            domain={x.domain}
-            format={x.format}
-            markerTicks={markerValues}
-            markerClasses={markerClasses}
-          />
-        </g>
-
         <LineMarker locations={markerLocations}
           classes={markerClasses}
-          height={y.scale(0)}
+          y1={y.scale(y.domain[0])}
+          y2={y.scale(y.domain[1])}
         />
 
         { this.props.center ? (
@@ -166,6 +154,27 @@ class LineChart extends React.Component {
         <g className='legend' transform={`translate(${x.scale(0)},12)`}>
           {this.props.legend || []}
         </g>
+
+        <g transform={`translate(${x.scale(0)},0)`}>
+          <Axis orientation='vertical'
+            scale={y.scale}
+            domain={y.domain}
+            format={y.format}
+            ticks={y.scale.ticks(8)}
+          />
+        </g>
+
+        <g transform={`translate(0,${y.scale(0)})`}>
+          <Axis orientation='horizontal'
+            scale={x.scale}
+            domain={x.domain}
+            format={x.format}
+            labelOffset={y.scale(y.domain[0]) - y.scale(0)}
+            ticks={markerValues}
+            tickClasses={markerClasses}
+          />
+        </g>
+
       </g>
     );
   }

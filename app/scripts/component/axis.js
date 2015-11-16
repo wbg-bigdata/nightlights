@@ -1,17 +1,16 @@
 let React = require('react');
-let d3 = require('d3');
 let classnames = require('classnames');
-let AccessorType = require('../lib/accessor-type');
 
 class Axis extends React.Component {
   render () {
     let {
       scale,
-      markerTicks,
-      markerClasses,
+      ticks,
+      tickClasses,
       domain,
       format,
-      orientation
+      orientation,
+      labelOffset
     } = this.props;
 
     let [x1, x2] = domain.map(scale);
@@ -34,10 +33,8 @@ class Axis extends React.Component {
     }
 
     // ticks = standard ticks unioned with marker positions
-    markerTicks = markerTicks || [];
-    markerClasses = markerClasses || [];
-    let ticks = d3.set(scale.ticks(5).concat(markerTicks))
-      .values().map(Number);
+    ticks = ticks || [];
+    tickClasses = tickClasses || ticks.map(t => '');
 
     return (
       <g className={classnames('axis', orientation)}>
@@ -45,11 +42,11 @@ class Axis extends React.Component {
         {ticks
         .filter((tick, i) => tick + i !== 0)
         .map((tick) => {
-          let mi = markerTicks.indexOf(tick);
-          let klass = 'label ' + (mi >= 0 ? markerClasses[mi] : '');
+          let mi = ticks.indexOf(tick);
+          let klass = 'label ' + (mi >= 0 ? (tickClasses[mi] || '') : '');
           return (<text className={klass} key={tick}
-            x={orientation === 'vertical' ? -5 : scale(tick)}
-            y={orientation === 'vertical' ? scale(tick) : 0}
+            x={orientation === 'vertical' ? labelOffset - 5 : scale(tick)}
+            y={orientation === 'vertical' ? scale(tick) : labelOffset }
             dy={orientation === 'vertical' ? 0 : '1em'}
             textAnchor={orientation === 'vertical' ? 'end' : 'middle'} >
 
@@ -70,8 +67,13 @@ Axis.propTypes = {
   domain: React.PropTypes.array.isRequired,
   orientation: React.PropTypes.string.isRequired,
   format: React.PropTypes.func,
-  markerTicks: React.PropTypes.array,
-  markerClasses: React.PropTypes.array
+  ticks: React.PropTypes.array,
+  tickClasses: React.PropTypes.array,
+  labelOffset: React.PropTypes.number
+};
+
+Axis.defaultProps = {
+  labelOffset: 0
 };
 
 module.exports = Axis;

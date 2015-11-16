@@ -3,11 +3,25 @@ module.exports = {
   mapboxAccessToken: 'pk.eyJ1IjoiZGV2c2VlZCIsImEiOiJnUi1mbkVvIn0.018aLhX0Mb0tdtaT2QNe2Q',
   apiUrl: process.env.API_URL || 'http://api.nightlights.io',
   interval: '1993.01-2013.12',
-  villageLightStops: [1, 2, 4, 6, 7, 8, 9, 10, 20, 30],
+  villageLightStops: [
+    -1.833,
+    -1,
+    -0.4577,
+    -0.1333,
+    0.28825,
+    1.13711,
+    3,
+    5,
+    10,
+    20,
+    30
+  ],
+  interpolation: 'basis',
+  movingAverageWindow: 3,
   satelliteAdjustment: {
-    'F12': 1.24454,
-    'F16': 0.68629,
-    'F18': 1.18883
+    // 'F12': 1.24454,
+    // 'F16': 0.68629,
+    // 'F18': 1.18883
   },
   dataThreshold: 400,
   welcome: {

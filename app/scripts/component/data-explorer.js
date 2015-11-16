@@ -128,6 +128,13 @@ let DataExplorer = React.createClass({
     let allVillages = villages.loading ? [] : villages.data.features
       .map(feat => feat.properties.key);
     let selectedVillages = villageCurves.loading ? [] : villageCurves.villages;
+    let selectedVillageNames = selectedVillages;
+    if (this.state.villages && this.state.villages.data) {
+      let features = this.state.villages.data.features;
+      selectedVillageNames = selectedVillages
+        .map(v => [v, features.filter(f => f.properties.key === v)])
+        .map(([v, names]) => names.length ? names[0].properties.name : v);
+    }
 
     return (
       <div className='data-container'>
@@ -136,7 +143,8 @@ let DataExplorer = React.createClass({
             region={region} />
           <VillageDetail
             region={region}
-            villages={selectedVillages} />
+            villages={selectedVillages}
+            villageNames={selectedVillageNames} />
         </div>
         <RegionDetail
           region={region}
@@ -152,6 +160,7 @@ let DataExplorer = React.createClass({
           month={month}
           timeSeries={timeSeries}
           villageCurves={villageCurves}
+          smoothing={true}
           region={region}
           margins={{left: 36, right: 36, top: 48, bottom: 48}}
         />
