@@ -237,10 +237,10 @@ class LightMap extends React.Component {
         // 3. the 'rggvy-lightsX' layers, which will style the same geojson
         // source as 2, but filtered only for rggvy villages.
         lightStyles.create(base, 'rggvy-lights', {
-          source: 'district-villages'
+          source: 'district-villages',
+          visibility: 'none'
         }, stops.length)
         .forEach((layer) => {
-          layer.interactive = true;
           batch.addLayer(layer, 'cities');
         });
 
@@ -448,11 +448,6 @@ class LightMap extends React.Component {
       // rggvy ones
       lightStyles.forEach('district-lights', stops, layer =>
         showLayer(this.map, batch, layer, focus));
-      if (focus) {
-        batch.addClass('rggvy');
-      } else {
-        batch.removeClass('rggvy');
-      }
     }
   }
 
