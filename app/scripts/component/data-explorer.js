@@ -99,7 +99,6 @@ let DataExplorer = React.createClass({
     month = +month;
 
     // Decide if we need to show the no-data indicator.
-    // We never need to show it in district level.
     let noData = false;
     if (!region.district && region.count) {
       let count = region.count.filter((a) => a.month === month && a.year === year)[0];
@@ -109,6 +108,8 @@ let DataExplorer = React.createClass({
         count !== undefined && count.hasOwnProperty('count') && count.count < dataThreshold)) {
         noData = true;
       }
+    } else if (region.district && !villages.loading) {
+      noData = villages.data.features.length === 0;
     }
 
     // region median
