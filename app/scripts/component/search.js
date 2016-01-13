@@ -8,7 +8,7 @@ function fuse (data) {
   return new Fuse(data.regions, {
     keys: ['name'],
     maxPatternLength: 64,
-    includeScore: true
+    include: ['score']
   });
 }
 
