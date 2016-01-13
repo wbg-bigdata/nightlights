@@ -77,7 +77,7 @@ class LightCurves extends React.Component {
       data: null,
       centerline: null,
       series: [],
-      scales: {x: (x) => x, y: (x) => x},
+      scales: {x: d3.scale.linear(), y: d3.scale.linear()},
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
