@@ -138,6 +138,44 @@
   .bttn-next:before { @extend .icon-arr-right; }
   .bttn-prev.inactive:before { color: #333; }
   .bttn-next.inactive:before { color: #333; }
+  .bttn-info {
+    color: rgba(#fff, 0.24);
+    font-size: 1rem;
+    position: absolute;
+    right: 0.5rem;
+    top: 0.5rem;
+    z-index: 1;
+    line-height: 1rem;
+    &:before { @extend .icon-circle-info; }
+    span { @extend .visually-hidden; }
+  }
+
+  .info-box {
+    @extend %base-box-skin;
+    position: absolute;
+    right: -16rem;
+    top: 0;
+    z-index: 1;
+    width: 15rem;
+    font-size: 1rem;
+    font-weight: normal;
+    padding: 1rem;
+    display: none;
+
+    &:before {
+      @extend .icon-triangle-left;
+      position: absolute;
+      top: 0.5rem;
+      left: -11px;
+      z-index: 10;
+      line-height: 1;
+      color: rgba($base-color, 0.80);
+    }
+  }
+
+  .bttn-info:hover + .info-box {
+    display: block;
+  }
 }
 
 .browse-date {
