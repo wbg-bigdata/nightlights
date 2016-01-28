@@ -121,12 +121,13 @@ The India Lights project is a collaboration between [Development Seed](https://d
  - Satellite base map © [Mapbox](https://mapbox.com).
  - India village locations derived from India VillageMap © 2011-2015 ML Infomap.
  - India population data and district boundaries © 2011-2015 ML Infomap.
- - Data for reference map of Uttar Pradesh, India, from [Natural Earth Data](www.naturalearthdata.com/downloads/)
+ - Data for reference map of Uttar Pradesh, India, from [Natural Earth Data](http://www.naturalearthdata.com/downloads/)
  - Banerjee, Sudeshna Ghosh; Barnes, Douglas; Singh, Bipul; Mayer, Kristy; Samad, Hussain. 2014. [Power for all : electricity access challenge in India. A World Bank study](https://github.com/mapbox/mapbox-gl-js/issues/1270). Washington, DC ; World Bank Group.
  - Hsu, Feng-Chi, Kimberly Baugh, Tilottama Ghosh, Mikhail Zhizhin, and Christopher Elvidge. "DMSP-OLS Radiance Calibrated Nighttime Lights Time Series with Intercalibration." Remote Sensing 7.2 (2015): 1855-876. Web.
  - Min, Brian. Monitoring Rural Electrification by Satellite. Tech. World Bank, 30 Dec. 2014. Web.
- - Min, Brian. Power and the Vote: Elections and Electricity in the Developing World. N.p.: Cambridge UP, Print. To be published in September 2015.
- - Min, Brian, and Kwawu Gaba. "Tracking Electrification in Vietnam Using Nighttime Lights." Remote Sensing 6.10 (2014): 9511-529. Web.
+ - Min, Brian. [Power and the Vote: Elections and Electricity in the Developing World](http://www.cambridge.org/9781107525382). New York and Cambridge: Cambridge University Press. 2015.
+ - Min, Brian, and Kwawu Mensan Gaba. [Tracking Electrification in Vietnam Using Nighttime Lights](http://www.mdpi.com/2072-4292/6/10/9511). Remote Sensing 6.10 (2014): 9511-529.
+ - Min, Brian, and Kwawu Mensan Gaba, Ousmane Fall Sarr, Alassane Agalassou. [Detection of Rural Electrification in Africa using DMSP-OLS Night Lights Imagery](https://www.openknowledge.worldbank.org/handle/10986/16192). International Journal of Remote Sensing 34.22 (2013):8118-8141.
 
 ## Disclaimer
 
