@@ -11,8 +11,7 @@ let time = {
   },
 
   validYear (year) {
-    return year >= time.start.year
-      && year <= time.end.year;
+    return year >= time.start.year && year <= time.end.year;
   },
 
   validMonth (month) {
