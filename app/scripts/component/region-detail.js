@@ -78,7 +78,7 @@ let RegionDetail = React.createClass({
           <dl className='spane-details'>
             <dt>Level</dt>
             <dd>{titlecase(level)}</dd>
-            <dt>Population</dt>
+            <dt>Population (census 2011)</dt>
             <dd>{population}</dd>
 
             {regionMedian ? [
