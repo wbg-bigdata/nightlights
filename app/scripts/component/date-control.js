@@ -16,10 +16,10 @@ class DateControl extends React.Component {
     let prev = timespan.prev(valid);
     let currentMonth = valid.month + ' / ' + valid.year;
 
-    let nextClassName = timespan.isLast(valid) ?
-      'bttn-next inactive' : 'bttn-next';
-    let prevClassName = timespan.isFirst(valid) ?
-      'bttn-prev inactive' : 'bttn-prev';
+    let nextClassName = timespan.isLast(valid)
+      ? 'bttn-next inactive' : 'bttn-next';
+    let prevClassName = timespan.isFirst(valid)
+      ? 'bttn-prev inactive' : 'bttn-prev';
 
     let content = region.loading ? '' : (
       <ul className='browse-date'>
@@ -41,13 +41,16 @@ class DateControl extends React.Component {
     );
 
     return (
-    <div className='month-label'>
-      <h1 className='spane-title'>
-        <small>Now Showing</small>
-        <strong>{currentMonth}</strong>
-      </h1>
-      {content}
-    </div>);
+      <div className='month-label'>
+        <h1 className='spane-title'>
+          <a href='#help-box' className='bttn-info' onClick={e => e.preventDefault()}><span>Help</span></a>
+          <p className='info-box' id='help-box'>Use these arrows to move through time, and click on the map to navigate into specific regions</p>
+          <small>Now Showing</small>
+          <strong>{currentMonth}</strong>
+        </h1>
+        {content}
+      </div>
+    );
   }
 }
 
