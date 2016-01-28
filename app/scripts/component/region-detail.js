@@ -82,7 +82,7 @@ let RegionDetail = React.createClass({
             <dd>{population}</dd>
 
             {regionMedian ? [
-              <dt key='median-label'>Median Light Output (0-63)</dt>,
+              <dt key='median-label'>Median Light Output</dt>,
               <dd key='median-value'>{regionMedian}</dd>
             ] : []}
 
