@@ -4,7 +4,7 @@ node_js:
 
 env:
   global:
-    - GH_REF=github.com/developmentseed/india-lights.git
+    - GH_REF=github.com/wbg-bigdata/nightlights.git
     - DEPLOY_BRANCH=master
     - secure: "Z4O+g/sna2Zj8tS1UTbR5LTrTMWO6qRU4NWEmqEXYqIxe5CO9HIxy7DdhHZs82FHhcs80uiA7FXRgEk3DYYkuX/Jg+4k45j+T5Mn6k1kEJOXFZunEJtkAMI7bvHmoCXP1OhXyxvbfVWN7RnLZYSrouWJI8jOqtKcxn2MJf0olvj4IJ50acp6m/EBMoZfr8ZtUmpG14h/Rkw7kavaYxTWgVEyuLnpFJkw4nB29dZtlJn+v4TQq85+GIUuvA0U89A7GZ+HxGQUMVHwLhwrS0KnLHyeX0+gOB1mjx2ML0RdNigw+6az+NryTIQ3KLcXDdr+Fb3/JEPjxrdT/4K9Z2v1ucMeTvlvuk8gWmqdzv2Qa3XGZmhk6yeSnY1qA2u9qNbBOcfIY7/7/I+dlr1DWWpvFaXzSdyWPvkxOOKIF1ZrtT4Hzgnyzqy/FDd6reynsZYm5UzoVwqabvow3eRr3+zUhiVsML1J8T9IY6ocrG0wdECIGWe/bzqxJZnjbr9QyN7uasdaf0INefMuoBtNXi7PMKUQddfAfKCW6PSt2gD+HTiqKEk5MXADIvnJ3tWW1Pe0tsHblVKeDWZGmxCHdm9yYJ42MqT1Vx3tcebKN0RFCGYi5der3eAsZaxWHQhKsVdEWuvrdw0zAjpL9jVLe0YTTW9VgcPlikOteCcII6R/mM4="
 
