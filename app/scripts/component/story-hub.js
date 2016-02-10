@@ -42,10 +42,13 @@ let StoryHub = React.createClass({
       let Content = stories[index].content;
 
       // Get previous/next articles
-      let previous = (index === 0) ?
-        stories[stories.length - 1] : stories[index - 1];
-      let next = (index === stories.length - 1) ?
-        stories[0] : stories[index + 1];
+      let previous = (index === 0)
+        ? stories[stories.length - 1]
+        : stories[index - 1];
+
+      let next = (index === stories.length - 1)
+        ? stories[0]
+        : stories[index + 1];
 
       return (
         <Story title={stories[index].title} slug={stories[index].slug} previous={previous} next={next}>

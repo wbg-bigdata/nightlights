@@ -38,5 +38,8 @@ class Legend extends React.Component {
 }
 
 Legend.displayName = 'Legend';
+Legend.propTypes = {
+  admin: React.PropTypes.string
+};
 
 module.exports = Legend;

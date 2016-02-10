@@ -16,7 +16,7 @@ class Story extends React.Component {
               <ul className='actions-menu'>
                 <li className='all'><a href='#/stories' title='View all stories'><span>All</span></a></li>
                 <li className='prev'><a href={'#/stories/' + previous.slug} title='View previous story'><span>Previous</span></a></li>
-                <li className='next'><a href={'#/stories/' + next.slug}  title='View next story'><span>Next</span></a></li>
+                <li className='next'><a href={'#/stories/' + next.slug} title='View next story'><span>Next</span></a></li>
               </ul>
             </div>
           </div>
@@ -38,6 +38,7 @@ Story.propTypes = {
   title: React.PropTypes.string,
   previous: React.PropTypes.string,
   next: React.PropTypes.string,
+  slug: React.PropTypes.string,
   children: React.PropTypes.node
 };
 

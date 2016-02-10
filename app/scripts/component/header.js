@@ -12,7 +12,7 @@ class Header extends React.Component {
             <li><Link to='nation' params={{ year: 2006, month: 12 }}>Home</Link></li>
             <li><Link to='stories'>Stories</Link></li>
             <li><Link to='about'>About</Link></li>
-            <li><a href="http://api.nightlights.io/">Data</a></li>
+            <li><a href='http://api.nightlights.io/'>Data</a></li>
           </ul>
         </nav>
       </header>

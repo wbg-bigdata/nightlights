@@ -642,7 +642,7 @@ class LightMap extends React.Component {
     if (this.state.unsupported) {
       return (
         <div className='light-map'>
-          <Modal isOn={true} isPermanent={true} content={unsupportedText} />
+          <Modal isOn isPermanent content={unsupportedText} />
         </div>
       );
     }

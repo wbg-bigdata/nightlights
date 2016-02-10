@@ -3,7 +3,7 @@
  * two words with a non-breaking space.
  *
  * Allows you to turn this:
- *  You have to see it to believe 
+ *  You have to see it to believe
  *  it
  *
  * into this:
@@ -12,7 +12,7 @@
  *
  * &nbsp; = \u00A0
  */
-module.exports = function(string, breakBefore) {
+module.exports = function (string, breakBefore) {
   breakBefore = breakBefore || 22;
 
   string = string.replace(/\u00A0([^\s]+)$/, ' $1');
@@ -21,7 +21,7 @@ module.exports = function(string, breakBefore) {
   if (s.length > 1) {
     var l = s.length;
     var breakLength = (s[l - 1] + ' ' + s[l - 2]).length;
-    if (breakBefore == 'always' || breakLength < breakBefore) {
+    if (breakBefore === 'always' || breakLength < breakBefore) {
       return string.replace(/\s([^\s]+)\s*$/, '\u00A0$1');
     }
   }
