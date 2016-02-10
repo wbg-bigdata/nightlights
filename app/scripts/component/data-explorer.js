@@ -94,7 +94,7 @@ let DataExplorer = React.createClass({
   render () {
     let {region, timeSeries, villages, villageCurves} = this.state;
     // get year and month from router params
-    let {year, month, interval } = this.getParams();
+    let { year, month, interval } = this.getParams();
     year = +year;
     month = +month;
 
@@ -114,9 +114,7 @@ let DataExplorer = React.createClass({
 
     // region median
     let median;
-    if (!timeSeries.loading
-    && !timeSeries.error
-    && region.level !== 'nation') {
+    if (!timeSeries.loading && !timeSeries.error && region.level !== 'nation') {
       let nowData = timeSeries.results.filter(d =>
         +d.year === year && +d.month === month && d.key === region.key);
       median = d3.mean(nowData, d => d.vis_median);
@@ -161,7 +159,7 @@ let DataExplorer = React.createClass({
           month={month}
           timeSeries={timeSeries}
           villageCurves={villageCurves}
-          smoothing={true}
+          smoothing
           region={region}
           margins={{left: 36, right: 36, top: 48, bottom: 48}}
         />
@@ -169,7 +167,7 @@ let DataExplorer = React.createClass({
           noData={noData}
         />
         <Modal
-          isOn={true}
+          isOn
           content={welcomeText}
           cookieKey='welcomeModalHasPlayed'
         />

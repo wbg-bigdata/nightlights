@@ -35,21 +35,23 @@ class Modal extends React.Component {
     function stopClick (e) { e.stopPropagation(); }
     let content = this.props.content;
     let {title, body} = content;
-    let className = this.state.closed ? 'modal destroyed' :
-      this.state.active ? 'modal active' : 'modal';
+    let className = this.state.closed
+      ? 'modal destroyed'
+      : this.state.active ? 'modal active' : 'modal';
     return (
       <div className={className} onClick={this.close.bind(this)}>
         <div className='modal-content' onClick={stopClick}>
           {title}
           {body}
-          {this.props.isPermanent ? '' :
-            <span className='close-modal' onClick={this.close.bind(this)} title="Close"><span>Close</span></span>
+          {this.props.isPermanent
+            ? ''
+            : <span className='close-modal' onClick={this.close.bind(this)} title='Close'><span>Close</span></span>
           }
         </div>
       </div>
     );
   }
-};
+}
 
 Modal.displayName = 'Modal';
 Modal.propTypes = {

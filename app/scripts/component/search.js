@@ -71,7 +71,7 @@ let Search = React.createClass({
     let suggestions = this.state.fuse.search(input);
     suggestions.sort((a, b) => {
       let diff = a.score - b.score;
-      return diff ? diff : (a.item.name < b.item.name ? -1 : 1);
+      return diff || (a.item.name < b.item.name ? -1 : 1);
     });
     suggestions = suggestions.map(s => s.item);
 
@@ -101,7 +101,7 @@ let Search = React.createClass({
           suggestionValue={s => s.name}
           onSuggestionSelected={s => this.go(s)}
           value={this.state.currentValue}
-          scrollBar={true}
+          scrollBar
           inputAttributes={{
             id: 'search-input',
             name: 'search-input',
