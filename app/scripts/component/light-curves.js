@@ -35,6 +35,11 @@ const smoothedProp = {
 function processSeries (values, doSmoothing) {
   let properties = Object.keys(smoothedProp);
 
+  let averageCount = values.reduce((memo, x) => memo + x.count / values.length, 0)
+  if (!isNaN(averageCount)) {
+    values = values.filter(x => x.count > (0.05 * averageCount))
+  }
+
   // average satellite values
   values = d3.nest()
     .key(x)
