@@ -68,6 +68,7 @@ let Data = React.createClass({
 ## [Get the Data](http://api.nightlights.io)
 The data from this platform is open-source. It can be accessed from the [India Lights API](http://api.nightlights.io).
 
+Email [brunosanchez@worldbank.org](mailto:brunosanchez@worldbank.org) with questions.
 ## Twenty years of India Lights
 The India Lights platform shows light output at night for 20 years for 600,000 villages across India. The Defense Meteorological Satellite Program (DMSP) has taken pictures of the Earth every night from 1993 to 2013. Researchers at the University of Michigan, in collaboration with the World Bank, used the DMSP images to extract the data you see on the India Lights platform. Each point you see on the map represents the light output of a specific village at a specific point in time. On the district level, the map also allows you to filter to view villages that have participated in India’s flagship electrification program (you can read more about it [here](#/stories/rggvy)). This tremendous trove of data can be used to look at changes in light output, which can be used to complement research about electrification in the country.
 
