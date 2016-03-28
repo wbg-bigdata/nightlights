@@ -61,8 +61,10 @@ let RegionDetail = React.createClass({
 
     return (
       <section className='spane region-detail'>
-        <header className='spane-header'>
-
+        <ul>
+            <li className="breadcrumbs">Region</li>
+          </ul>
+        <div className='spane-header'>
           <h1 className='spane-title'>{name}</h1>
 
           <a className='bttn-center-map'
@@ -73,11 +75,9 @@ let RegionDetail = React.createClass({
 
           <Search initialValue={name} />
 
-        </header>
+        </div>
         <div className='spane-body'>
           <dl className='spane-details'>
-            <dt>Level</dt>
-            <dd>{titlecase(level)}</dd>
             <dt>Population (census 2011)</dt>
             <dd>{population}</dd>
 

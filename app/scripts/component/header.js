@@ -5,7 +5,7 @@ class Header extends React.Component {
 
   render () {
     return (
-      <header id='site-header' role='banner'>
+      <header id='site-header' class="clearfix" role='banner'>
         <h1 id='site-title'><a href='#/' title='Twenty Years of India Lights'><span>Twenty Years of India Lights</span></a></h1>
         <nav id='site-prime-nav' role='navigation'>
           <ul className='global-menu'>

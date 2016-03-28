@@ -103,9 +103,11 @@ a:active{
   left: 0;
   width: 100%;
   z-index: 100;
-  padding: $inner-pad*1.5 $inner-pad*2;
+  padding: $inner-pad*.7 $inner-pad*2 0;
   color: #fff;
   pointer-events: none;
+  background: rgb(54, 25, 25);
+  background: rgba(0, 0, 0, .65);
   > * {
     pointer-events: all;
   }
@@ -146,6 +148,7 @@ a:active{
       position: relative;
       display: block;
       color: inherit;
+      padding-bottom: .8em;
       &.active {
         &:before {
           position: absolute;
@@ -153,7 +156,7 @@ a:active{
           bottom: 0;
           height: 1px;
           background: #fff;
-          width: 1rem;
+          width: 3rem;
           @include transform(translate(-50%, 0));
           content: "";
           .light-theme & {
