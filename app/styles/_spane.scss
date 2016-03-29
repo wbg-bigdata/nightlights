@@ -120,14 +120,6 @@
 }
 
 .now-showing {
-  position: absolute;
-  top: 15rem;
-  left: 0;
-  z-index: 100;
-  width: 14rem;
-  padding: 1.5rem 2rem;
-  @extend %base-box-skin;
-
   .bttn-prev,
   .bttn-next {
     display: block;
@@ -198,6 +190,14 @@
 }
 
 .village-detail {
+  position: absolute;
+  top: 15rem;
+  left: 0;
+  z-index: 100;
+  width: 14rem;
+  padding: 1.5rem 2rem;
+  @extend %base-box-skin;
+
   margin-top: 1rem;
   h1, .bttn-clear-selection {
     @extend .hd-sup;

@@ -1,6 +1,5 @@
 let React = require('react');
 let Router = require('react-router');
-let d3 = require('d3');
 let TimeSeriesStore = require('../store/time-series');
 let VillageStore = require('../store/village');
 let VillageCurveStore = require('../store/village-curve');
@@ -9,13 +8,11 @@ let RegionDetail = require('./region-detail');
 let VillageDetail = require('./village-detail');
 let LightMap = require('./light-map');
 let LightCurves = require('./light-curves');
-let DateControl = require('./date-control');
 let Modal = require('./modal');
 let NoData = require('./no-data');
 let Actions = require('../actions');
 let timespan = require('../lib/timespan');
 let config = require('../config');
-let interval = config.interval;
 let dataThreshold = config.dataThreshold;
 let welcomeText = config.welcome;
 
@@ -112,51 +109,39 @@ let DataExplorer = React.createClass({
       noData = villages.data.features.length === 0;
     }
 
-    // region median
-    let median;
-    if (!timeSeries.loading && !timeSeries.error && region.level !== 'nation') {
-      let nowData = timeSeries.results.filter(d =>
-        +d.year === year && +d.month === month && d.key === region.key);
-      median = d3.mean(nowData, d => d.vis_median);
-    }
-
     // villages
     let rggvy = villages.loading ? [] : villages.data.features
-      .filter(feat => feat.properties.energ_date)
-      .map(feat => feat.properties.key);
+      .filter((feat) => feat.properties.energ_date)
+      .map((feat) => feat.properties.key);
     let allVillages = villages.loading ? [] : villages.data.features
-      .map(feat => feat.properties.key);
+      .map((feat) => feat.properties.key);
     let selectedVillages = villageCurves.loading ? [] : villageCurves.villages;
     let selectedVillageNames = selectedVillages;
     if (this.state.villages && this.state.villages.data) {
       let features = this.state.villages.data.features;
       selectedVillageNames = selectedVillages
-        .map(v => [v, features.filter(f => f.properties.key === v)])
+        .map((v) => [v, features.filter((f) => f.properties.key === v)])
         .map(([v, names]) => names.length ? names[0].properties.name : v);
     }
 
     return (
       <div className='data-container'>
-        <div className='now-showing'>
-          <DateControl year={year} month={month} interval={interval}
-            region={region} />
-          <VillageDetail
-            region={region}
-            villages={selectedVillages}
-            villageNames={selectedVillageNames} />
-        </div>
+        <VillageDetail
+          region={region}
+          villages={selectedVillages}
+          villageNames={selectedVillageNames} />
         <RegionDetail
           region={region}
           villages={allVillages}
           rggvyVillages={rggvy}
           rggvyFocus={this.state.rggvyFocus}
           selectedVillages={selectedVillages}
-          regionMedian={median}
           />
         <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus} />
         <LightCurves
           year={year}
           month={month}
+          interval={interval}
           timeSeries={timeSeries}
           villageCurves={villageCurves}
           smoothing

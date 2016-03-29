@@ -1,4 +1,5 @@
 let d3 = require('d3');
+let numeral = require('numeral');
 let React = require('react');
 let classnames = require('classnames');
 let debounce = require('lodash.debounce');
@@ -7,6 +8,7 @@ let Actions = require('../actions');
 let LineChart = require('./line-chart');
 let Legend = require('./legend');
 let Loading = require('./loading');
+let DateControl = require('./date-control');
 let smooth = require('../lib/moving-average');
 let {satelliteAdjustment} = require('../config');
 
@@ -35,9 +37,9 @@ const smoothedProp = {
 function processSeries (values, doSmoothing) {
   let properties = Object.keys(smoothedProp);
 
-  let averageCount = values.reduce((memo, x) => memo + x.count / values.length, 0)
+  let averageCount = values.reduce((memo, x) => memo + x.count / values.length, 0);
   if (!isNaN(averageCount)) {
-    values = values.filter(x => x.count > (0.05 * averageCount))
+    values = values.filter((x) => x.count > (0.05 * averageCount));
   }
 
   // average satellite values
@@ -48,7 +50,7 @@ function processSeries (values, doSmoothing) {
       let newValue = assign({}, values[0]);
       properties.forEach((prop) => {
         let fn = acc(prop);
-        let val = d3.mean(values, value =>
+        let val = d3.mean(values, (value) =>
           fn(value) - (satelliteAdjustment[value.satellite] || 0));
         newValue[prop] = val;
       });
@@ -59,7 +61,7 @@ function processSeries (values, doSmoothing) {
 
   if (values.length > 0) {
     let smoothFn = doSmoothing ? smooth : (values, fn, prop) =>
-      values.forEach(d => d[prop] = fn(d));
+      values.forEach((d) => { d[prop] = fn(d); });
     smoothFn(values, acc('vis_median'), 'smoothedMedian');
     smoothFn(values, acc('quintile1'), 'smoothedQuintile1');
     smoothFn(values, acc('quintile4'), 'smoothedQuintile4');
@@ -88,6 +90,8 @@ class LightCurves extends React.Component {
       height: 0,
       expanded: !!expanded
     };
+
+    this.toggle = this.toggle.bind(this);
   }
 
   componentDidMount () {
@@ -285,12 +289,21 @@ class LightCurves extends React.Component {
     } = this.state;
 
     let errors = [timeSeries, region, villageCurves]
-      .filter(s => s.error)
-      .map(s => s.error);
+      .filter((s) => s.error)
+      .map((s) => s.error);
     let loading = errors.length > 0 ||
       timeSeries.loading ||
       region.loading ||
       (region.district && villageCurves.loading);
+
+    // region median
+    let median;
+    if (!timeSeries.loading && !timeSeries.error && region.level !== 'nation') {
+      let nowData = timeSeries.results.filter((d) =>
+        +d.year === +this.props.year && +d.month === +this.props.month && d.key === region.key);
+      median = d3.mean(nowData, (d) => d.vis_median);
+      numeral(median).format('0.00');
+    }
 
     let markers = [ ];
     let onCursorClick;
@@ -321,14 +334,24 @@ class LightCurves extends React.Component {
             Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
           </div>
         </div>
-        <a href='#' className='bttn-expand' onClick={this.toggle.bind(this)}><span>Expand/Collapse</span></a>
+        <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+
+        <div className='now-showing'>
+          <DateControl year={this.props.year} month={this.props.month}
+            interval={this.props.interval}
+            region={region} />
+        </div>
+
+        {median ? [
+          <dt key='median-label'>Median Light Output</dt>,
+          <dd key='median-value'>{median}</dd>
+        ] : []}
 
         {loading ? <Loading message={region.loadingMessage} errors={errors} />
         : <svg style={{width, height}}>
 
           <g transform={`translate(${margins.left}, ${margins.top})`}
             className='data-availability'>
-
           </g>
 
           <LineChart
@@ -350,7 +373,7 @@ class LightCurves extends React.Component {
               domain: domains.y
             }}
             markers={markers}
-            markerClass={(m) => m.className || ''}
+            markerClass={function (m) { return m.className || ''; }}
             emphasized={region.emphasized || []}
             margins={margins}
             legend={legend}
@@ -366,6 +389,7 @@ LightCurves.displayName = 'LightCurves';
 LightCurves.propTypes = {
   year: React.PropTypes.number,
   month: React.PropTypes.number,
+  interval: React.PropTypes.string,
   timeSeries: React.PropTypes.object,
   villageCurves: React.PropTypes.object,
   margins: React.PropTypes.object,
