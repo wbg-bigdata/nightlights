@@ -42,12 +42,12 @@ class DateControl extends React.Component {
 
     return (
       <div className='month-label'>
-        <h1 className='spane-title'>
+        <div className='spane-title'>
+          <span>Viewing:</span>
+          <span>{currentMonth}</span>
           <a href='#help-box' className='bttn-info' onClick={e => e.preventDefault()}><span>Help</span></a>
           <p className='info-box' id='help-box'>Use these arrows to move through time, and click on the map to navigate into specific regions</p>
-          <small>Now Showing</small>
-          <strong>{currentMonth}</strong>
-        </h1>
+        </div>
         {content}
       </div>
     );

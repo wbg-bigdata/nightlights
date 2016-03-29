@@ -326,6 +326,23 @@ class LightCurves extends React.Component {
 
     return (
       <div className={classnames('light-curves', region.level, {expanded})}>
+
+        <div className='now-showing'>
+          <DateControl year={this.props.year} month={this.props.month}
+            interval={this.props.interval}
+            region={region} />
+          <a href="#" className='bttn-compare clearfix'>Compare Points in Time</a>
+        
+          <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+
+          {median ? [
+            <dl className="spane-details">
+              <dt key='median-label'>Median Light Output</dt>
+              <dd key='median-value'>{median}</dd>
+            </dl>
+          ] : []}
+        </div>
+
         <div className='footer'>
           {apiUrl ? <div className='api-url'>
             <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
@@ -334,18 +351,6 @@ class LightCurves extends React.Component {
             Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
           </div>
         </div>
-        <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
-
-        <div className='now-showing'>
-          <DateControl year={this.props.year} month={this.props.month}
-            interval={this.props.interval}
-            region={region} />
-        </div>
-
-        {median ? [
-          <dt key='median-label'>Median Light Output</dt>,
-          <dd key='median-value'>{median}</dd>
-        ] : []}
 
         {loading ? <Loading message={region.loadingMessage} errors={errors} />
         : <svg style={{width, height}}>

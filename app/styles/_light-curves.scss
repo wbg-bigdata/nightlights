@@ -14,7 +14,7 @@
   // set explicitly, because the d3 chart gets its height from this
   // container.
   transition: background-color 0.25s;
-  height: 10rem;
+  height: 12rem;
   &.expanded {
     height: 20rem;
     background: rgba(darken($base-color, 4%), .9);
@@ -117,7 +117,7 @@
 
 .bttn-expand {
   position: absolute;
-  top: 0.5rem;
+  top: 0.2rem;
   right: 0.5rem;
   z-index: 1;
   height: 2rem;
