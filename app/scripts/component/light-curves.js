@@ -1,6 +1,7 @@
 let d3 = require('d3');
 let numeral = require('numeral');
 let React = require('react');
+let Router = require('react-router');
 let classnames = require('classnames');
 let debounce = require('lodash.debounce');
 let assign = require('object-assign');
@@ -11,6 +12,7 @@ let Loading = require('./loading');
 let DateControl = require('./date-control');
 let smooth = require('../lib/moving-average');
 let {satelliteAdjustment} = require('../config');
+let Link = Router.Link;
 
 /*
  * Data Accessor Functions
@@ -274,6 +276,7 @@ class LightCurves extends React.Component {
     let {
       timeSeries,
       villageCurves,
+      villages,
       region,
       margins
     } = this.props;
@@ -295,6 +298,19 @@ class LightCurves extends React.Component {
       timeSeries.loading ||
       region.loading ||
       (region.district && villageCurves.loading);
+
+    // village count
+    let rggvy = villages.loading ? [] : villages.data.features
+      .filter((feat) => feat.properties.energ_date)
+      .map((feat) => feat.properties.key);
+    let allVillages = villages.loading ? [] : villages.data.features
+      .map((feat) => feat.properties.key);
+    let highlightButton = region.district && rggvy.length ? (
+      <a className='bttn-select-rggvy'
+        onClick={function () { Actions.toggleRggvy(); }}>
+        <div>{this.props.rggvyFocus ? 'Show All' : 'Highlight'}</div>
+      </a>
+    ) : '';
 
     // region median
     let median;
@@ -331,15 +347,21 @@ class LightCurves extends React.Component {
           <DateControl year={this.props.year} month={this.props.month}
             interval={this.props.interval}
             region={region} />
-          <a href="#" className='bttn-compare clearfix'>Compare Points in Time</a>
-        
-          <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+          <a href='#' className='bttn-compare clearfix'>Compare Points in Time</a>
 
+          <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
           {median ? [
-            <dl className="spane-details">
+            <dl className='spane-details'>
               <dt key='median-label'>Median Light Output</dt>
               <dd key='median-value'>{median}</dd>
             </dl>
+          ] : []}
+
+          {region.district && allVillages.length ? [
+            <dt>Villages in national electification program
+              (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
+            </dt>,
+            <dd>{rggvy.length} / {allVillages.length} {highlightButton}</dd>
           ] : []}
         </div>
 
@@ -396,7 +418,9 @@ LightCurves.propTypes = {
   month: React.PropTypes.number,
   interval: React.PropTypes.string,
   timeSeries: React.PropTypes.object,
+  villages: React.PropTypes.object,
   villageCurves: React.PropTypes.object,
+  rggvyFocus: React.PropTypes.bool,
   margins: React.PropTypes.object,
   region: React.PropTypes.object,
   expanded: React.PropTypes.bool,

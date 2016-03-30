@@ -1,10 +1,12 @@
 let React = require('react');
 let Router = require('react-router');
+let titlecase = require('titlecase');
+let numeral = require('numeral');
 let TimeSeriesStore = require('../store/time-series');
 let VillageStore = require('../store/village');
 let VillageCurveStore = require('../store/village-curve');
 let RegionStore = require('../store/region');
-let RegionDetail = require('./region-detail');
+let Search = require('./search');
 let VillageDetail = require('./village-detail');
 let LightMap = require('./light-map');
 let LightCurves = require('./light-curves');
@@ -109,12 +111,31 @@ let DataExplorer = React.createClass({
       noData = villages.data.features.length === 0;
     }
 
+    // search & breadcrumbs
+    let {
+      level,
+      properties,
+      loading
+    } = region;
+    level = level || 'nation';
+    properties = properties || {};
+    // region name for search box
+    let name = loading ? '' : properties.name;
+    if (!loading && level === 'district') {
+      let state = region.state;
+      name = state.replace(/-/g, ' ') + ' / ' + name;
+    }
+    name = titlecase(name.toLowerCase());
+    // population
+    let population = 'Unknown';
+    if (!isNaN(properties.tot_pop)) {
+      population = numeral(properties.tot_pop).format('0,0');
+    }
+
     // villages
-    let rggvy = villages.loading ? [] : villages.data.features
+    let hasRggvyVillages = villages.loading ? [] : villages.data.features
       .filter((feat) => feat.properties.energ_date)
-      .map((feat) => feat.properties.key);
-    let allVillages = villages.loading ? [] : villages.data.features
-      .map((feat) => feat.properties.key);
+      .length > 0;
     let selectedVillages = villageCurves.loading ? [] : villageCurves.villages;
     let selectedVillageNames = selectedVillages;
     if (this.state.villages && this.state.villages.data) {
@@ -129,20 +150,37 @@ let DataExplorer = React.createClass({
         <VillageDetail
           region={region}
           villages={selectedVillages}
-          villageNames={selectedVillageNames} />
-        <RegionDetail
-          region={region}
-          villages={allVillages}
-          rggvyVillages={rggvy}
-          rggvyFocus={this.state.rggvyFocus}
-          selectedVillages={selectedVillages}
-          />
+          villageNames={selectedVillageNames}
+          hasRggvyVillages={hasRggvyVillages}
+        />
+        <section className='spane region-detail'>
+          <ul>
+            <li className='breadcrumbs'>Region</li>
+          </ul>
+          <div className='spane-header'>
+            <h1 className='spane-title'>{name}</h1>
+            <a className='bttn-center-map'
+              onClick={Actions.recenterMap}
+              title='Zoom to location bounds'>
+              <span>Zoom to location bounds</span>
+            </a>
+            <Search initialValue={name} />
+          </div>
+          <div className='spane-body'>
+            <dl className='spane-details'>
+              <dt>Population (census 2011)</dt>
+              <dd>{population}</dd>
+            </dl>
+          </div>
+        </section>
         <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus} />
         <LightCurves
           year={year}
           month={month}
           interval={interval}
           timeSeries={timeSeries}
+          villages={villages}
+          rggvyFocus={this.state.rggvyFocus}
           villageCurves={villageCurves}
           smoothing
           region={region}
