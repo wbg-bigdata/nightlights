@@ -15,6 +15,8 @@ var DataExplorer = require('./component/data-explorer');
 var StoryHub = require('./component/story-hub');
 var About = require('./component/about');
 
+let timespan = require('./lib/timespan');
+
 var routes = (
   <Route name='app' path='/' handler={App}>
 
@@ -42,10 +44,10 @@ var routes = (
       handler={About} />
 
     <Redirect from='*' to='nation'
-    params={{
-      year: 2006,
-      month: 12
-    }}/>
+      params={{
+        year: 2006,
+        month: 12
+      }}/>
   </Route>
 );
 
@@ -63,11 +65,11 @@ Actions.select.listen(function (key) {
   let {state, year, month} = router.getCurrentParams();
   var route = state ? 'district' : 'state';
   router.transitionTo(route, {
-    state: state ? state : key,
+    state: state || key,
     district: state ? key : undefined,
     year,
     month
-  });
+  }, router.getCurrentQuery());
 });
 
 // When user wants to 'escape' from the current region, go up by one
@@ -82,20 +84,32 @@ Actions.selectParent.listen(function () {
     state: district ? state : undefined,
     year,
     month
-  });
+  }, router.getCurrentQuery());
 });
 
 // When user changes the date, update the appropriate route params
-Actions.selectDate.listen(function ({year, month}) {
-  let {state, district} = router.getCurrentParams();
+Actions.selectDate.listen(function ({year, month, compare}) {
+  let params = router.getCurrentParams();
+  let query = router.getCurrentQuery();
   let routes = router.getCurrentRoutes();
   let route = routes[routes.length - 1].name;
-  router.transitionTo(route, {
-    state,
-    district,
-    year,
-    month
-  });
+  if (typeof compare === 'undefined') {
+    Object.assign(params, {year, month});
+  } else if (compare) {
+    Object.assign(query, {compare: `${year}.${month}`});
+  } else {
+    delete query.compare;
+  }
+  router.transitionTo(route, params, query);
+});
+
+Actions.toggleCompareMode.listen(function () {
+  let query = router.getCurrentQuery();
+  if (query.compare) {
+    Actions.selectDate({compare: false});
+  } else {
+    Actions.selectDate(Object.assign({compare: true}, timespan.end));
+  }
 });
 
 Actions.selectVillages.listen(function (villagecodes) {
@@ -113,5 +127,5 @@ Actions.unselectVillages.listen(function (villagecodes) {
 function setVillages (villages) {
   let routes = router.getCurrentRoutes();
   let route = routes[routes.length - 1].name;
-  router.transitionTo(route, router.getCurrentParams(), { v: villages });
+  router.transitionTo(route, router.getCurrentParams(), Object.assign(router.getCurrentQuery(), { v: villages }));
 }

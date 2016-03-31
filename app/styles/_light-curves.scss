@@ -11,6 +11,10 @@
   overflow: hidden;
   padding-top: 1em;
 
+  // side-by-side layout
+  .compare & { width: 50%; }
+  .compare & + & { left: 50%; }
+
   // It's important that a default height and .expanded height are
   // set explicitly, because the d3 chart gets its height from this
   // container.

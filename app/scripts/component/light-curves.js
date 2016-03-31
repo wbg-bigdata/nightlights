@@ -93,7 +93,9 @@ class LightCurves extends React.Component {
       expanded: !!expanded
     };
 
+    this.toggleCompareMode = this.toggleCompareMode.bind(this);
     this.toggle = this.toggle.bind(this);
+    this.selectDate = this.selectDate.bind(this);
   }
 
   componentDidMount () {
@@ -117,6 +119,23 @@ class LightCurves extends React.Component {
     window.addEventListener('resize', this.handleResize);
     this._handleData(this.props);
     this.handleResize(this.state);
+
+    Actions.toggleChartExpanded.listen(function () {
+      this.setState({
+        expanded: !this.state.expanded
+      });
+
+      // HACK: since we know that changing the `expanded` state will
+      // cause a height change post-render, we trigger handleResize
+      // to force a second call to render after the container has its
+      // new height so that the line chart is rendered with the correct
+      // height too
+      setTimeout(this.handleResize);
+    }.bind(this));
+    // same as the above hack, but for toggling split screen mode
+    Actions.toggleCompareMode.listen(function () {
+      setTimeout(this.handleResize);
+    }.bind(this));
   }
 
   componentWillUnmount () {
@@ -126,7 +145,7 @@ class LightCurves extends React.Component {
   componentWillReceiveProps (props) {
     let {expanded} = props;
     if (typeof expanded !== 'undefined' && this.state.expanded !== expanded) {
-      this.toggle();
+      Actions.toggleChartExpanded();
     }
     this._handleData(props);
   }
@@ -256,20 +275,16 @@ class LightCurves extends React.Component {
 
   toggle (e) {
     if (e) { e.preventDefault(); }
-    this.setState({
-      expanded: !this.state.expanded
-    });
+    Actions.toggleChartExpanded();
+  }
 
-    // HACK: since we know that changing the `expanded` state will
-    // cause a height change post-render, we trigger handleResize
-    // to force a second call to render after the container has its
-    // new height so that the line chart is rendered with the correct
-    // height too
-    setTimeout(this.handleResize);
+  toggleCompareMode (e) {
+    if (e) { e.preventDefault(); }
+    Actions.toggleCompareMode();
   }
 
   selectDate ([date]) {
-    Actions.selectDate(parseDate(date));
+    this.props.onChangeDate(parseDate(date));
   }
 
   render () {
@@ -300,11 +315,13 @@ class LightCurves extends React.Component {
       (region.district && villageCurves.loading);
 
     // village count
-    let rggvy = villages.loading ? [] : villages.data.features
+    let date = `${this.props.year}.${this.props.month}`;
+    let features = !villages[date] || villages[date].loading
+      ? [] : villages[date].data.features;
+    let rggvy = features
       .filter((feat) => feat.properties.energ_date)
       .map((feat) => feat.properties.key);
-    let allVillages = villages.loading ? [] : villages.data.features
-      .map((feat) => feat.properties.key);
+    let allVillages = features.map((feat) => feat.properties.key);
     let highlightButton = region.district && rggvy.length ? (
       <a className='bttn-select-rggvy'
         onClick={function () { Actions.toggleRggvy(); }}>
@@ -345,10 +362,22 @@ class LightCurves extends React.Component {
         <div className='now-showing'>
           <DateControl year={this.props.year} month={this.props.month}
             interval={this.props.interval}
-            region={region} />
-          <a href='#' className='bttn-compare clearfix'>Compare Points in Time</a>
+            region={region}
+            onChangeDate={this.props.onChangeDate}
+          />
+          {this.props.compareMode === false
+            ? <a href='#' className='bttn-compare clearfix'
+              onClick={this.toggleCompareMode}>Compare Points in Time</a>
+            : ''}
+          {this.props.compareMode === 'left'
+            ? <a href='#' className='bttn-compare clearfix'
+              onClick={this.toggleCompareMode}>Hide Comparison</a>
+            : ''}
 
-          <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+          {this.props.compareMode !== 'left'
+            ? <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+            : ''}
+
           <ul className='spane-details'>
           {median ? [
             <li>
@@ -419,6 +448,8 @@ LightCurves.propTypes = {
   year: React.PropTypes.number,
   month: React.PropTypes.number,
   interval: React.PropTypes.string,
+  compareMode: React.PropTypes.oneOf(['left', 'right', false]),
+  onChangeDate: React.PropTypes.func,
   timeSeries: React.PropTypes.object,
   villages: React.PropTypes.object,
   villageCurves: React.PropTypes.object,

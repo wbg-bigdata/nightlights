@@ -2,6 +2,7 @@ let React = require('react');
 let Router = require('react-router');
 let titlecase = require('titlecase');
 let numeral = require('numeral');
+let classnames = require('classnames');
 let TimeSeriesStore = require('../store/time-series');
 let VillageStore = require('../store/village');
 let VillageCurveStore = require('../store/village-curve');
@@ -14,6 +15,7 @@ let Modal = require('./modal');
 let NoData = require('./no-data');
 let Actions = require('../actions');
 let timespan = require('../lib/timespan');
+let syncMaps = require('../lib/sync-maps');
 let config = require('../config');
 let dataThreshold = config.dataThreshold;
 let welcomeText = config.welcome;
@@ -43,7 +45,7 @@ let DataExplorer = React.createClass({
         // route was being attempted at this point.
         transition.redirect('nation', valid, {});
       }
-      RegionStore.setRegion(params);
+      RegionStore.setRegion(params, query);
       VillageCurveStore.setSelectedVillages(query.v || []);
     }
   },
@@ -57,6 +59,10 @@ let DataExplorer = React.createClass({
     };
   },
 
+  componentWillMount () {
+    this.maps = [];
+  },
+
   componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionStore.listen(this.onRegion));
@@ -64,6 +70,15 @@ let DataExplorer = React.createClass({
     this.unsubscribe.push(VillageCurveStore.listen(this.onVillageCurves));
     this.unsubscribe.push(TimeSeriesStore.listen(this.onTimeSeries));
     this.unsubscribe.push(Actions.toggleRggvy.listen(this.onToggleRggvy));
+    // HACK: willTransitionTo is not getting called when _just_ the query param
+    // changes, so we have to listen for that case specially
+    this.unsubscribe.push(Actions.selectDate.listen(function ({compare}) {
+      if (typeof compare !== 'undefined') {
+        setTimeout(function () {
+          RegionStore.setRegion(this.getParams(), this.getQuery());
+        }.bind(this));
+      }
+    }.bind(this)));
   },
 
   componentWillUnmount () {
@@ -90,15 +105,30 @@ let DataExplorer = React.createClass({
     this.setState({rggvyFocus: !this.state.rggvyFocus});
   },
 
-  render () {
-    let {region, timeSeries, villages, villageCurves} = this.state;
-    // get year and month from router params
-    let { year, month, interval } = this.getParams();
-    year = +year;
-    month = +month;
+  onChangeDate (params) {
+    Actions.selectDate(params);
+  },
 
+  onChangeCompareDate (params) {
+    Actions.selectDate(Object.assign({compare: true}, params));
+  },
+
+  onMapCreated (map) {
+    this.maps.push(map);
+    if (this.maps.length === 2) {
+      syncMaps(this.maps[0], this.maps[1]);
+    }
+    return function () {
+      var i = this.maps.indexOf(map);
+      if (i >= 0) { this.maps.splice(i, 1); }
+      map.remove();
+    }.bind(this);
+  },
+
+  hasNoData (region, villages, year, month) {
     // Decide if we need to show the no-data indicator.
     let noData = false;
+    let date = `${year}.${month}`;
     if (!region.district && region.count) {
       let count = region.count.filter((a) => a.month === month && a.year === year)[0];
       // If count is not present, assume there are no readings for this month.
@@ -107,8 +137,26 @@ let DataExplorer = React.createClass({
         count !== undefined && count.hasOwnProperty('count') && count.count < dataThreshold)) {
         noData = true;
       }
-    } else if (region.district && !villages.loading) {
-      noData = villages.data.features.length === 0;
+    } else if (region.district && villages[date] && !villages[date].loading) {
+      noData = villages[date].data.features.length === 0;
+    }
+
+    return noData;
+  },
+
+  render () {
+    let {region, timeSeries, villages, villageCurves} = this.state;
+    // get year and month from router params
+    let { year, month, interval } = this.getParams();
+    year = +year;
+    month = +month;
+    let date = `${year}.${month}`;
+
+    let query = this.getQuery();
+    let compare;
+    if (query.compare) {
+      var [cy, cm] = query.compare.split('.');
+      compare = { year: cy, month: cm };
     }
 
     // search & breadcrumbs
@@ -133,20 +181,20 @@ let DataExplorer = React.createClass({
     }
 
     // villages
-    let hasRggvyVillages = villages.loading ? [] : villages.data.features
-      .filter((feat) => feat.properties.energ_date)
-      .length > 0;
+    let hasRggvyVillages = !villages[date] || villages[date].loading
+      ? false
+      : villages[date].data.features.filter((feat) => feat.properties.energ_date).length > 0;
     let selectedVillages = villageCurves.loading ? [] : villageCurves.villages;
     let selectedVillageNames = selectedVillages;
-    if (this.state.villages && this.state.villages.data) {
-      let features = this.state.villages.data.features;
+    if (villages && villages[date] && villages[date].data) {
+      let features = villages[date].data.features;
       selectedVillageNames = selectedVillages
         .map((v) => [v, features.filter((f) => f.properties.key === v)])
         .map(([v, names]) => names.length ? names[0].properties.name : v);
     }
 
     return (
-      <div className='data-container'>
+      <div className={classnames('data-container', { compare: !!compare })}>
         <VillageDetail
           region={region}
           villages={selectedVillages}
@@ -174,11 +222,20 @@ let DataExplorer = React.createClass({
             </dl>
           </div>
         </section>
-        <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus} />
+        <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus}
+          compareMode={compare ? 'left' : false}
+          onMapCreated={this.onMapCreated} />
+        {compare
+          ? <LightMap time={compare} rggvyFocus={this.state.rggvyFocus}
+            compareMode={'right'}
+            onMapCreated={this.onMapCreated} />
+          : ''}
         <LightCurves
           year={year}
           month={month}
           interval={interval}
+          compareMode={compare ? 'left' : false}
+          onChangeDate={this.onChangeDate}
           timeSeries={timeSeries}
           villages={villages}
           rggvyFocus={this.state.rggvyFocus}
@@ -187,9 +244,24 @@ let DataExplorer = React.createClass({
           region={region}
           margins={{left: 36, right: 36, top: 70, bottom: 48}}
         />
-        <NoData
-          noData={noData}
-        />
+        {compare
+          ? <LightCurves
+            year={compare.year}
+            month={compare.month}
+            interval={interval}
+            compareMode={'right'}
+            onChangeDate={this.onChangeCompareDate}
+            timeSeries={timeSeries}
+            villages={villages}
+            rggvyFocus={this.state.rggvyFocus}
+            villageCurves={villageCurves}
+            smoothing
+            region={region}
+            margins={{left: 36, right: 36, top: 48, bottom: 48}}
+            />
+          : ''
+        }
+        <NoData noData={this.hasNoData(region, villages, year, month)} />
         <Modal
           isOn
           content={welcomeText}

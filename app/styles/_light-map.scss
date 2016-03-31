@@ -15,6 +15,11 @@
   height: 100%;
   position: absolute;
   overflow: hidden;
+
+  // side-by-side layout
+  .compare & { width: 50%; }
+  .compare & + & { left: 50%; }
+
   canvas {
     outline: none;
   }

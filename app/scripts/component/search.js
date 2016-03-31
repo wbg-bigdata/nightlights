@@ -89,7 +89,7 @@ let Search = React.createClass({
       state: region.type === 'state' ? region.key : region.state,
       district: region.type === 'state' ? undefined : region.key
     };
-    this.transitionTo(region.type, params);
+    this.transitionTo(region.type, params, this.getQuery());
   },
 
   render () {

@@ -98,8 +98,9 @@ class LightMap extends React.Component {
 
   componentWillUnmount () {
     this._unsubscribe.forEach((unsub) => unsub());
-    if (this.map) {
-      this.map.remove();
+    if (this._removeMap) {
+      this._removeMap();
+      this.map = this._removeMap = null;
     }
   }
 
@@ -120,7 +121,7 @@ class LightMap extends React.Component {
     if (this.isMapLoaded()) { return; }
 
     let loaded = this.state.stylesLoaded &&
-      this.state.sourcesPending.every(s => this.state.sourcesLoaded[s]);
+      this.state.sourcesPending.every((s) => this.state.sourcesLoaded[s]);
 
     if (loaded && !this.isMapLoaded()) {
       this._mapLoaded = true;
@@ -166,6 +167,7 @@ class LightMap extends React.Component {
       style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
     console.info('The Mapbox GL map is available as `window.glMap`');
+    this._removeMap = this.props.onMapCreated(self.map);
 
     // Interaction handlers
     self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
@@ -222,7 +224,7 @@ class LightMap extends React.Component {
         // 1. the 'lightsX' layers, which style the vector tile village points
         // used in national and state view.
         lightStyles.create(base, 'lights', {}, stops.length)
-        .forEach(layer => batch.addLayer(layer, 'cities'));
+        .forEach((layer) => batch.addLayer(layer, 'cities'));
 
         // 2. the 'district-lightsX' layers, which will style the geojson source
         // of villages in district view.
@@ -278,7 +280,7 @@ class LightMap extends React.Component {
 
       self.setState({
         stylesLoaded: true,
-        sourcesPending: [ 'villages-base', 'states' ].map(l => self.map.getLayer(l).source),
+        sourcesPending: [ 'villages-base', 'states' ].map((l) => self.map.getLayer(l).source),
         emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource
@@ -317,7 +319,7 @@ class LightMap extends React.Component {
       // if any of these features have a key that maches the current region,
       // then we know that the mouse is within the current region.
       let currentRegionHover = features
-        .map(f => f.properties.key && f.properties.key === region.key)
+        .map((f) => f.properties.key && f.properties.key === region.key)
         .reduce((a, b) => a || b, false);
 
       this.setState({
@@ -388,6 +390,9 @@ class LightMap extends React.Component {
           self.setRggvyFocus(batch, newProps.rggvyFocus);
         }
       });
+      if (newProps.compareMode !== this.props.compareMode) {
+        this.map.resize();
+      }
     }
   }
 
@@ -416,12 +421,15 @@ class LightMap extends React.Component {
    * Receive new village point features from the store
    */
   onVillages (villagesState) {
+    let date = `${this.props.time.year}.${this.props.time.month}`;
+    villagesState = villagesState[date] ||
+      { loading: false, data: { type: 'FeatureCollection', features: [] } };
     if (!villagesState.loading && this.isMapLoaded()) {
       this.state.districtVillagesSource.setData(villagesState.data);
       if (villagesState.data.features.length > 0) {
         let s = stops.map((d, i) => i / (stops.length - 1));
         let quantiles = ss.quantile(villagesState.data.features
-          .map(feat => feat.properties.vis_median), s);
+          .map((feat) => feat.properties.vis_median), s);
         this.map.batch(function (batch) {
           lightStyles.setFilters(batch, 'district-lights', quantiles, 'vis_median',
             [[ '==', 'rggvy', false ]]);
@@ -446,7 +454,7 @@ class LightMap extends React.Component {
       this.state.region.district) {
       // set filter based on whether we want to see all villages or just
       // rggvy ones
-      lightStyles.forEach('district-lights', stops, layer =>
+      lightStyles.forEach('district-lights', stops, (layer) =>
         showLayer(this.map, batch, layer, focus));
     }
   }
@@ -652,11 +660,11 @@ class LightMap extends React.Component {
       this.state.region.loading ||
       this.state.villages.loading;
     let errors = (!this.state.region || !this.state.villages) ? []
-      : [this.state.region, this.state.villages].map(s => s.error);
+      : [this.state.region, this.state.villages].map((s) => s.error);
 
     return (
       <div className='light-map'>
-        { loading ? <Loading errors={errors} /> : '' }
+        {loading ? <Loading errors={errors} /> : ''}
         <div className='map-inner' />
       </div>
     );
@@ -666,7 +674,9 @@ class LightMap extends React.Component {
 LightMap.displayName = 'LightMap';
 LightMap.propTypes = {
   time: React.PropTypes.object.isRequired,
-  rggvyFocus: React.PropTypes.bool
+  rggvyFocus: React.PropTypes.bool,
+  onMapCreated: React.PropTypes.func.isRequired,
+  compareMode: React.PropTypes.oneOf(['left', 'right', false])
 };
 
 module.exports = LightMap;
@@ -683,6 +693,6 @@ function cloneVillageLayer (base, id, source, color) {
   });
   layer.paint['circle-radius'] = assign({}, layer.paint['circle-radius']);
   layer.paint['circle-radius'].stops = layer.paint['circle-radius'].stops
-    .map(stop => [stop[0], stop[1] * 0.667]);
+    .map((stop) => [stop[0], stop[1] * 0.667]);
   return layer;
 }
