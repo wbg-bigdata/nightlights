@@ -11,9 +11,10 @@
 }
 
 .light-map {
-  width: 100%;
+  width: 50%;
   height: 100%;
   position: absolute;
+  & + .light-map { left: 50%; }
   overflow: hidden;
   canvas {
     outline: none;

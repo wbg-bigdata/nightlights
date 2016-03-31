@@ -42,10 +42,10 @@ var routes = (
       handler={About} />
 
     <Redirect from='*' to='nation'
-    params={{
-      year: 2006,
-      month: 12
-    }}/>
+      params={{
+        year: 2006,
+        month: 12
+      }}/>
   </Route>
 );
 
@@ -63,7 +63,7 @@ Actions.select.listen(function (key) {
   let {state, year, month} = router.getCurrentParams();
   var route = state ? 'district' : 'state';
   router.transitionTo(route, {
-    state: state ? state : key,
+    state: state || key,
     district: state ? key : undefined,
     year,
     month

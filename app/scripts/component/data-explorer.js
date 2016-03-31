@@ -14,6 +14,7 @@ let Modal = require('./modal');
 let NoData = require('./no-data');
 let Actions = require('../actions');
 let timespan = require('../lib/timespan');
+let syncMaps = require('../lib/sync-maps');
 let config = require('../config');
 let dataThreshold = config.dataThreshold;
 let welcomeText = config.welcome;
@@ -57,6 +58,10 @@ let DataExplorer = React.createClass({
     };
   },
 
+  componentWillMount () {
+    this.maps = [];
+  },
+
   componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionStore.listen(this.onRegion));
@@ -88,6 +93,13 @@ let DataExplorer = React.createClass({
 
   onToggleRggvy () {
     this.setState({rggvyFocus: !this.state.rggvyFocus});
+  },
+
+  onMapCreated (map) {
+    this.maps.push(map);
+    if (this.maps.length === 2) {
+      syncMaps(this.maps[0], this.maps[1]);
+    }
   },
 
   render () {
@@ -173,7 +185,8 @@ let DataExplorer = React.createClass({
             </dl>
           </div>
         </section>
-        <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus} />
+        <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus}
+          onMapCreated={this.onMapCreated}/>
         <LightCurves
           year={year}
           month={month}
