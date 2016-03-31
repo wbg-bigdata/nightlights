@@ -98,8 +98,9 @@ class LightMap extends React.Component {
 
   componentWillUnmount () {
     this._unsubscribe.forEach((unsub) => unsub());
-    if (this.map) {
-      this.map.remove();
+    if (this._removeMap) {
+      this._removeMap();
+      this.map = this._removeMap = null;
     }
   }
 
@@ -166,7 +167,7 @@ class LightMap extends React.Component {
       style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
     console.info('The Mapbox GL map is available as `window.glMap`');
-    this.props.onMapCreated(self.map);
+    this._removeMap = this.props.onMapCreated(self.map);
 
     // Interaction handlers
     self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
@@ -389,6 +390,9 @@ class LightMap extends React.Component {
           self.setRggvyFocus(batch, newProps.rggvyFocus);
         }
       });
+      if (newProps.compareMode !== this.props.compareMode) {
+        this.map.resize();
+      }
     }
   }
 
@@ -668,7 +672,8 @@ LightMap.displayName = 'LightMap';
 LightMap.propTypes = {
   time: React.PropTypes.object.isRequired,
   rggvyFocus: React.PropTypes.bool,
-  onMapCreated: React.PropTypes.func.isRequired
+  onMapCreated: React.PropTypes.func.isRequired,
+  compareMode: React.PropTypes.oneOf(['left', 'right', false])
 };
 
 module.exports = LightMap;

@@ -2,6 +2,7 @@ let React = require('react');
 let Router = require('react-router');
 let titlecase = require('titlecase');
 let numeral = require('numeral');
+let classnames = require('classnames');
 let TimeSeriesStore = require('../store/time-series');
 let VillageStore = require('../store/village');
 let VillageCurveStore = require('../store/village-curve');
@@ -95,20 +96,27 @@ let DataExplorer = React.createClass({
     this.setState({rggvyFocus: !this.state.rggvyFocus});
   },
 
+  onChangeDate (params) {
+    Actions.selectDate(params);
+  },
+
+  onChangeCompareDate (params) {
+    Actions.selectDate(Object.assign({compare: true}, params));
+  },
+
   onMapCreated (map) {
     this.maps.push(map);
     if (this.maps.length === 2) {
       syncMaps(this.maps[0], this.maps[1]);
     }
+    return function () {
+      var i = this.maps.indexOf(map);
+      if (i >= 0) { this.maps.splice(i, 1); }
+      map.remove();
+    }.bind(this);
   },
 
-  render () {
-    let {region, timeSeries, villages, villageCurves} = this.state;
-    // get year and month from router params
-    let { year, month, interval } = this.getParams();
-    year = +year;
-    month = +month;
-
+  hasNoData (region, villages, year, month) {
     // Decide if we need to show the no-data indicator.
     let noData = false;
     if (!region.district && region.count) {
@@ -121,6 +129,23 @@ let DataExplorer = React.createClass({
       }
     } else if (region.district && !villages.loading) {
       noData = villages.data.features.length === 0;
+    }
+
+    return noData;
+  },
+
+  render () {
+    let {region, timeSeries, villages, villageCurves} = this.state;
+    // get year and month from router params
+    let { year, month, interval } = this.getParams();
+    year = +year;
+    month = +month;
+
+    let query = this.getQuery();
+    let compare;
+    if (query.compare) {
+      var [cy, cm] = query.compare.split('.');
+      compare = { year: cy, month: cm };
     }
 
     // search & breadcrumbs
@@ -158,7 +183,7 @@ let DataExplorer = React.createClass({
     }
 
     return (
-      <div className='data-container'>
+      <div className={classnames('data-container', { compare: !!compare })}>
         <VillageDetail
           region={region}
           villages={selectedVillages}
@@ -186,11 +211,19 @@ let DataExplorer = React.createClass({
           </div>
         </section>
         <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus}
-          onMapCreated={this.onMapCreated}/>
+          compareMode={compare ? 'left' : false}
+          onMapCreated={this.onMapCreated} />
+        {compare
+          ? <LightMap time={compare} rggvyFocus={this.state.rggvyFocus}
+            compareMode={'right'}
+            onMapCreated={this.onMapCreated} />
+          : ''}
         <LightCurves
           year={year}
           month={month}
           interval={interval}
+          compareMode={compare ? 'left' : false}
+          onChangeDate={this.onChangeDate}
           timeSeries={timeSeries}
           villages={villages}
           rggvyFocus={this.state.rggvyFocus}
@@ -199,9 +232,24 @@ let DataExplorer = React.createClass({
           region={region}
           margins={{left: 36, right: 36, top: 48, bottom: 48}}
         />
-        <NoData
-          noData={noData}
-        />
+        {compare
+          ? <LightCurves
+            year={compare.year}
+            month={compare.month}
+            interval={interval}
+            compareMode={'right'}
+            onChangeDate={this.onChangeCompareDate}
+            timeSeries={timeSeries}
+            villages={villages}
+            rggvyFocus={this.state.rggvyFocus}
+            villageCurves={villageCurves}
+            smoothing
+            region={region}
+            margins={{left: 36, right: 36, top: 48, bottom: 48}}
+            />
+          : ''
+        }
+        <NoData noData={this.hasNoData(region, villages, year, month)} />
         <Modal
           isOn
           content={welcomeText}

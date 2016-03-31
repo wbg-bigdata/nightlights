@@ -1,44 +1,30 @@
 let React = require('react');
-let Link = require('react-router').Link;
 let timespan = require('../lib/timespan');
-let interval = require('../config').interval;
 
 class DateControl extends React.Component {
+  constructor () {
+    super();
+    this.next = this.next.bind(this);
+    this.prev = this.prev.bind(this);
+  }
+
+  next (e) {
+    this.props.onChangeDate(timespan.next(timespan.getValid(this.props)));
+    e.preventDefault();
+  }
+
+  prev (e) {
+    this.props.onChangeDate(timespan.prev(timespan.getValid(this.props)));
+    e.preventDefault();
+  }
+
   render () {
-    let {year, month, region} = this.props;
-    let {level, state, district} = region;
-    level = level || 'nation';
-
-    // validate checks if a year is possible, ie
-    // it won't allow year: 2020 or month: 15
-    let valid = timespan.getValid({year: year, month: month});
-    let next = timespan.next(valid);
-    let prev = timespan.prev(valid);
+    let valid = timespan.getValid({year: this.props.year, month: this.props.month});
     let currentMonth = valid.month + ' / ' + valid.year;
-
     let nextClassName = timespan.isLast(valid)
       ? 'bttn-next inactive' : 'bttn-next';
     let prevClassName = timespan.isFirst(valid)
       ? 'bttn-prev inactive' : 'bttn-prev';
-
-    let content = region.loading ? '' : (
-      <ul className='browse-date'>
-      <li><Link to={level} className={prevClassName} params={{
-        year: prev.year,
-        month: prev.month,
-        state,
-        district,
-        interval
-      }} title='Show previous month'><span>Previous Month</span></Link></li>
-      <li><Link to={level} className={nextClassName} params={{
-        year: next.year,
-        month: next.month,
-        state,
-        district,
-        interval
-      }} title='Show next month'><span>Next Month</span></Link></li>
-      </ul>
-    );
 
     return (
       <div className='month-label'>
@@ -48,7 +34,18 @@ class DateControl extends React.Component {
           <a href='#help-box' className='bttn-info' onClick={e => e.preventDefault()}><span>Help</span></a>
           <p className='info-box' id='help-box'>Use these arrows to move through time, and click on the map to navigate into specific regions</p>
         </div>
-        {content}
+        {this.props.region.loading ? '' : (
+          <ul className='browse-date'>
+            <li>
+              <a href='#' className={prevClassName} onClick={this.prev}
+                title='Show previous month'><span>Previous Month</span></a>
+            </li>
+            <li>
+              <a href='#' className={nextClassName} onClick={this.next}
+                title='Show next month'><span>Next Month</span></a>
+            </li>
+          </ul>
+        )}
       </div>
     );
   }
@@ -59,7 +56,8 @@ DateControl.propTypes = {
   year: React.PropTypes.number,
   month: React.PropTypes.number,
   interval: React.PropTypes.string,
-  region: React.PropTypes.object
+  region: React.PropTypes.object,
+  onChangeDate: React.PropTypes.func
 };
 
 module.exports = DateControl;

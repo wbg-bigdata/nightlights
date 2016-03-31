@@ -12,6 +12,7 @@ module.exports = function sync (a, b) {
     cp(b, a);
     a.on('move', a2b);
   }
+  cp(a, b);
   a.on('move', a2b);
   b.on('move', b2a);
 };
