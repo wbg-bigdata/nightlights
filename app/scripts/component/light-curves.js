@@ -340,79 +340,77 @@ class LightCurves extends React.Component {
 
     let apiUrl = timeSeries ? timeSeries.url : 'http://api.nightlights.io/';
 
-    return (
-      <div className='container-light-curves'>
-        <div className={classnames('light-curves', region.level, {expanded})}>
-          <div className='now-showing'>
-            <DateControl year={this.props.year} month={this.props.month}
-              interval={this.props.interval}
-              region={region} />
-            <a href='#' className='bttn-compare clearfix'>Compare Points in Time</a>
+    return (<div className='container-light-curves'>
+      <div className={classnames('light-curves', region.level, {expanded})}>
+        <div className='now-showing'>
+          <DateControl year={this.props.year} month={this.props.month}
+            interval={this.props.interval}
+            region={region} />
+          <a href='#' className='bttn-compare clearfix'>Compare Points in Time</a>
 
-            <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
-            <ul className='spane-details'>
-            {median ? [
-              <li>
-                <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
-                <span className='spane-details-description' key='median-value'>{median}</span>
-              </li>
-            ] : []}
+          <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+          <ul className='spane-details'>
+          {median ? [
+            <li>
+              <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
+              <span className='spane-details-description' key='median-value'>{median}</span>
+            </li>
+          ] : []}
 
-            {region.district && allVillages.length ? [
-              <li>
-                <h5 className='spane-details-title'>Villages in Electification Program
-                  (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
-                </h5>
-                <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
-              </li>
-            ] : []}
-            </ul>
-          </div>
-          <div className='footer'>
-            {apiUrl ? <div className='api-url'>
-              <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
-            </div> : []}
-            <div className='attribution'>
-              Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
-            </div>
-          </div>
-
-          {loading ? <Loading message={region.loadingMessage} errors={errors} />
-          : <svg style={{width, height}}>
-
-            <g transform={`translate(${margins.left}, ${margins.top})`}
-              className='data-availability'>
-            </g>
-
-            <LineChart
-              Actions={Actions}
-              series={series}
-              center={centerline}
-              envelope={envelope}
-              showSeriesEnvelopes={this.props.showAllEnvelopes}
-              x={{
-                value: x,
-                format: formatDate,
-                scale: scales.x,
-                domain: domains.x
-              }}
-              y={{
-                value: y,
-                format: Math.round.bind(Math),
-                scale: scales.y,
-                domain: domains.y
-              }}
-              markers={markers}
-              markerClass={function (m) { return m.className || ''; }}
-              emphasized={region.emphasized || []}
-              margins={margins}
-              legend={legend}
-              onCursorClick={onCursorClick} />
-          </svg>
-          }
+          {region.district && allVillages.length ? [
+            <li>
+              <h5 className='spane-details-title'>Villages in Electification Program
+                (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
+              </h5>
+              <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
+            </li>
+          ] : []}
+          </ul>
         </div>
+        <div className='footer'>
+          {apiUrl ? <div className='api-url'>
+            <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
+          </div> : []}
+          <div className='attribution'>
+            Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
+          </div>
+        </div>
+
+        {loading ? <Loading message={region.loadingMessage} errors={errors} />
+        : <svg style={{width, height}}>
+
+          <g transform={`translate(${margins.left}, ${margins.top})`}
+            className='data-availability'>
+          </g>
+
+          <LineChart
+            Actions={Actions}
+            series={series}
+            center={centerline}
+            envelope={envelope}
+            showSeriesEnvelopes={this.props.showAllEnvelopes}
+            x={{
+              value: x,
+              format: formatDate,
+              scale: scales.x,
+              domain: domains.x
+            }}
+            y={{
+              value: y,
+              format: Math.round.bind(Math),
+              scale: scales.y,
+              domain: domains.y
+            }}
+            markers={markers}
+            markerClass={function (m) { return m.className || ''; }}
+            emphasized={region.emphasized || []}
+            margins={margins}
+            legend={legend}
+            onCursorClick={onCursorClick} />
+        </svg>
+        }
       </div>
-    );
+    </div>);
   }
 }
 
