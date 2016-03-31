@@ -171,7 +171,7 @@ class LineChart extends React.Component {
           />
         </g>
 
-        <g className='legend' transform={`translate(${x.scale(0)},160)`}>
+        <g className='legend' transform={`translate(${x.scale(0)},115)`}>
           {this.props.legend || []}
         </g>
 

@@ -155,7 +155,8 @@ let DataExplorer = React.createClass({
         />
         <section className='spane region-detail'>
           <ul>
-            <li className='breadcrumbs'>Region</li>
+            <li className='breadcrumbs'><a href="#">Region</a></li>
+            <li className='breadcrumbs'>Region 2</li>
           </ul>
           <div className='spane-header'>
             <h1 className='spane-title'>{name}</h1>
@@ -184,7 +185,7 @@ let DataExplorer = React.createClass({
           villageCurves={villageCurves}
           smoothing
           region={region}
-          margins={{left: 36, right: 36, top: 48, bottom: 48}}
+          margins={{left: 36, right: 36, top: 70, bottom: 48}}
         />
         <NoData
           noData={noData}

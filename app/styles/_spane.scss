@@ -2,11 +2,11 @@
 
 .spane {
   position: absolute;
-  top: 3.5rem;
+  top: 3.4rem;
   left: 0;
   z-index: 50;
   width: 100%;
-  padding: .2rem 2rem .6rem;
+  padding: .1rem 2rem .6rem;
   @extend %base-box-skin;
 }
 
@@ -54,6 +54,11 @@
   margin: 0;
   padding: 0;
   clear: left;
+
+  li { 
+    float: left;
+    margin-right: 1em;
+  }
   // box-shadow: inset 0 1px 0 0 $brdr-ghost;
   @extend .clearfix;
   dt, dd {
@@ -66,14 +71,14 @@
       box-shadow: none;
     }
   }
-  dt {
+  dt, .spane-details-title {
     //width: 50%;
     //clear: left;
     //padding: 0.5rem 0.5rem 0.5rem 0;
     @extend .hd-sup;
     margin-bottom: 0em;
   }
-  dd {
+  dd, .spane-details-description {
     //width: 50%;
     //text-align: right;
     //padding-left: 0.5rem;
@@ -90,7 +95,7 @@
 .breadcrumbs {
   display: inline-block;
   font-size: .8em;
-  margin-bottom: .7em;
+  margin-bottom: .5em;
   a {
 
   }
@@ -128,11 +133,23 @@
   }
 }
 
+.container-light-curves {
+  position: absolute;
+  background: rgba(24, 25, 23, 0.8);
+  bottom: 0;
+  height: 10em;
+  width: 100%;
+}
+
 .now-showing {
   padding: .2rem 2rem .6rem;
   position: absolute;
   width: 100%;
-
+  top: 0rem;
+  z-index: 110;
+  .spane-details {
+    margin-top: .7em;
+  }
   .bttn-prev,
   .bttn-next {
     display: block;
@@ -177,9 +194,9 @@
   .info-box {
     @extend %base-box-skin;
     position: absolute;
-    right: -16rem;
-    top: 0;
-    z-index: 1;
+    left: 12rem;
+    top: 0rem;
+    z-index: 200;
     width: 15rem;
     font-size: 1rem;
     font-weight: normal;
@@ -310,7 +327,7 @@
   z-index: 2;
   background: rgba(#fff, 0.08);
   font-family: $base-font-family;
-  font-weight: $base-font-bold;
+  font-weight: normal;
   white-space: nowrap;
   border-radius: $global-radius/2;
   border: 0;
@@ -319,7 +336,7 @@
   width: 100%;
   line-height: 1.5rem;
   font-size: 1rem;
-  padding: 0.3rem 2rem .3rem .8rem;
+  padding: 0.25rem 2rem .3rem .8rem;
 
   @include transform(translateZ(0));
   @include transition(box-shadow 0.2s ease 0s);

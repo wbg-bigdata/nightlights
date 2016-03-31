@@ -9,15 +9,15 @@
   z-index: 100;
   color: #fff;
   overflow: hidden;
+  padding-top: 1em;
 
   // It's important that a default height and .expanded height are
   // set explicitly, because the d3 chart gets its height from this
   // container.
   transition: background-color 0.25s;
-  height: 12rem;
+  height: 10rem;
   &.expanded {
     height: 20rem;
-    background: rgba(darken($base-color, 4%), .9);
 
     .line {
       stroke-width: 1.6px;
@@ -85,6 +85,11 @@
     fill: rgba(#fff, 0.48);
     font-size: 0.875rem;
     font-weight: $base-font-regular;
+  }
+  .legend { 
+    text {
+      font-size: 0.8em;
+    }
   }
 
   .markers {
