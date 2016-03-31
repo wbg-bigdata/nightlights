@@ -45,7 +45,7 @@ let DataExplorer = React.createClass({
         // route was being attempted at this point.
         transition.redirect('nation', valid, {});
       }
-      RegionStore.setRegion(params);
+      RegionStore.setRegion(params, query);
       VillageCurveStore.setSelectedVillages(query.v || []);
     }
   },
@@ -70,6 +70,15 @@ let DataExplorer = React.createClass({
     this.unsubscribe.push(VillageCurveStore.listen(this.onVillageCurves));
     this.unsubscribe.push(TimeSeriesStore.listen(this.onTimeSeries));
     this.unsubscribe.push(Actions.toggleRggvy.listen(this.onToggleRggvy));
+    // HACK: willTransitionTo is not getting called when _just_ the query param
+    // changes, so we have to listen for that case specially
+    this.unsubscribe.push(Actions.selectDate.listen(function ({compare}) {
+      if (typeof compare !== 'undefined') {
+        setTimeout(function () {
+          RegionStore.setRegion(this.getParams(), this.getQuery());
+        }.bind(this));
+      }
+    }.bind(this)));
   },
 
   componentWillUnmount () {
@@ -119,6 +128,7 @@ let DataExplorer = React.createClass({
   hasNoData (region, villages, year, month) {
     // Decide if we need to show the no-data indicator.
     let noData = false;
+    let date = `${year}.${month}`;
     if (!region.district && region.count) {
       let count = region.count.filter((a) => a.month === month && a.year === year)[0];
       // If count is not present, assume there are no readings for this month.
@@ -127,8 +137,8 @@ let DataExplorer = React.createClass({
         count !== undefined && count.hasOwnProperty('count') && count.count < dataThreshold)) {
         noData = true;
       }
-    } else if (region.district && !villages.loading) {
-      noData = villages.data.features.length === 0;
+    } else if (region.district && villages[date] && !villages[date].loading) {
+      noData = villages[date].data.features.length === 0;
     }
 
     return noData;
@@ -140,6 +150,7 @@ let DataExplorer = React.createClass({
     let { year, month, interval } = this.getParams();
     year = +year;
     month = +month;
+    let date = `${year}.${month}`;
 
     let query = this.getQuery();
     let compare;
@@ -170,13 +181,13 @@ let DataExplorer = React.createClass({
     }
 
     // villages
-    let hasRggvyVillages = villages.loading ? [] : villages.data.features
-      .filter((feat) => feat.properties.energ_date)
-      .length > 0;
+    let hasRggvyVillages = !villages[date] || villages[date].loading
+      ? false
+      : villages[date].data.features.filter((feat) => feat.properties.energ_date).length > 0;
     let selectedVillages = villageCurves.loading ? [] : villageCurves.villages;
     let selectedVillageNames = selectedVillages;
-    if (this.state.villages && this.state.villages.data) {
-      let features = this.state.villages.data.features;
+    if (villages && villages[date] && villages[date].data) {
+      let features = villages[date].data.features;
       selectedVillageNames = selectedVillages
         .map((v) => [v, features.filter((f) => f.properties.key === v)])
         .map(([v, names]) => names.length ? names[0].properties.name : v);

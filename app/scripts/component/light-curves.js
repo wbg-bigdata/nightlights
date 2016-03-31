@@ -315,11 +315,13 @@ class LightCurves extends React.Component {
       (region.district && villageCurves.loading);
 
     // village count
-    let rggvy = villages.loading ? [] : villages.data.features
+    let date = `${this.props.year}.${this.props.month}`;
+    let features = !villages[date] || villages[date].loading
+      ? [] : villages[date].data.features;
+    let rggvy = features
       .filter((feat) => feat.properties.energ_date)
       .map((feat) => feat.properties.key);
-    let allVillages = villages.loading ? [] : villages.data.features
-      .map((feat) => feat.properties.key);
+    let allVillages = features.map((feat) => feat.properties.key);
     let highlightButton = region.district && rggvy.length ? (
       <a className='bttn-select-rggvy'
         onClick={function () { Actions.toggleRggvy(); }}>

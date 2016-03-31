@@ -127,5 +127,5 @@ Actions.unselectVillages.listen(function (villagecodes) {
 function setVillages (villages) {
   let routes = router.getCurrentRoutes();
   let route = routes[routes.length - 1].name;
-  router.transitionTo(route, router.getCurrentParams(), { v: villages });
+  router.transitionTo(route, router.getCurrentParams(), Object.assign(router.getCurrentQuery(), { v: villages }));
 }

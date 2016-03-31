@@ -421,6 +421,9 @@ class LightMap extends React.Component {
    * Receive new village point features from the store
    */
   onVillages (villagesState) {
+    let date = `${this.props.time.year}.${this.props.time.month}`;
+    villagesState = villagesState[date] ||
+      { loading: false, data: { type: 'FeatureCollection', features: [] } };
     if (!villagesState.loading && this.isMapLoaded()) {
       this.state.districtVillagesSource.setData(villagesState.data);
       if (villagesState.data.features.length > 0) {
