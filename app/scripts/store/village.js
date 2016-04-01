@@ -6,14 +6,15 @@ let apiUrl = require('../config').apiUrl;
 
 module.exports = Reflux.createStore({
   init () {
-    this.clearState();
+    this._state = {};
   },
 
-  clearState () {
-    this._state = {
-      data: { type: 'FeatureCollection', features: [] },
-      loading: false
-    };
+  clearState (keepKeys) {
+    for (let k in this._state) {
+      if (!keepKeys || keepKeys.indexOf(k) < 0) {
+        delete this._state[k];
+      }
+    }
   },
 
   getInitialState () {
@@ -25,22 +26,35 @@ module.exports = Reflux.createStore({
     this.trigger(assign({}, this._state));
   },
 
-  setDistrict ({district, year, month}) {
+  setDistrict ({district, year, month}, {compare}) {
     if (!district) {
       this.clearState();
       return this.setState({});
     }
 
-    let path = `districts/${district}/villages?month=${year}.${month}`;
-    let api = url.resolve(apiUrl, path);
+    var date = year + '.' + month;
+    this.clearState([date, compare].filter(Boolean));
+
+    if (!this._state[date]) {
+      this._state[date] = assign({}, this._state[date], { loading: true });
+      this._fetch(district, date);
+    }
+    if (compare && !this._state[compare]) {
+      this._state[compare] = assign({}, this._state[compare], { loading: true });
+      this._fetch(district, compare);
+    }
+
+    // emit the loading state to listeners
+    this.setState({});
+  },
+
+  _fetch (district, date) {
     let self = this;
-    this._mostRecentRequest = api;
-    this.setState({loading: true});
+    let path = `districts/${district}/villages?month=${date}`;
+    let api = url.resolve(apiUrl, path);
     ajax({ url: api }, function (err, result) {
-      if (err) { return self.setState(err); }
-      if (api !== self._mostRecentRequest) {
-        return;
-      }
+      if (err) { return self.setState({[date]: err}); }
+      if (!self._state[date]) { return; }
 
       let data = {
         type: 'FeatureCollection',
@@ -61,8 +75,10 @@ module.exports = Reflux.createStore({
       };
 
       self.setState({
-        data,
-        loading: false
+        [date]: {
+          data,
+          loading: false
+        }
       });
     });
   }
