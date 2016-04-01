@@ -28,14 +28,16 @@ let Search = React.createClass({
       fuse: fuse(RegionListStore.getInitialState())
     };
   },
+
   componentDidMount () {
     this.unsubscribe = [];
-    this.unsubscribe.push(RegionListStore.listen(data => {
+    this.unsubscribe.push(RegionListStore.listen((data) => {
       /* eslint react/no-did-mount-set-state: [2, "allow-in-func"] */
       this.setState({ fuse: fuse(data) });
     }));
   },
-  componentDidUnmount () { this.unsubscribe.forEach(u => u()); },
+
+  componentDidUnmount () { this.unsubscribe.forEach((u) => u()); },
   onClick () {
     this.setState({active: true});
   },
@@ -47,18 +49,11 @@ let Search = React.createClass({
     if (event.which === 13) {
       // enter key
       let best = this.getSuggestions(this.state.currentValue)[0];
-      if (!best || !best.name) {
-        var node = React.findDOMNode(this.refs.search);
-        // Remove error class.
-        node.className = node.className.replace(/ ?no-results/, '');
-        // Add it back on next tick so that css animation is triggered.
-        setTimeout(function () { node.className += ' no-results'; }, 1);
-        return;
-      }
+      if (!best || !best.name) { return this.onNotFound(); }
       // if the value in the search box exactly equals the best suggestion
       // then just go there.
       if (this.state.currentValue === best.name) {
-        this.go(best);
+        this.onSubmit();
       } else if (best.name) {
       // otherwise, complete the value in the input, so that hitting enter
       // again will navigate
@@ -67,13 +62,38 @@ let Search = React.createClass({
     }
   },
 
+  onNotFound () {
+    var node = React.findDOMNode(this.refs.search);
+    // Remove error class.
+    node.className = node.className.replace(/ ?no-results/, '');
+    // Add it back on next tick so that css animation is triggered.
+    setTimeout(function () { node.className += ' no-results'; }, 1);
+  },
+
+  onClear (e) {
+    e.preventDefault();
+    this.setState({currentValue: ''});
+    let node = React.findDOMNode(this);
+    node.querySelector('#search-input').focus();
+  },
+
+  onReset () {
+    this.setState({currentValue: this.props.initialValue});
+  },
+
+  onSubmit () {
+    let best = this.getSuggestions(this.state.currentValue)[0];
+    if (!best || !best.name) { return this.onNotFound(); }
+    this.go(best);
+  },
+
   getSuggestions (input, callback) {
     let suggestions = this.state.fuse.search(input);
     suggestions.sort((a, b) => {
       let diff = a.score - b.score;
       return diff || (a.item.name < b.item.name ? -1 : 1);
     });
-    suggestions = suggestions.map(s => s.item);
+    suggestions = suggestions.map((s) => s.item);
 
     if (callback) {
       callback(null, suggestions);
@@ -89,17 +109,25 @@ let Search = React.createClass({
       state: region.type === 'state' ? region.key : region.state,
       district: region.type === 'state' ? undefined : region.key
     };
-    this.transitionTo(region.type, params);
+    this.transitionTo(region.type, params, this.getQuery());
   },
 
   render () {
     return (
       <div className='search' ref='search'>
+        <a href='#' onClick={this.onClear} className='bttn-clear-search'>
+          <span>Clear Search</span>
+        </a>
+        <a className='bttn-search'
+          onClick={this.onSubmit}
+          title='Search'>
+          <span>Search</span>
+        </a>
         <label htmlFor='search-input'><span>Where</span></label>
         <Autosuggest suggestions={this.getSuggestions}
-          suggestionRenderer={s => s.name}
-          suggestionValue={s => s.name}
-          onSuggestionSelected={s => this.go(s)}
+          suggestionRenderer={getName}
+          suggestionValue={getName}
+          onSuggestionSelected={this.go}
           value={this.state.currentValue}
           scrollBar
           inputAttributes={{
@@ -108,12 +136,15 @@ let Search = React.createClass({
             placeholder: 'Enter region...',
             type: 'search',
             onKeyPress: this.onKeyPress,
-            onChange: value => this.setState({ currentValue: value })
+            onChange: (value) => this.setState({ currentValue: value }),
+            onBlur: this.onReset
           }}
           />
       </div>
     );
   }
 });
+
+function getName (s) { return s.name; }
 
 module.exports = Search;

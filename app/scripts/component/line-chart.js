@@ -100,7 +100,7 @@ class LineChart extends React.Component {
     }
 
     return (
-      <g>
+      <g transform={`translate(0,10)`}>
         <rect className='mouse-catcher'
           style={{fill: 'rgba(0,0,0,.01)'}}
           x={0} y={0} width={10000} height={10000} />
@@ -151,10 +151,6 @@ class LineChart extends React.Component {
           )}
         </g>
 
-        <g className='legend' transform={`translate(${x.scale(0)},12)`}>
-          {this.props.legend || []}
-        </g>
-
         <g transform={`translate(${x.scale(0)},0)`}>
           <Axis orientation='vertical'
             scale={y.scale}
@@ -174,7 +170,6 @@ class LineChart extends React.Component {
             tickClasses={markerClasses}
           />
         </g>
-
       </g>
     );
   }
@@ -193,7 +188,6 @@ LineChart.propTypes = {
   markerClass: React.PropTypes.func,
   emphasized: React.PropTypes.array,
   onCursorClick: React.PropTypes.func,
-  legend: React.PropTypes.node,
   showSeriesEnvelopes: React.PropTypes.bool
 };
 

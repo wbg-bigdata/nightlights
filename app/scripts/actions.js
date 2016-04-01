@@ -26,5 +26,7 @@ module.exports = Reflux.createActions({
   'selectVillages': {},
   'unselectVillages': {},
   'recenterMap': {},
-  'toggleRggvy': {}
+  'toggleRggvy': {},
+  'toggleChartExpanded': {},
+  'toggleCompareMode': {}
 });

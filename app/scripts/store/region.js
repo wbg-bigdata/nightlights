@@ -55,7 +55,7 @@ module.exports = Reflux.createStore({
     this.trigger(assign({}, this._region));
   },
 
-  setRegion (params) {
+  setRegion (params, query) {
     let {state, district} = params;
     let level = state ? (district ? 'district' : 'state') : 'nation';
     let key = params[level];
@@ -76,7 +76,7 @@ module.exports = Reflux.createStore({
 
     this.setState({ loading: true, loadingMessage, state, district, level });
     TimeSeriesStore.setRegion(params);
-    VillageStore.setDistrict(params);
+    VillageStore.setDistrict(params, query);
 
     if (shouldSkipEndpoint) {
       this.setState({ loading: false });
