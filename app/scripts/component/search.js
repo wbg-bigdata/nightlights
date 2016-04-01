@@ -28,6 +28,7 @@ let Search = React.createClass({
       fuse: fuse(RegionListStore.getInitialState())
     };
   },
+
   componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionListStore.listen((data) => {
@@ -35,6 +36,7 @@ let Search = React.createClass({
       this.setState({ fuse: fuse(data) });
     }));
   },
+
   componentDidUnmount () { this.unsubscribe.forEach((u) => u()); },
   onClick () {
     this.setState({active: true});
@@ -70,7 +72,9 @@ let Search = React.createClass({
 
   onReset (e) {
     e.preventDefault();
-    this.setState({currentValue: this.props.initialValue});
+    this.setState({currentValue: ''});
+    let node = React.findDOMNode(this);
+    node.querySelector('#search-input').focus();
   },
 
   onSubmit () {
