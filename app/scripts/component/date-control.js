@@ -1,5 +1,6 @@
 let React = require('react');
 let timespan = require('../lib/timespan');
+let months = require('../lib/months');
 
 class DateControl extends React.Component {
   constructor () {
@@ -20,7 +21,7 @@ class DateControl extends React.Component {
 
   render () {
     let valid = timespan.getValid({year: this.props.year, month: this.props.month});
-    let currentMonth = valid.month + ' / ' + valid.year;
+    let currentMonth = months[valid.month - 1] + ' ' + valid.year;
     let nextClassName = timespan.isLast(valid)
       ? 'bttn-next inactive' : 'bttn-next';
     let prevClassName = timespan.isFirst(valid)
