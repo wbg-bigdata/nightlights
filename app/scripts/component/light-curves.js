@@ -265,6 +265,7 @@ class LightCurves extends React.Component {
       .domain(domainY)
       .range([height - margins.top, margins.bottom]);
 
+    console.log(domainY.join(','), height, this.props.compareMode);
     return {
       scales: { x: scaleX, y: scaleY },
       domains: { x: domainX, y: domainY },
@@ -355,8 +356,8 @@ class LightCurves extends React.Component {
       acc('smoothedQuintile4')
     ] : undefined;
 
-    return (<div className='container-light-curves'>
-      <div className={classnames('light-curves', region.level, {expanded})}>
+    return (<div className={classnames('container-light-curves', {expanded})}>
+      <div className={classnames('light-curves', region.level)}>
         <div className='now-showing'>
           <DateControl year={this.props.year} month={this.props.month}
             interval={this.props.interval}
@@ -424,8 +425,11 @@ class LightCurves extends React.Component {
             markerClass={function (m) { return m.className || ''; }}
             emphasized={region.emphasized || []}
             margins={margins}
-            legend={legend}
             onCursorClick={onCursorClick} />
+
+          <g className='legend' transform={`translate(${scales.x(0)}, ${height - 32})`}>
+            {this.props.compareMode === 'right' ? false : legend}
+          </g>
         </svg>
         }
       </div>

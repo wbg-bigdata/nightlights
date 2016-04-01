@@ -170,11 +170,6 @@ class LineChart extends React.Component {
             tickClasses={markerClasses}
           />
         </g>
-
-        <g className='legend' transform={`translate(${x.scale(0)},115)`}>
-          {this.props.legend || []}
-        </g>
-
       </g>
     );
   }
@@ -193,7 +188,6 @@ LineChart.propTypes = {
   markerClass: React.PropTypes.func,
   emphasized: React.PropTypes.array,
   onCursorClick: React.PropTypes.func,
-  legend: React.PropTypes.node,
   showSeriesEnvelopes: React.PropTypes.bool
 };
 

@@ -1,5 +1,25 @@
 // LIGHT CURVE PLOTS
 
+
+// It's important that a default height and .expanded height are
+// set explicitly, because the d3 chart gets its height from this
+// container.
+
+.container-light-curves {
+  position: absolute;
+  background: rgba(24, 25, 23, 0.8);
+  bottom: 0;
+  height: 10rem;
+  &.expanded {
+    height: 20rem;
+  }
+  width: 100%;
+
+  // side-by-side layout
+  .compare & { width: 50%; }
+  .compare & + & { left: 50%; }
+}
+
 .light-curves {
   @extend %base-box-skin;
   position: absolute;
@@ -11,14 +31,10 @@
   overflow: hidden;
   padding-top: 1em;
 
-  // It's important that a default height and .expanded height are
-  // set explicitly, because the d3 chart gets its height from this
-  // container.
   transition: background-color 0.25s;
   height: 10rem;
-  &.expanded {
+  .expanded & {
     height: 20rem;
-
     .line {
       stroke-width: 1.6px;
     }

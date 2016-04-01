@@ -277,7 +277,7 @@ let DataExplorer = React.createClass({
             villageCurves={villageCurves}
             smoothing
             region={region}
-            margins={{left: 36, right: 36, top: 48, bottom: 48}}
+            margins={{left: 36, right: 36, top: 70, bottom: 48}}
             />
           : ''
         }

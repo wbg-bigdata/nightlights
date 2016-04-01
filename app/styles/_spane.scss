@@ -164,19 +164,6 @@
   }
 }
 
-.container-light-curves {
-  position: absolute;
-  background: rgba(24, 25, 23, 0.8);
-  bottom: 0;
-  height: 10em;
-  width: 100%;
-
-  // side-by-side layout
-  .compare & { width: 50%; }
-  .compare & + & { left: 50%; }
-}
-
-
 .now-showing {
   padding: .2rem 2rem .6rem;
   position: absolute;
