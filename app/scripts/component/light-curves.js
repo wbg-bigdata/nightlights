@@ -335,7 +335,7 @@ class LightCurves extends React.Component {
       let nowData = timeSeries.results.filter((d) =>
         +d.year === +this.props.year && +d.month === +this.props.month && d.key === region.key);
       median = d3.mean(nowData, (d) => d.vis_median);
-      numeral(median).format('0.00');
+      median = numeral(median).format('0.00');
     }
 
     let markers = [ ];
