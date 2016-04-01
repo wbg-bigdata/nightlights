@@ -70,11 +70,15 @@ let Search = React.createClass({
     setTimeout(function () { node.className += ' no-results'; }, 1);
   },
 
-  onReset (e) {
+  onClear (e) {
     e.preventDefault();
     this.setState({currentValue: ''});
     let node = React.findDOMNode(this);
     node.querySelector('#search-input').focus();
+  },
+
+  onReset () {
+    this.setState({currentValue: this.props.initialValue});
   },
 
   onSubmit () {
@@ -111,7 +115,7 @@ let Search = React.createClass({
   render () {
     return (
       <div className='search' ref='search'>
-        <a href='#' onClick={this.onReset} className='bttn-clear-search'>
+        <a href='#' onClick={this.onClear} className='bttn-clear-search'>
           <span>Clear Search</span>
         </a>
         <a className='bttn-search'
@@ -132,7 +136,8 @@ let Search = React.createClass({
             placeholder: 'Enter region...',
             type: 'search',
             onKeyPress: this.onKeyPress,
-            onChange: (value) => this.setState({ currentValue: value })
+            onChange: (value) => this.setState({ currentValue: value }),
+            onBlur: this.onReset
           }}
           />
       </div>
