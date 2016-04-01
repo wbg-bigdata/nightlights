@@ -62,14 +62,14 @@ router.run((Root, routeState) => {
 
 // When the user selects a region (`key`), go to the appropriate route.
 Actions.select.listen(function (key) {
-  let {state, year, month} = router.getCurrentParams();
-  var route = state ? 'district' : 'state';
-  router.transitionTo(route, {
-    state: state || key,
-    district: state ? key : undefined,
-    year,
-    month
-  }, router.getCurrentQuery());
+  let params = router.getCurrentParams();
+  let query = router.getCurrentQuery();
+  if (!key) { router.transitionTo('nation', params, query); }
+  let route = params.state ? 'district' : 'state';
+  router.transitionTo(route, Object.assign(params, {
+    state: params.state || key,
+    district: params.state ? key : undefined
+  }), query);
 });
 
 // When user wants to 'escape' from the current region, go up by one

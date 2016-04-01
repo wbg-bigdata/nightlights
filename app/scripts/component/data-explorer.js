@@ -144,6 +144,16 @@ let DataExplorer = React.createClass({
     return noData;
   },
 
+  selectParent (e) {
+    e.preventDefault();
+    Actions.selectParent();
+  },
+
+  selectNation (e) {
+    e.preventDefault();
+    Actions.select();
+  },
+
   render () {
     let {region, timeSeries, villages, villageCurves} = this.state;
     // get year and month from router params
@@ -169,11 +179,17 @@ let DataExplorer = React.createClass({
     properties = properties || {};
     // region name for search box
     let name = loading ? '' : properties.name;
-    if (!loading && level === 'district') {
-      let state = region.state;
-      name = state.replace(/-/g, ' ') + ' / ' + name;
-    }
     name = titlecase(name.toLowerCase());
+    let stateName = titlecase((region.state || '').replace(/-/g, ' '));
+
+    let breadcrumbs = [];
+    if (level !== 'nation') {
+      breadcrumbs.push(<a href='#' onClick={this.selectNation}>India</a>);
+    }
+    if (level === 'district') {
+      breadcrumbs.push(<a href='#' onClick={this.selectParent}>{stateName}</a>);
+    }
+    breadcrumbs.push(name);
 
     // population
     let population = 'Unknown';
@@ -206,8 +222,7 @@ let DataExplorer = React.createClass({
         />
         <section className='spane region-detail'>
           <ul>
-            <li className='breadcrumbs'><a href='#'>Region</a></li>
-            <li className='breadcrumbs'>Region 2</li>
+            {breadcrumbs.map((b) => <li className='breadcrumbs'>{b}</li>)}
           </ul>
           <div className='spane-header'>
             <h1 className='spane-title'>{name}</h1>
