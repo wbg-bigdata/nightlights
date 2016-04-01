@@ -106,7 +106,7 @@
   }
 }
 
-.bttn-center-map, .bttn-clear-map {
+.bttn-search, .bttn-clear-search {
   position: absolute;
   top: 50%;
   right: .18em;
@@ -134,13 +134,13 @@
   }
 }
 
-.bttn-center-map { 
+.bttn-search { 
   margin-left: .3em;
   padding-left: .3em;
   border-left: 1px solid grey;
 }
 
-.bttn-clear-map {
+.bttn-clear-search {
   right: 2.2em;
   &:before {
     display: block;
