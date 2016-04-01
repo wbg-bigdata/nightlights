@@ -174,6 +174,7 @@ let DataExplorer = React.createClass({
       name = state.replace(/-/g, ' ') + ' / ' + name;
     }
     name = titlecase(name.toLowerCase());
+
     // population
     let population = 'Unknown';
     if (!isNaN(properties.tot_pop)) {
@@ -193,6 +194,8 @@ let DataExplorer = React.createClass({
         .map(([v, names]) => names.length ? names[0].properties.name : v);
     }
 
+    let apiUrl = timeSeries ? timeSeries.url : 'http://api.nightlights.io/';
+
     return (
       <div className={classnames('data-container', { compare: !!compare })}>
         <VillageDetail
@@ -203,7 +206,7 @@ let DataExplorer = React.createClass({
         />
         <section className='spane region-detail'>
           <ul>
-            <li className='breadcrumbs'><a href="#">Region</a></li>
+            <li className='breadcrumbs'><a href='#'>Region</a></li>
             <li className='breadcrumbs'>Region 2</li>
           </ul>
           <div className='spane-header'>
@@ -270,6 +273,14 @@ let DataExplorer = React.createClass({
           content={welcomeText}
           cookieKey='welcomeModalHasPlayed'
         />
+      <div className='footer'>
+        {apiUrl ? <div className='api-url'>
+          <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
+        </div> : []}
+        <div className='attribution'>
+          Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
+        </div>
+      </div>
       </div>
     );
   }

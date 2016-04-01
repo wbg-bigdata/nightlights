@@ -146,12 +146,12 @@
   }
 }
 
-.light-curves .footer {
+.data-container .footer {
   width: 100%;
   position: absolute;
-  bottom: 0.125rem;
+  bottom: -2em;
   padding: 0 36px;
-  z-index: 1;
+  z-index: 2;
   line-height: 2;
   text-align: right;
   font-family: $code-font-family;
@@ -159,13 +159,6 @@
   *, a {
     color: rgba($base-font-color, .15);
   }
-}
-
-.light-curves.expanded .api-url {
-  float: left;
-}
-
-.light-curves:not(.expanded) .api-url {
-  @extend .visually-hidden;
+  .api-url { float: left; }
 }
 

@@ -73,7 +73,7 @@ Actions.select.listen(function (key) {
 });
 
 // When user wants to 'escape' from the current region, go up by one
-// addmin level
+// admin level
 Actions.selectParent.listen(function () {
   let {state, district, year, month} = router.getCurrentParams();
   // if we're already up at nation view, do nothing

@@ -355,8 +355,6 @@ class LightCurves extends React.Component {
       acc('smoothedQuintile4')
     ] : undefined;
 
-    let apiUrl = timeSeries ? timeSeries.url : 'http://api.nightlights.io/';
-
     return (<div className='container-light-curves'>
       <div className={classnames('light-curves', region.level, {expanded})}>
         <div className='now-showing'>
@@ -395,14 +393,6 @@ class LightCurves extends React.Component {
             </li>
           ] : []}
           </ul>
-        </div>
-        <div className='footer'>
-          {apiUrl ? <div className='api-url'>
-            <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
-          </div> : []}
-          <div className='attribution'>
-            Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
-          </div>
         </div>
 
         {loading ? <Loading message={region.loadingMessage} errors={errors} />
