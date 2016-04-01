@@ -49,11 +49,18 @@
   .mapboxgl-popup-close-button { display: none; }
 
   .mapboxgl-ctrl-top-right { top: 140px; }
-  .mapboxgl-ctrl-zoom-in { 
-    //todo
+  .mapboxgl-ctrl-group {
+    background: rgba(#fff, 0.2);
   }
-  .mapboxgl-ctrl-zoom-out { 
-    //todo
+  .mapboxgl-ctrl-icon.mapboxgl-ctrl-zoom-in { 
+    background-image: none;
+    border-bottom-color: rgba(#fff, .1);
+    &:before { @extend .icon-s-add; }
+  }
+  .mapboxgl-ctrl-icon.mapboxgl-ctrl-zoom-out { 
+    background-image: none;
+    border-bottom: 0;
+    &:after { @extend .icon-s-subtract; }
   }
   // hide the compass button, because we keep orientation locked
   .mapboxgl-ctrl-compass { display: none; }
