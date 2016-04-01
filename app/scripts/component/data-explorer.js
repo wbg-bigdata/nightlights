@@ -208,6 +208,9 @@ let DataExplorer = React.createClass({
           </ul>
           <div className='spane-header'>
             <h1 className='spane-title'>{name}</h1>
+            <a className='bttn-clear-map'>
+              <span>Clear out input box</span>
+            </a>
             <a className='bttn-center-map'
               onClick={Actions.recenterMap}
               title='Zoom to location bounds'>

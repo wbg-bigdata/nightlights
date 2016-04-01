@@ -15,6 +15,7 @@
   margin-right: 1.5rem;
   width: 40%;
   float: left;
+  max-width: 300px;
   > *:last-child { 
     margin-bottom: 0;
   }
@@ -27,7 +28,6 @@
 .spane-title {
   @include heading(1rem);
   font-weight: 700;
-  margin: .2em .5em 0 0;
   float: left;
   small {
     @extend .hd-sup;
@@ -36,7 +36,8 @@
   }
   span {
     margin-right: .5em;
-    padding-top: .2em;
+    margin-top: .1em;
+    display: inline-block;
   }
   .region-detail & {
     @extend .visually-hidden;
@@ -105,13 +106,13 @@
   }
 }
 
-.bttn-center-map {
+.bttn-center-map, .bttn-clear-map {
   position: absolute;
   top: 50%;
-  right: 0;
+  right: .18em;
   z-index: 4;
-  height: 2rem;
-  line-height: 2;
+  height: 1.5rem;
+  line-height: 1.5em;
   width: 2rem;
   text-align: center;
   font-size: 1rem;
@@ -130,6 +131,20 @@
     outline: none;
     margin-top: 1px;
     @include transform(translate(0, -50%));
+  }
+}
+
+.bttn-center-map { 
+  margin-left: .3em;
+  padding-left: .3em;
+  border-left: 1px solid grey;
+}
+
+.bttn-clear-map {
+  right: 2.2em;
+  &:before {
+    display: block;
+    @extend .icon-s-cancel;
   }
 }
 
@@ -190,10 +205,14 @@
   .bttn-compare { 
     font-size: .9rem;
     margin-left: 1.5em;
-    padding-left: 1.5em;
-    border-left: 1px solid grey;
     margin-top: .4em;
     display: inline-block;
+    border-bottom: 1px solid $primary-color;
+  }
+
+  .browse-date { 
+    float: right;
+    margin-left: .5em;
   }
 
   .info-box {
@@ -283,7 +302,7 @@
   left: -14rem;
   width: 14rem;
   padding: 1.5rem 2rem;
-  z-index: 101;
+  z-index: 10;
 
   -webkit-transition-delay: .4s;
   transition-delay: .4s;

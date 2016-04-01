@@ -18,7 +18,13 @@
 
   // side-by-side layout
   .compare & { width: 50%; }
-  .compare & + & { left: 50%; }
+  .compare & + & { 
+    left: 50%; 
+    border-left: 1px solid #484848;
+    .legend {
+      display: none;
+    }
+  }
 
   canvas {
     outline: none;
