@@ -94,38 +94,28 @@
 }
 
 .breadcrumbs {
+  position: relative; // needed for icon placement
   display: inline-block;
   font-size: .8em;
   margin-bottom: .5em;
+  position: relative;
   a {
 
   }
-  a:after {
+  & + &:before {
     content: '/';
     padding: 0 0.5em;
   }
 }
 
-.bttn-search, .bttn-clear-search {
+.bttn-center-map, .bttn-search, .bttn-clear-search {
   position: absolute;
   top: 50%;
-  right: .18em;
   z-index: 4;
-  height: 1.5rem;
-  line-height: 1.5em;
-  width: 2rem;
   text-align: center;
-  font-size: 1rem;
   @include transform(translate(0, -50%));
-  span {
-    @extend .visually-hidden;
-  }
   &:visited, & {
     color: inherit;
-  }
-  &:before {
-    display: block;
-    @extend .icon-target-alt;
   }
   &:active{
     outline: none;
@@ -134,10 +124,25 @@
   }
 }
 
-.bttn-search { 
-  margin-left: .3em;
-  padding-left: .3em;
-  border-left: 1px solid grey;
+.bttn-center-map {
+  &:after {
+    @extend .icon-target-alt;
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 0.75em;
+    padding-left: 0.25em;
+    padding-bottom: 1px;
+  }
+}
+
+.bttn-search, .bttn-clear-search {
+  width: 2rem;
+  height: 1.5rem;
+  line-height: 1.5em;
+  font-size: 1rem;
+  span {
+    @extend .visually-hidden;
+  }
 }
 
 .bttn-clear-search {
@@ -145,6 +150,17 @@
   &:before {
     display: block;
     @extend .icon-s-cancel;
+  }
+}
+
+.bttn-search { 
+  right: .18em;
+  margin-left: .3em;
+  padding-left: .3em;
+  border-left: 1px solid grey;
+  &:before {
+    display: block;
+    @extend .icon-search-left;
   }
 }
 
@@ -329,14 +345,6 @@
     @include transform(translate(0, -50%));
     span {
       @extend .visually-hidden;
-    }
-    &:before {
-      @extend .icon-search-left;
-      opacity: 0.24;
-    }
-    &:hover {
-      cursor: pointer;
-      opacity: 0.64;
     }
   }
 

@@ -47,7 +47,19 @@
   }
   // the close button
   .mapboxgl-popup-close-button { display: none; }
+
+  .mapboxgl-ctrl-top-right { top: 140px; }
+  .mapboxgl-ctrl-zoom-in { 
+    //todo
+  }
+  .mapboxgl-ctrl-zoom-out { 
+    //todo
+  }
+  // hide the compass button, because we keep orientation locked
+  .mapboxgl-ctrl-compass { display: none; }
 }
+
+.light-map_left .mapbox-ctrl-zoom { display: none; }
 
 .mapboxgl-ctrl-attrib {
   background: transparent;

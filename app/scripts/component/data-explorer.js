@@ -189,7 +189,14 @@ let DataExplorer = React.createClass({
     if (level === 'district') {
       breadcrumbs.push(<a href='#' onClick={this.selectParent}>{stateName}</a>);
     }
-    breadcrumbs.push(name);
+    breadcrumbs.push(
+      <span><a className='bttn-center-map'
+          onClick={Actions.recenterMap.bind(Actions)}
+          title={'Recenter map on ' + name}>
+            <span>{name}</span>
+        </a>
+      </span>
+    );
 
     // population
     let population = 'Unknown';

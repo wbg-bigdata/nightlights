@@ -1,4 +1,5 @@
 let React = require('react');
+let classnames = require('classnames');
 let mgl = require('mapbox-gl');
 let extent = require('turf-extent');
 let centroid = require('turf-centroid');
@@ -166,6 +167,7 @@ class LightMap extends React.Component {
       attributionControl: false,
       style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
+    self.map.addControl(new mgl.Navigation({position: 'top-right'}));
     console.info('The Mapbox GL map is available as `window.glMap`');
     this._removeMap = this.props.onMapCreated(self.map);
 
@@ -647,9 +649,13 @@ class LightMap extends React.Component {
   }
 
   render () {
+    let cn = classnames('light-map', {
+      ['light-map_' + this.props.compareMode]: this.props.compareMode
+    });
+
     if (this.state.unsupported) {
       return (
-        <div className='light-map'>
+        <div className={cn}>
           <Modal isOn isPermanent content={unsupportedText} />
         </div>
       );
@@ -663,7 +669,7 @@ class LightMap extends React.Component {
       : [this.state.region, this.state.villages].map((s) => s.error);
 
     return (
-      <div className='light-map'>
+      <div className={cn}>
         {loading ? <Loading errors={errors} /> : ''}
         <div className='map-inner' />
       </div>
