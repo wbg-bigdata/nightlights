@@ -108,7 +108,7 @@
   }
 }
 
-.bttn-center-map, .bttn-search, .bttn-clear-search {
+.bttn-search, .bttn-clear-search {
   position: absolute;
   top: 50%;
   z-index: 4;
@@ -125,12 +125,13 @@
 }
 
 .bttn-center-map {
+  color: #C9C8C8;
   &:after {
     @extend .icon-target-alt;
     display: inline-block;
     vertical-align: middle;
     font-size: 0.75em;
-    padding-left: 0.25em;
+    padding-left: 0.5em;
     padding-bottom: 1px;
   }
 }
@@ -147,6 +148,9 @@
 
 .bttn-clear-search {
   right: 2.2em;
+  margin-right: .3em;
+  padding-right: .3em;
+  border-right: 1px solid grey;
   &:before {
     display: block;
     @extend .icon-s-cancel;
@@ -155,9 +159,6 @@
 
 .bttn-search { 
   right: .18em;
-  margin-left: .3em;
-  padding-left: .3em;
-  border-left: 1px solid grey;
   &:before {
     display: block;
     @extend .icon-search-left;
@@ -257,7 +258,7 @@
 
 .village-detail {
   position: absolute;
-  top: 15rem;
+  top: 8rem;
   left: 0;
   z-index: 100;
   width: 14rem;
