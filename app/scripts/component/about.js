@@ -68,7 +68,8 @@ let Data = React.createClass({
 ## [Get the Data](http://api.nightlights.io)
 The data from this platform is open-source. It can be accessed from the [India Lights API](http://api.nightlights.io).
 
-Email [brunosanchez@worldbank.org](mailto:brunosanchez@worldbank.org) with questions.
+You may email [Kwawu Mensan Gaba](mailto:KGaba@worldbank.org) or [Brian Min](mailto:brianmin@umich.edu) if you have questions.
+
 ## Twenty years of India Lights
 The India Lights platform shows light output at night for 20 years for 600,000 villages across India. The Defense Meteorological Satellite Program (DMSP) has taken pictures of the Earth every night from 1993 to 2013. Researchers at the University of Michigan, in collaboration with the World Bank, used the DMSP images to extract the data you see on the India Lights platform. Each point you see on the map represents the light output of a specific village at a specific point in time. On the district level, the map also allows you to filter to view villages that have participated in India’s flagship electrification program (you can read more about it [here](#/stories/rggvy)). This tremendous trove of data can be used to look at changes in light output, which can be used to complement research about electrification in the country.
 
@@ -115,6 +116,9 @@ To derive a single measurement, the light output values were extracted from the 
 First, we filtered out data with too much cloud cover and solar glare, according to recommendations from the National Oceanic and Atmospheric Administration (NOAA). We aggregated the resulting 4.4 billion data points by taking the median measurement for each village over the course of a month. We adjusted for differences among satellites using a multiple regression on year and satellite to isolate the effect of each satellite. To analyze data on the state and district level, we also determined the median village light output within each administrative boundary for each month in the twenty-year time span.  These monthly aggregates for each village, district, and state are the data that we have made accessible through the [API](http://api.nightlights.io).
 
 To generate the map and light curve visualizations that are presented on this site, we performed some additional data processing. For the light curves, we used a rolling average to smooth out the noise due to wide fluctuations inherent in satellite measurements. For the map, we took a random sample of 10% of the villages, stratified over districts to ensure good coverage across regions of varying village density.
+
+## Citation
+Gaba, Kwawu Mensan; Min, Brian; Thakker, Anand; Elvidge, Chris. 2016. [nightlights.io](http://nightlights.io/): Twenty Years of India Lights. 
 
 ## Acknowledgments
 The India Lights project is a collaboration between [Development Seed](https://developmentseed.org), [The World Bank](http://www.worldbank.org/), and [Dr. Brian Min](http://www-personal.umich.edu/~brianmin/) at the University of Michigan.
