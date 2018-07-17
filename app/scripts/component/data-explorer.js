@@ -86,7 +86,7 @@ class DataExplorer extends React.Component {
   render () {
     let {region, timeSeries, villages, villageCurves} = this.state;
     // get year and month from router params
-    let {year, month, interval } = this.getParams();
+    let {year, month, interval } = this.props.match.params;
     year = +year;
     month = +month;
 

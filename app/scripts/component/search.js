@@ -28,7 +28,7 @@ class Search extends React.Component {
     }));
   }
 
-  componentDidUnmount () {
+  componentWillUnMount () {
     this.unsubscribe.forEach(u => u());
   }
 
