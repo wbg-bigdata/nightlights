@@ -17,61 +17,80 @@
   "homepage": "https://github.com/developmentseed/project-seed",
   "main": "app/scripts/main.js",
   "scripts": {
-    "serve": "gulp serve",
-    "build": "gulp",
+    "serve": "DS_ENV=development gulp serve",
+    "build": "DS_ENV=production NODE_ENV=production gulp",
     "lint": "semistandard app/scripts/**/*.js",
     "test": "echo no other tests yet!"
   },
-  "devDependencies": {
-    "autoprefixer-core": "^4.0.2",
-    "babel": "^5.4.7",
-    "babelify": "^6.1.1",
-    "brfs": "^1.4.0",
-    "browser-sync": "^1.8.2",
-    "browserify": "^10.1.2",
-    "browserify-shim": "^3.8.6",
-    "del": "^1.1.1",
-    "envify": "^3.4.0",
-    "gulp": "^3.6.0",
-    "gulp-cache": "^0.2.2",
-    "gulp-csso": "^0.2.6",
-    "gulp-exit": "0.0.2",
-    "gulp-if": "^1.2.1",
-    "gulp-imagemin": "^2.0.0",
-    "gulp-jshint": "^1.5.3",
-    "gulp-load-plugins": "^0.8.0",
-    "gulp-minify-html": "^0.1.6",
-    "gulp-postcss": "^3.0.0",
-    "gulp-rev": "^3.0.1",
-    "gulp-rev-replace": "^0.4.0",
-    "gulp-sass": "^2.0",
-    "gulp-size": "^1.1.0",
-    "gulp-sourcemaps": "^1.3.0",
-    "gulp-uglify": "^1.0.1",
-    "gulp-useref": "^1.0.2",
-    "gulp-util": "^3.0.4",
-    "jshint-stylish": "^1.0.0",
-    "lodash.assign": "^3.1.0",
-    "node-neat": "^1.7.2",
-    "opn": "^1.0.0",
-    "semistandard": "^4.1.4",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.2.1"
+  "engines": {
+    "node": "8.x"
   },
   "browserify": {
     "transform": [
       [
         "babelify",
-        {}
+        {
+          "presets": [
+            "env",
+            "react"
+          ],
+          "plugins": [
+            "transform-es2015-spread",
+            "transform-object-rest-spread"
+          ]
+        }
       ],
-      "brfs",
-      "envify",
-      "browserify-shim"
+      "require-globify",
+      "envify"
     ]
   },
   "browserify-shim": {
     "d3": "global:d3"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.3",
+    "babel-plugin-transform-es2015-spread": "^6.22.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.7.0",
+    "babel-preset-react": "^6.24.1",
+    "babelify": "^8.0.0",
+    "browser-sync": "^2.24.4",
+    "browserify": "^16.2.2",
+    "del": "^3.0.0",
+    "envify": "^4.1.0",
+    "eslint": "^4.19.1",
+    "eslint-config-standard": "^11.0.0",
+    "eslint-plugin-import": "^2.12.0",
+    "eslint-plugin-node": "^6.0.1",
+    "eslint-plugin-promise": "^3.7.0",
+    "eslint-plugin-react": "^7.8.2",
+    "eslint-plugin-standard": "^3.1.0",
+    "fancy-log": "^1.3.2",
+    "gulp": "^3.9.1",
+    "gulp-cache": "^1.0.2",
+    "gulp-csso": "^3.0.1",
+    "gulp-exit": "0.0.2",
+    "gulp-if": "^2.0.2",
+    "gulp-imagemin": "^4.1.0",
+    "gulp-load-plugins": "^1.5.0",
+    "gulp-plumber": "^1.2.0",
+    "gulp-rev": "^8.1.1",
+    "gulp-rev-replace": "^0.4.4",
+    "gulp-sass": "^4.0.1",
+    "gulp-size": "^3.0.0",
+    "gulp-sourcemaps": "^2.6.4",
+    "gulp-uglify": "^3.0.0",
+    "gulp-useref": "^3.1.5",
+    "node-bourbon": "^4.2.8",
+    "node-neat": "^2.0.0-beta.0",
+    "node-notifier": "^5.2.1",
+    "node-sass": "^4.9.0",
+    "require-globify": "^1.4.1",
+    "semistandard": "^12.0.1",
+    "vinyl-buffer": "^1.0.1",
+    "vinyl-source-stream": "^2.0.0",
+    "watchify": "^3.11.0"
   },
   "dependencies": {
     "classnames": "^2.1.1",
@@ -81,7 +100,6 @@
     "lodash.difference": "^3.2.1",
     "lodash.throttle": "^3.0.3",
     "lodash.union": "^3.1.0",
-    "mapbox-gl": "^0.11.2",
     "mapbox.js": "^2.2.1",
     "nets": "^3.1.0",
     "numeral": "^1.5.3",

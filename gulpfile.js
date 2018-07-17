@@ -3,6 +3,7 @@
 var fs = require('fs');
 var gulp = require('gulp');
 var $ = require('gulp-load-plugins')();
+var del = require('del');
 var browserSync = require('browser-sync');
 var reload = browserSync.reload;
 var watchify = require('watchify');
@@ -10,107 +11,163 @@ var browserify = require('browserify');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 var sourcemaps = require('gulp-sourcemaps');
-var gutil = require('gulp-util');
-var assign = require('lodash.assign');
+var log = require('fancy-log');
 var exit = require('gulp-exit');
 var rev = require('gulp-rev');
 var revReplace = require('gulp-rev-replace');
+var SassString = require('node-sass').types.String;
+var notifier = require('node-notifier');
 
-// Setup for watchify
-var customOpts = {
-  entries: 'app/scripts/main.js',
-  debug: true
-};
-var opts = assign({}, watchify.args, customOpts);
-var b = watchify(browserify(opts));
-b.on('update', bundle);
-b.on('log', gutil.log); // output build logs to terminal
+// /////////////////////////////////////////////////////////////////////////////
+// --------------------------- Variables -------------------------------------//
+// ---------------------------------------------------------------------------//
 
+// The package.json
 var pkg;
-// update pkg:
+
+// Environment
+// Set the correct environment, which controls what happens in config.js
+if (!process.env.DS_ENV) {
+  if (!process.env.CIRCLE_BRANCH || process.env.CIRCLE_BRANCH !== process.env.PRODUCTION_BRANCH) {
+    process.env.DS_ENV = 'staging';
+  } else {
+    process.env.DS_ENV = 'production';
+  }
+}
+
+var prodBuild = false;
+
+// /////////////////////////////////////////////////////////////////////////////
+// ------------------------- Helper functions --------------------------------//
+// ---------------------------------------------------------------------------//
+
 function readPackage () {
   pkg = JSON.parse(fs.readFileSync('package.json'));
-  if (pkg.dependencies) {
-    b.external(Object.keys(pkg.dependencies));
-  }
 }
 readPackage();
 
+// /////////////////////////////////////////////////////////////////////////////
+// ------------------------- Callable tasks ----------------------------------//
+// ---------------------------------------------------------------------------//
+
 gulp.task('styles', function () {
   return gulp.src('app/styles/main.scss')
+    .pipe($.plumber(function (e) {
+      notifier.notify({
+        title: 'Oops! Sass errored:',
+        message: e.message
+      });
+      console.log('Sass error:', e.toString());
+      if (prodBuild) {
+        process.exit(1);
+      }
+      // Allows the watch to continue.
+      this.emit('end');
+    }))
     .pipe($.sourcemaps.init())
     .pipe($.sass({
-      outputStyle: 'nested', // libsass doesn't support expanded yet
+      outputStyle: 'expanded',
       precision: 10,
-      includePaths: require('node-neat').includePaths,
-      onError: console.error.bind(console, 'Sass error:')
+      functions: {
+        'urlencode($url)': function (url) {
+          var v = new SassString();
+          v.setValue(encodeURIComponent(url.getValue()));
+          return v;
+        }
+      },
+      includePaths: ['.'].concat([
+        require('node-bourbon').includePaths,
+        require('node-neat').includePaths,
+      ])
     }))
-    .pipe($.postcss([
-      require('autoprefixer-core')({browsers: ['last 1 version']})
-    ]))
     .pipe($.sourcemaps.write())
     .pipe(gulp.dest('.tmp/styles'))
     .pipe(reload({stream: true}));
 });
 
-function vendorBundle () {
+// Vendor scripts. Basically all the dependencies in the package.js.
+// Therefore be careful and keep the dependencies clean.
+gulp.task('vendorScripts', function () {
   readPackage();
   var vb = browserify({
     debug: true,
     require: pkg.dependencies ? Object.keys(pkg.dependencies) : []
   });
   return vb.bundle()
-    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
+    .on('error', log.bind(log, 'Browserify Error'))
     .pipe(source('vendor.js'))
     .pipe(buffer())
     .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest('.tmp/scripts/'))
     .pipe(reload({stream: true}));
-}
-gulp.task('vendorScripts', vendorBundle);
+});
 
-function bundle () {
-  return b.bundle()
-    // log errors if they happen
-    .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-    .pipe(source('bundle.js'))
-    // optional, remove if you don't need to buffer file contents
-    .pipe(buffer())
-    // optional, remove if you dont want sourcemaps
-    .pipe(sourcemaps.init({loadMaps: true})) // loads map from browserify file
-     // Add transformation tasks to the pipeline here.
-    .pipe(sourcemaps.write('./')) // writes .map file
-    .pipe(gulp.dest('.tmp/scripts/')) // write to .tmp for serve command
-    .pipe(reload({stream: true}));
-}
-gulp.task('javascript', bundle);
+gulp.task('javascript', function () {
+  var watcher = watchify(browserify({
+    entries: ['./app/scripts/main.js'],
+    debug: true,
+    cache: {},
+    packageCache: {},
+    fullPaths: true
+  }), {poll: true});
+
+  function bundler () {
+    if (pkg.dependencies) {
+      watcher.external(Object.keys(pkg.dependencies));
+    }
+    return watcher.bundle()
+      .on('error', function (e) {
+        notifier.notify({
+          title: 'Oops! Browserify errored:',
+          message: e.message
+        });
+        console.log('Javascript error:', e);
+        if (prodBuild) {
+          process.exit(1);
+        }
+        // Allows the watch to continue.
+        this.emit('end');
+      })
+      .pipe(source('bundle.js'))
+      .pipe(buffer())
+      // Source maps.
+      .pipe(sourcemaps.init({loadMaps: true}))
+      .pipe(sourcemaps.write('./'))
+      .pipe(gulp.dest('.tmp/scripts'))
+      .pipe(reload({stream: true}));
+  }
+
+  watcher
+    .on('log', log)
+    .on('update', bundler);
+
+  return bundler();
+});
 
 gulp.task('html', ['styles'], function () {
-  var assets = $.useref.assets({searchPath: ['.tmp', 'app', '.']});
-
   return gulp.src('app/*.html')
-    .pipe(assets)
-    .pipe($.if('*.js', $.uglify()))
+    .pipe($.useref({searchPath: ['.tmp', 'app', '.']}))
+    // Do not compress comparisons, to avoid MapboxGLJS minification issue
+    // https://github.com/mapbox/mapbox-gl-js/issues/4359#issuecomment-286277540
+    .pipe($.if('*.js', $.uglify({compress: {comparisons: false}})))
     .pipe($.if('*.css', $.csso()))
-    .pipe(rev())
-    .pipe(assets.restore())
-    .pipe($.useref())
+    .pipe($.if(/\.(css|js)$/, rev()))
     .pipe(revReplace())
-    .pipe($.if('*.html', $.minifyHtml({conditionals: true, loose: true})))
     .pipe(gulp.dest('dist'));
 });
 
 gulp.task('images', function () {
-  return gulp.src('app/graphics/**/*')
-    .pipe($.cache($.imagemin({
-      progressive: true,
-      interlaced: true,
+  return gulp.src('app/assets/graphics/**/*')
+    .pipe($.cache($.imagemin([
+      $.imagemin.gifsicle({interlaced: true}),
+      $.imagemin.jpegtran({progressive: true}),
+      $.imagemin.optipng({optimizationLevel: 5}),
       // don't remove IDs from SVGs, they are often used
       // as hooks for embedding and styling
-      svgoPlugins: [{cleanupIDs: false}]
-    })))
-    .pipe(gulp.dest('dist/graphics'));
+      $.imagemin.svgo({plugins: [{cleanupIDs: false}]})
+    ])))
+    .pipe(gulp.dest('dist/assets/graphics'));
 });
 
 gulp.task('fonts', function () {
@@ -134,7 +191,12 @@ gulp.task('extras', function () {
   }).pipe(gulp.dest('dist'));
 });
 
-gulp.task('clean', require('del').bind(null, ['.tmp', 'dist']));
+gulp.task('clean', function () {
+  return del(['.tmp', 'dist'])
+    .then(function () {
+      $.cache.clearAll();
+    });
+});
 
 gulp.task('serve', ['vendorScripts', 'javascript', 'styles', 'fonts'], function () {
   browserSync({
@@ -156,7 +218,6 @@ gulp.task('serve', ['vendorScripts', 'javascript', 'styles', 'fonts'], function 
   ]).on('change', reload);
 
   gulp.watch('app/styles/**/*.scss', ['styles']);
-  // gulp.watch('app/scripts/**/*.js', ['javascript']);
   gulp.watch('app/fonts/**/*', ['fonts']);
   gulp.watch('package.json', ['vendorScripts']);
 });
@@ -170,5 +231,6 @@ gulp.task('build', ['javascript', 'vendorScripts'], function () {
 });
 
 gulp.task('default', ['clean'], function () {
+  prodBuild = true;
   gulp.start('build');
 });
