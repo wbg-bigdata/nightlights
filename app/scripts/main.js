@@ -12,6 +12,8 @@ const DataExplorer = require('./component/data-explorer');
 const StoryHub = require('./component/story-hub');
 const About = require('./component/about');
 
+const DefaultRoute = ({...args}) => <Route {...args} render={() => <Redirect to='/nation/2006/12' />} />;
+
 const Root = () => (
   <HashRouter>
     <App>
@@ -22,7 +24,7 @@ const Root = () => (
         <Route name='stories' path='/stories' component={StoryHub} />
         <Route name='story' path='/stories/:story' component={StoryHub} />
         <Route name='about' path='/about' component={About} />
-        <Redirect from='*' to='nation' params={{ year: 2006, month: 12 }}/>
+        <Route component={DefaultRoute} />
       </Switch>
     </App>
   </HashRouter>
