@@ -2,7 +2,7 @@
 
 .page {
   position: relative;
-	padding-bottom: 4rem;
+  padding-bottom: 4rem;
   > * {
     position: relative;
     z-index: 2;
@@ -10,14 +10,14 @@
 }
 
 .page .prose {
-	@include span-columns(12 of 12);
+  @include grid-column(12);
   @include media(small-up) {
-    @include span-columns(10 of 12);
-    @include shift(1);
+    @include grid-column(10);
+    @include grid-shift(1);
   }
   @include media(large-up) {
-    @include span-columns(8 of 12);
-    @include shift(2);
+    @include grid-column(8);
+    @include grid-shift(2);
   }
 }
 
@@ -148,14 +148,14 @@
 .summary-list {
   @extend .clearfix;
   box-shadow: 0 1px 0 0 $brdr-ghost;
-	> * {
+  > * {
     padding: 2rem;
     float: left;
     width: 50%;
     min-height: 18rem;
     position: relative;
     box-shadow: 1px -1px 0 0 $brdr-ghost;
-	}
+  }
 }
 
 .summary-body {
@@ -163,7 +163,7 @@
 }
 
 .summary-title {
-	@include heading(1.25rem, large-up);
+  @include heading(1.25rem, large-up);
   a {
     display: block;
     color: inherit;
@@ -264,10 +264,10 @@
   .envelope { fill: rgba($line-color, 0.2); }
   .dot { fill: rgba($primary-color, 0.5); }
   .axis {
-     fill: none;
-     stroke: rgba(#fff, 0.16);
-     stroke-width: 1px;
-   }
+    fill: none;
+    stroke: rgba(#fff, 0.16);
+    stroke-width: 1px;
+  }
 }
 
 #small-multiples {
