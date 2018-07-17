@@ -1,36 +1,37 @@
-let React = require('react');
-let RegionStore = require('../store/region');
-let Story = require('./story');
-let widont = require('../lib/widont');
+const React = require('react');
+const RegionStore = require('../store/region');
+const Story = require('./story');
+const widont = require('../lib/widont');
 
-let stories = [
+const stories = [
   require('./stories/diwali'),
   require('./stories/rggvy'),
   require('./stories/election')
 ];
 
-let StoryHub = React.createClass({
-  displayName: 'StoryHub',
+class StoryHub extends React.Component {
   // mixins: [ Router.State ],
 
-  statics: {
-    willTransitionTo (transition, params) {
-      let story = params.story;
-      let index = stories.map(s => s.slug).indexOf(story);
-
-      if (stories[index] && stories[index].loadData) {
-        RegionStore.setRegion(stories[index].loadData);
+  constructor (props) {
+    super(props);
+    this.statics = {
+      willTransitionTo (transition, params) {
+        let story = params.story;
+        let index = stories.map(s => s.slug).indexOf(story);
+        if (stories[index] && stories[index].loadData) {
+          RegionStore.setRegion(stories[index].loadData);
+        }
       }
-    }
-  },
+    };
+  }
 
   componentDidMount () {
     document.body.className = document.body.className + ' light-theme';
-  },
+  }
 
   componentWillUnmount () {
     document.body.className = document.body.className.replace('light-theme', '');
-  },
+  }
 
   render () {
     let story = this.getParams().story;
@@ -87,6 +88,6 @@ let StoryHub = React.createClass({
       );
     }
   }
-});
+};
 
 module.exports = StoryHub;

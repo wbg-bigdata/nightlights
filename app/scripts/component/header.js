@@ -1,7 +1,7 @@
+const React = require('React');
 const { Link } = require('react-router-dom');
 
 class Header extends React.Component {
-
   render () {
     return (
       <header id='site-header' role='banner'>
@@ -18,7 +18,5 @@ class Header extends React.Component {
     );
   }
 }
-
-Header.displayName = 'Header';
 
 module.exports = Header;

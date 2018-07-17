@@ -1,11 +1,11 @@
-let React = require('react');
-let Markdown = require('./markdown');
-let config = require('../config');
+const React = require('react');
+const Markdown = require('./markdown');
+const config = require('../config');
 
 /* global L */
 require('mapbox.js');
 
-let Data = React.createClass({
+class Data extends React.Component {
 
   componentDidMount () {
     document.body.className = document.body.className + ' light-theme';
@@ -43,11 +43,11 @@ let Data = React.createClass({
     hardoi.on('move', clip);
 
     clip();
-  },
+  }
 
   componentWillUnmount () {
     document.body.className = document.body.className.replace('light-theme', '');
-  },
+  }
 
   render () {
     return (
@@ -150,8 +150,6 @@ Country borders or names do not necessarily reflect the World Bank Group's offic
       </article>
     );
   }
-});
-
-Data.displayName = 'Open Data';
+};
 
 module.exports = Data;

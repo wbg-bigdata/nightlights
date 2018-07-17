@@ -1,12 +1,7 @@
-let React = require('react');
-let Markdown = require('../markdown');
+const React = require('react');
+const Markdown = require('../markdown');
 
-let story = {
-  slug: 'rggvy',
-  title: 'Seeing the Impact of Electricity Development Projects',
-  introduction: 'The Rajiv Gandhi Grameen Vidyutikaran Yojana (RGGVY) program is India’s flagship national program to increase electrification throughout the country...',
-
-  body: (
+const body = (
 <div id='rggvy'><Markdown>{`
 
 Over 310 million people in India do not have electricity in their homes, and over 90% of those people live in rural areas. The Rajiv Gandhi Grameen Vidyutikaran Yojana (RGGVY) program is India’s flagship national program to increase electrification throughout the country, especially in rural areas. RGGVY launched in 2005, identifying over 100,000 villages with a population of at least 100 people that did not have access to electricity. The program subsidizes the construction of infrastructure to connect these villages to the existing grid or to provide off-grid distributed energy through generators or alternative renewable energy sources.
@@ -24,12 +19,18 @@ The RGGVY program has four main focuses: construction of a rural electricity dis
 
 Night light data shows that light output in most of these villages has increased since the program, but it is difficult to isolate the impact of RGGVY from the broader trend of higher light output across the country. Additionally, in rural areas where households are connected to electricity, people typically use it for charging phones, running small appliances, and other uses that might not show up on the satellite imagery. Further research is necessary to determine how the India Lights data can be leveraged to assess the effectiveness of the RGGVY program.
 `}</Markdown></div>
-  ),
+);
 
-  content: React.createClass({
-    displayName: 'Content',
-    render () { return story.body; }
-  })
+class Content extends React.Component {
+  render () { return body; }
+}
+
+let story = {
+  slug: 'rggvy',
+  title: 'Seeing the Impact of Electricity Development Projects',
+  introduction: 'The Rajiv Gandhi Grameen Vidyutikaran Yojana (RGGVY) program is India’s flagship national program to increase electrification throughout the country...',
+  body,
+  content: Content
 };
 
 module.exports = story;

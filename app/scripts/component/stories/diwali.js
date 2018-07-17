@@ -1,13 +1,8 @@
-let React = require('react');
-let Markdown = require('../markdown');
-let d3 = require('d3');
+const React = require('react');
+const Markdown = require('../markdown');
+const d3 = require('d3');
 
-let story = {
-  slug: 'diwali',
-  title: 'Seeing Diwali from Space',
-  introduction: 'Each year, people from around India gather to celebrate Diwali, the festival of lights. The multiday festival...',
-
-  body: (
+const body = (
     <div className='diwali'>
       <Markdown>{`
 
@@ -46,175 +41,183 @@ let story = {
       </figure>
 
   </div>
-  ),
+);
 
-  content: React.createClass({
-    displayName: 'Content',
-    render () { return story.body; },
-    componentDidMount () {
 
-      function updateChart (data, chartNode, xTicks, selYear, margin, width, height, switchYear) {
-        // ignoring animation for now
-        chartNode.selectAll('.axis').remove();
-        chartNode.selectAll('rect').remove();
-        chartNode.selectAll('.dot').remove();
+class Content extends React.Component {
+  render () { return body; }
 
-        let x = d3.time.scale()
-                  .domain(d3.extent(data, function(d) { return d.date; }))
-                  .range([ 0, width ]);
+  componentDidMount () {
 
-        let y = d3.scale.linear()
-                  .domain([0, d3.max(data, function(d) { return d.value; }) + 3])
-                  .range([ height, 0 ]);
+    function updateChart (data, chartNode, xTicks, selYear, margin, width, height, switchYear) {
+      // ignoring animation for now
+      chartNode.selectAll('.axis').remove();
+      chartNode.selectAll('rect').remove();
+      chartNode.selectAll('.dot').remove();
 
-        let xAxis = d3.svg.axis()
-                      .scale(x)
-                      .orient('bottom')
-                      .ticks(xTicks);
+      let x = d3.time.scale()
+                .domain(d3.extent(data, function(d) { return d.date; }))
+                .range([ 0, width ]);
 
-        chartNode.append('g')
-            .attr('transform', 'translate(0,' + height + ')')
-            .attr('class', 'main axis date')
-            .call(xAxis);
+      let y = d3.scale.linear()
+                .domain([0, d3.max(data, function(d) { return d.value; }) + 3])
+                .range([ height, 0 ]);
 
-        let yAxis = d3.svg.axis()
-                      .scale(y)
-                      .orient('left')
-                      .ticks(5);
+      let xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient('bottom')
+                    .ticks(xTicks);
 
-        chartNode.append('g')
-            .attr('transform', 'translate(0,0)')
-            .attr('class', 'main axis value')
-            .call(yAxis);
+      chartNode.append('g')
+          .attr('transform', 'translate(0,' + height + ')')
+          .attr('class', 'main axis date')
+          .call(xAxis);
 
-        chartNode.append('rect')
-            .attr('class','envelope')
-            .attr('width', width / 60)
-            .attr('height', height)
-            .attr('x', x(diwaliDates[String(selYear)]) - width / 120)
-            .attr('y',0);
+      let yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient('left')
+                    .ticks(5);
 
-        chartNode.selectAll('dot')
-            .data(data)
-            .enter().append('circle')
-            .attr('class', 'dot')
-            .attr('cx', function (d) { return x(d.date); } )
-            .attr('cy', function (d) { return y(d.value); } )
-            .attr('r', width / 120);
+      chartNode.append('g')
+          .attr('transform', 'translate(0,0)')
+          .attr('class', 'main axis value')
+          .call(yAxis);
 
-        if (switchYear) {
-          d3.select('#year-switcher span').html(selYear)
+      chartNode.append('rect')
+          .attr('class','envelope')
+          .attr('width', width / 60)
+          .attr('height', height)
+          .attr('x', x(diwaliDates[String(selYear)]) - width / 120)
+          .attr('y',0);
+
+      chartNode.selectAll('dot')
+          .data(data)
+          .enter().append('circle')
+          .attr('class', 'dot')
+          .attr('cx', function (d) { return x(d.date); } )
+          .attr('cy', function (d) { return y(d.value); } )
+          .attr('r', width / 120);
+
+      if (switchYear) {
+        d3.select('#year-switcher span').html(selYear)
+      }
+
+      d3.selectAll('.axis.value .tick').each(function(){
+        if (d3.select(this).select('text').html() === '0') {
+          d3.select(this).select('text').html('');
+          d3.select(this).select('line').remove();
         }
+      });
+    };
 
-        d3.selectAll('.axis.value .tick').each(function(){
-          if (d3.select(this).select('text').html() === '0') {
-            d3.select(this).select('text').html('');
-            d3.select(this).select('line').remove();
-          }
+    function csvHelper (row) {
+      row.value = +row.vis || +row.value;
+      row.year = +row.year;
+      row.date = new Date(+row.year, +row.month - 1, +row.day)
+      return row;
+    };
+
+    let node = React.findDOMNode(this);
+    let margin = {top: 20, right: 40, bottom: 30, left: 60}
+
+    let width = node.offsetWidth - margin.left - margin.right;
+    let height =  node.offsetHeight - margin.top - margin.bottom;
+    let svg = d3.select(node).select('#random-sample').append('svg')
+      .attr('width', width + margin.right + margin.left)
+      .attr('height', height + margin.top + margin.bottom)
+      .attr('class', 'chart');
+
+    let main = svg.append('g')
+      .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('class', 'main');
+
+    let diwaliDates = {
+      '2005': new Date (2005, 10, 1),
+      '2006': new Date (2006, 9, 21),
+      '2007': new Date (2007, 10, 9),
+      '2008': new Date (2008, 9, 28),
+      '2009': new Date (2009, 9, 17),
+      '2010': new Date (2010, 10, 5),
+      '2011': new Date (2011, 9, 26),
+      '2012': new Date (2012, 10, 13),
+      '2013': new Date (2013, 10, 3)
+    };
+
+    d3.csv('data/nightlysamples.csv', csvHelper, function(err, data) {
+      if (err) {
+        console.warn(err);
+        main.append('text').text('ERROR LOADING DATA');
+      }
+      else {
+
+        // starting date
+        let year = 2005;
+
+        let yearData = data.filter(function(d) {
+          return d.year === year;
         });
-      };
 
-      function csvHelper (row) {
-        row.value = +row.vis || +row.value;
-        row.year = +row.year;
-        row.date = new Date(+row.year, +row.month - 1, +row.day)
-        return row;
-      };
+        updateChart(yearData, main, 10, year, margin, width, height, true);
 
-      let node = React.findDOMNode(this);
-      let margin = {top: 20, right: 40, bottom: 30, left: 60}
-
-      let width = node.offsetWidth - margin.left - margin.right;
-      let height =  node.offsetHeight - margin.top - margin.bottom;
-      let svg = d3.select(node).select('#random-sample').append('svg')
-        .attr('width', width + margin.right + margin.left)
-      	.attr('height', height + margin.top + margin.bottom)
-      	.attr('class', 'chart');
-
-      let main = svg.append('g')
-      	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-      	.attr('width', width)
-      	.attr('height', height)
-      	.attr('class', 'main');
-
-      let diwaliDates = {
-        '2005': new Date (2005, 10, 1),
-        '2006': new Date (2006, 9, 21),
-        '2007': new Date (2007, 10, 9),
-        '2008': new Date (2008, 9, 28),
-        '2009': new Date (2009, 9, 17),
-        '2010': new Date (2010, 10, 5),
-        '2011': new Date (2011, 9, 26),
-        '2012': new Date (2012, 10, 13),
-        '2013': new Date (2013, 10, 3)
-      };
-
-      d3.csv('data/nightlysamples.csv', csvHelper, function(err, data) {
-        if (err) {
-          console.warn(err);
-          main.append('text').text('ERROR LOADING DATA');
-        }
-        else {
-
-          // starting date
-          let year = 2005;
-
-          let yearData = data.filter(function(d) {
+        d3.selectAll('.bttn').on('click', function(){
+          let indexShift = (d3.select(this).classed('bttn-next')) ? 1 : -1;
+          let dates = Object.keys(diwaliDates)
+          let index = friendlyMod(year + indexShift - 2005, dates.length);
+          year = Number(dates[index]);
+          yearData = data.filter(function(d) {
             return d.year === year;
           });
-
           updateChart(yearData, main, 10, year, margin, width, height, true);
-
-          d3.selectAll('.bttn').on('click', function(){
-            let indexShift = (d3.select(this).classed('bttn-next')) ? 1 : -1;
-            let dates = Object.keys(diwaliDates)
-            let index = friendlyMod(year + indexShift - 2005, dates.length);
-            year = Number(dates[index]);
-            yearData = data.filter(function(d) {
-              return d.year === year;
-            });
-            updateChart(yearData, main, 10, year, margin, width, height, true);
-          });
-
-          function friendlyMod (num, mod) {
-            return ((num % mod) + mod) % mod;
-          };
-        }
-        }
-      );
-
-      let selectedVillages = [
-        'punjab-301000500155200',
-        'haryana-616000200517900',
-        'delhi-708000100012000'
-      ];
-
-      let smallMultiples = d3.select(node).select('#small-multiples');
-
-      selectedVillages.forEach(function(village) {
-        d3.csv('data/2007/' + village + '.csv', csvHelper, function(err, data){
-
-          let margin = {top: 20, right: 20, bottom: 40, left: 40}
-          let width =  (1.3 * node.offsetWidth / selectedVillages.length) - margin.left - margin.right;
-          let height =  300 - margin.top - margin.bottom;
-          let svg = smallMultiples.append('svg')
-            .attr('width', width + margin.right + margin.left)
-          	.attr('height', height + margin.top + margin.bottom)
-          	.attr('class', 'smallChart');
-
-          let little = svg.append('g')
-          	.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
-          	.attr('width', width)
-          	.attr('height', height)
-          	.attr('class', 'little');
-
-          let year = 2007;
-
-          updateChart(data, little, 2, year, margin, width, height, false);
         });
+
+        function friendlyMod (num, mod) {
+          return ((num % mod) + mod) % mod;
+        };
+      }
+      }
+    );
+
+    let selectedVillages = [
+      'punjab-301000500155200',
+      'haryana-616000200517900',
+      'delhi-708000100012000'
+    ];
+
+    let smallMultiples = d3.select(node).select('#small-multiples');
+
+    selectedVillages.forEach(function(village) {
+      d3.csv('data/2007/' + village + '.csv', csvHelper, function(err, data){
+
+        let margin = {top: 20, right: 20, bottom: 40, left: 40}
+        let width =  (1.3 * node.offsetWidth / selectedVillages.length) - margin.left - margin.right;
+        let height =  300 - margin.top - margin.bottom;
+        let svg = smallMultiples.append('svg')
+          .attr('width', width + margin.right + margin.left)
+              .attr('height', height + margin.top + margin.bottom)
+              .attr('class', 'smallChart');
+
+        let little = svg.append('g')
+              .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')')
+              .attr('width', width)
+              .attr('height', height)
+              .attr('class', 'little');
+
+        let year = 2007;
+
+        updateChart(data, little, 2, year, margin, width, height, false);
       });
-    }
-  })
+    });
+  }
+};
+
+const story = {
+  slug: 'diwali',
+  title: 'Seeing Diwali from Space',
+  introduction: 'Each year, people from around India gather to celebrate Diwali, the festival of lights. The multiday festival...',
+  body,
+  content: Content
 };
 
 module.exports = story;
