@@ -1,14 +1,15 @@
-let d3 = require('d3');
-let React = require('react');
-let classnames = require('classnames');
-let debounce = require('lodash.debounce');
-let assign = require('object-assign');
-let Actions = require('../actions');
-let LineChart = require('./line-chart');
-let Legend = require('./legend');
-let Loading = require('./loading');
-let smooth = require('../lib/moving-average');
-let {satelliteAdjustment} = require('../config');
+const d3 = require('d3');
+const React = require('react');
+const t = require('prop-types');
+const classnames = require('classnames');
+const debounce = require('lodash.debounce');
+const assign = require('object-assign');
+const Actions = require('../actions');
+const LineChart = require('./line-chart');
+const Legend = require('./legend');
+const Loading = require('./loading');
+const smooth = require('../lib/moving-average');
+const {satelliteAdjustment} = require('../config');
 
 /*
  * Data Accessor Functions
@@ -357,19 +358,18 @@ class LightCurves extends React.Component {
   }
 }
 
-LightCurves.displayName = 'LightCurves';
 LightCurves.propTypes = {
-  year: React.PropTypes.number,
-  month: React.PropTypes.number,
-  timeSeries: React.PropTypes.object,
-  villageCurves: React.PropTypes.object,
-  margins: React.PropTypes.object,
-  region: React.PropTypes.object,
-  expanded: React.PropTypes.bool,
-  showCenterlineEnvelope: React.PropTypes.bool,
-  showAllEnvelopes: React.PropTypes.bool,
-  smoothing: React.PropTypes.bool,
-  legend: React.PropTypes.node
+  year: t.number,
+  month: t.number,
+  timeSeries: t.object,
+  villageCurves: t.object,
+  margins: t.object,
+  region: t.object,
+  expanded: t.bool,
+  showCenterlineEnvelope: t.bool,
+  showAllEnvelopes: t.bool,
+  smoothing: t.bool,
+  legend: t.node
 };
 LightCurves.defaultProps = {
   showCenterlineEnvelope: true,

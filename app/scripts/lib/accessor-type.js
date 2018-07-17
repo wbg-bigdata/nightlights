@@ -1,12 +1,12 @@
-let React = require('react');
+const t = require('prop-types');
 
 /**
  * A React PropType for use with lodash-style object accessors (string or
  * function)
  */
-let AccessorType = React.PropTypes.oneOfType([
-  React.PropTypes.func,
-  React.PropTypes.string
+let AccessorType = t.oneOfType([
+  t.func,
+  t.string
 ]);
 
 module.exports = AccessorType;

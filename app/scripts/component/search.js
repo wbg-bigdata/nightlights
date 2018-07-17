@@ -1,8 +1,7 @@
-let React = require('react');
-let Router = require('react-router');
-import Autosuggest from 'react-autosuggest';
-let RegionListStore = require('../store/region-list');
-let Fuse = require('fuse.js');
+const React = require('react');
+const t = require('prop-types');
+const RegionListStore = require('../store/region-list');
+const Fuse = require('fuse.js');
 
 function fuse (data) {
   return new Fuse(data.regions, {
@@ -12,36 +11,34 @@ function fuse (data) {
   });
 }
 
-let Search = React.createClass({
-  displayName: 'Search',
-  propTypes: {
-    children: React.PropTypes.node,
-    initialValue: React.PropTypes.string
-  },
+class Search extends React.Component {
+  // mixins: [Router.State, Router.Navigation],
 
-  mixins: [Router.State, Router.Navigation],
-
-  getInitialState () {
-    return {
+  constructor (props) {
+    super(props);
+    this.state = {
       active: true,
       currentValue: '',
       fuse: fuse(RegionListStore.getInitialState())
     };
-  },
-  componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionListStore.listen(data => {
       /* eslint react/no-did-mount-set-state: [2, "allow-in-func"] */
       this.setState({ fuse: fuse(data) });
     }));
-  },
-  componentDidUnmount () { this.unsubscribe.forEach(u => u()); },
+  }
+
+  componentDidUnmount () {
+    this.unsubscribe.forEach(u => u());
+  }
+
   onClick () {
     this.setState({active: true});
-  },
+  }
+
   componentWillReceiveProps (nextProps) {
     this.setState({currentValue: nextProps.initialValue});
-  },
+  }
 
   onKeyPress (event) {
     if (event.which === 13) {
@@ -65,7 +62,7 @@ let Search = React.createClass({
         this.setState({currentValue: best.name});
       }
     }
-  },
+  }
 
   getSuggestions (input, callback) {
     let suggestions = this.state.fuse.search(input);
@@ -79,7 +76,7 @@ let Search = React.createClass({
       callback(null, suggestions);
     }
     return suggestions;
-  },
+  }
 
   go (region) {
     let {year, month} = this.getParams();
@@ -90,30 +87,39 @@ let Search = React.createClass({
       district: region.type === 'state' ? undefined : region.key
     };
     this.transitionTo(region.type, params);
-  },
+  }
 
   render () {
     return (
       <div className='search' ref='search'>
         <label htmlFor='search-input'><span>Where</span></label>
-        <Autosuggest suggestions={this.getSuggestions}
-          suggestionRenderer={s => s.name}
-          suggestionValue={s => s.name}
-          onSuggestionSelected={s => this.go(s)}
-          value={this.state.currentValue}
-          scrollBar={true}
-          inputAttributes={{
-            id: 'search-input',
-            name: 'search-input',
-            placeholder: 'Enter region...',
-            type: 'search',
-            onKeyPress: this.onKeyPress,
-            onChange: value => this.setState({ currentValue: value })
-          }}
-          />
       </div>
     );
   }
-});
+};
+
+Search.propTypes = {
+  children: t.node,
+  initialValue: t.string
+};
+
+// this was lifted from the render component
+/*
+  <Autosuggest suggestions={this.getSuggestions}
+    suggestionRenderer={s => s.name}
+    suggestionValue={s => s.name}
+    onSuggestionSelected={s => this.go(s)}
+    value={this.state.currentValue}
+    scrollBar={true}
+    inputAttributes={{
+      id: 'search-input',
+      name: 'search-input',
+      placeholder: 'Enter region...',
+      type: 'search',
+      onKeyPress: this.onKeyPress,
+      onChange: value => this.setState({ currentValue: value })
+    }}
+    />
+*/
 
 module.exports = Search;

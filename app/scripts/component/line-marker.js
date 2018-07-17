@@ -1,4 +1,5 @@
-let React = require('react');
+const React = require('react');
+const t = require('prop-types');
 
 class LineMarker extends React.Component {
   constructor (props) {
@@ -28,10 +29,10 @@ class LineMarker extends React.Component {
 
 LineMarker.displayName = 'LineMarker';
 LineMarker.propTypes = {
-  locations: React.PropTypes.array.isRequired,
-  classes: React.PropTypes.array.isRequired,
-  y1: React.PropTypes.number.isRequired,
-  y2: React.PropTypes.number.isRequired
+  locations: t.array.isRequired,
+  classes: t.array.isRequired,
+  y1: t.number.isRequired,
+  y2: t.number.isRequired
 };
 
 module.exports = LineMarker;

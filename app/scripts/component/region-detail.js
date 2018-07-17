@@ -1,24 +1,13 @@
-let React = require('react');
-let Router = require('react-router');
-let titlecase = require('titlecase');
-let numeral = require('numeral');
-let Actions = require('../actions');
-let Link = Router.Link;
-let Search = require('./search');
+const React = require('react');
+const { Link } = require('react-router-dom');
+const t = require('prop-types');
+const titlecase = require('titlecase');
+const numeral = require('numeral');
+const Actions = require('../actions');
+const Search = require('./search');
 
-let RegionDetail = React.createClass({
-  displayName: 'RegionDetail',
-
-  propTypes: {
-    region: React.PropTypes.object.isRequired,
-    villages: React.PropTypes.array,
-    rggvyVillages: React.PropTypes.array,
-    rggvyFocus: React.PropTypes.bool,
-    selectedVillages: React.PropTypes.array,
-    regionMedian: React.PropTypes.number
-  },
-
-  mixins: [Router.State],
+class RegionDetail extends React.Component {
+  // mixins: [Router.State],
 
   render () {
     let {
@@ -99,6 +88,15 @@ let RegionDetail = React.createClass({
       </section>
     );
   }
-});
+};
+
+RegionDetail.propTypes = {
+  region: t.object.isRequired,
+  villages: t.array,
+  rggvyVillages: t.array,
+  rggvyFocus: t.bool,
+  selectedVillages: t.array,
+  regionMedian: t.number
+}
 
 module.exports = RegionDetail;

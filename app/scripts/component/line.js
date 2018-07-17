@@ -1,8 +1,9 @@
-let React = require('react');
-let d3 = require('d3');
-let classnames = require('classnames');
-let AccessorType = require('../lib/accessor-type');
-let config = require('../config');
+const React = require('react');
+const t = require('prop-types');
+const d3 = require('d3');
+const classnames = require('classnames');
+const AccessorType = require('../lib/accessor-type');
+const config = require('../config');
 
 class Line extends React.Component {
   constructor (props) {
@@ -68,15 +69,14 @@ class Line extends React.Component {
   }
 }
 
-Line.displayName = 'Line';
 Line.propTypes = {
-  Actions: React.PropTypes.object,
-  seriesKey: React.PropTypes.string,
-  data: React.PropTypes.array.isRequired,
+  Actions: t.object,
+  seriesKey: t.string,
+  data: t.array.isRequired,
   x: AccessorType.isRequired,
   y: AccessorType.isRequired,
-  envelope: React.PropTypes.array,
-  emphasized: React.PropTypes.bool
+  envelope: t.array,
+  emphasized: t.bool
 };
 
 module.exports = Line;

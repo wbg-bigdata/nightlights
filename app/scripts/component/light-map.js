@@ -1,23 +1,24 @@
-let React = require('react');
-let mgl = require('mapbox-gl');
-let extent = require('turf-extent');
-let centroid = require('turf-centroid');
-let assign = require('object-assign');
-let throttle = require('lodash.throttle');
-let debounce = require('lodash.debounce');
-let ss = require('simple-statistics');
+const React = require('react');
+const t = require('prop-types');
+const mgl = require('mapbox-gl');
+const extent = require('turf-extent');
+const centroid = require('turf-centroid');
+const assign = require('object-assign');
+const throttle = require('lodash.throttle');
+const debounce = require('lodash.debounce');
+const ss = require('simple-statistics');
 
-let {showLayer} = require('../lib/mgl-util');
-let Actions = require('../actions');
-let RegionStore = require('../store/region');
-let VillageStore = require('../store/village');
-let VillageCurveStore = require('../store/village-curve');
-let Loading = require('./loading');
-let Tooltip = require('./tooltip');
-let Modal = require('./modal');
-let lightStyles = require('../lib/light-styles');
-let unsupportedText = require('../config').unsupported;
-let config = require('../config');
+const {showLayer} = require('../lib/mgl-util');
+const Actions = require('../actions');
+const RegionStore = require('../store/region');
+const VillageStore = require('../store/village');
+const VillageCurveStore = require('../store/village-curve');
+const Loading = require('./loading');
+const Tooltip = require('./tooltip');
+const Modal = require('./modal');
+const lightStyles = require('../lib/light-styles');
+const unsupportedText = require('../config').unsupported;
+const config = require('../config');
 
 mgl.accessToken = config.mapboxAccessToken;
 
@@ -663,10 +664,9 @@ class LightMap extends React.Component {
   }
 }
 
-LightMap.displayName = 'LightMap';
 LightMap.propTypes = {
-  time: React.PropTypes.object.isRequired,
-  rggvyFocus: React.PropTypes.bool
+  time: t.object.isRequired,
+  rggvyFocus: t.bool
 };
 
 module.exports = LightMap;

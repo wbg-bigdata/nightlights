@@ -1,7 +1,8 @@
-let React = require('react');
-let Actions = require('../actions');
-let classnames = require('classnames');
-let titlecase = require('titlecase');
+const React = require('react');
+const t = require('prop-types');
+const Actions = require('../actions');
+const classnames = require('classnames');
+const titlecase = require('titlecase');
 
 class VillageDetail extends React.Component {
   render () {
@@ -37,11 +38,10 @@ class VillageDetail extends React.Component {
   }
 }
 
-VillageDetail.displayName = 'VillageDetail';
 VillageDetail.propTypes = {
-  villages: React.PropTypes.array.isRequired,
-  villageNames: React.PropTypes.array.isRequired,
-  region: React.PropTypes.object
+  villages: t.array.isRequired,
+  villageNames: t.array.isRequired,
+  region: t.object
 };
 
 module.exports = VillageDetail;

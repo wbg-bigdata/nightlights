@@ -1,5 +1,4 @@
 let React = require('react');
-let Router = require('react-router');
 let RegionStore = require('../store/region');
 let Story = require('./story');
 let widont = require('../lib/widont');
@@ -12,7 +11,7 @@ let stories = [
 
 let StoryHub = React.createClass({
   displayName: 'StoryHub',
-  mixins: [ Router.State ],
+  // mixins: [ Router.State ],
 
   statics: {
     willTransitionTo (transition, params) {

@@ -1,5 +1,6 @@
-let React = require('react');
-let cookie = require('cookie-cutter');
+const React = require('react');
+const t = require('prop-types');
+const cookie = require('cookie-cutter');
 
 class Modal extends React.Component {
   constructor (props) {
@@ -51,11 +52,10 @@ class Modal extends React.Component {
   }
 };
 
-Modal.displayName = 'Modal';
 Modal.propTypes = {
-  isOn: React.PropTypes.bool.isRequired,
-  content: React.PropTypes.object.isRequired,
-  cookieKey: React.PropTypes.string,
-  isPermanent: React.PropTypes.bool
+  isOn: t.bool.isRequired,
+  content: t.object.isRequired,
+  cookieKey: t.string,
+  isPermanent: t.bool
 };
 module.exports = Modal;

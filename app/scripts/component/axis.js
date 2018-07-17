@@ -1,5 +1,6 @@
-let React = require('react');
-let classnames = require('classnames');
+const React = require('react');
+const t = require('prop-types');
+const classnames = require('classnames');
 
 class Axis extends React.Component {
   render () {
@@ -60,16 +61,14 @@ class Axis extends React.Component {
   }
 }
 
-Axis.displayName = 'Axis';
-
 Axis.propTypes = {
-  scale: React.PropTypes.func.isRequired,
-  domain: React.PropTypes.array.isRequired,
-  orientation: React.PropTypes.string.isRequired,
-  format: React.PropTypes.func,
-  ticks: React.PropTypes.array,
-  tickClasses: React.PropTypes.array,
-  labelOffset: React.PropTypes.number
+  scale: t.func.isRequired,
+  domain: t.array.isRequired,
+  orientation: t.string.isRequired,
+  format: t.func,
+  ticks: t.array,
+  tickClasses: t.array,
+  labelOffset: t.number
 };
 
 Axis.defaultProps = {

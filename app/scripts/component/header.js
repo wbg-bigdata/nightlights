@@ -1,5 +1,4 @@
-var React = require('react');
-var Link = require('react-router').Link;
+const { Link } = require('react-router-dom');
 
 class Header extends React.Component {
 

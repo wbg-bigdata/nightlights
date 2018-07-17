@@ -1,9 +1,10 @@
-let React = require('react');
-let titlecase = require('titlecase');
+const React = require('react');
+const t = require('prop-types');
+const titlecase = require('titlecase');
 
 class Tooltip extends React.Component {
   render () {
-    let {region, villages} = this.props;
+    const {region, villages} = this.props;
 
     let name = '';
     if (!region.loading && region.emphasized && region.emphasized.length > 0) {
@@ -28,10 +29,9 @@ class Tooltip extends React.Component {
   }
 }
 
-Tooltip.displayName = 'Tooltip';
 Tooltip.propTypes = {
-  region: React.PropTypes.object.isRequired,
-  villages: React.PropTypes.object
+  region: t.object.isRequired,
+  villages: t.object
 };
 
 module.exports = Tooltip;

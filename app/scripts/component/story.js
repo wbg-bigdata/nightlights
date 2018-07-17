@@ -1,9 +1,10 @@
-let React = require('react');
-let widont = require('../lib/widont');
+const React = require('react');
+const t = require('prop-types');
+const widont = require('../lib/widont');
 
 class Story extends React.Component {
   render () {
-    let {previous, next} = this.props;
+    const {previous, next} = this.props;
     return (
       <article className='page single stories' id={'story-' + this.props.slug}>
         <header className='page-header'>
@@ -33,12 +34,11 @@ class Story extends React.Component {
   }
 }
 
-Story.displayName = 'Story';
 Story.propTypes = {
-  title: React.PropTypes.string,
-  previous: React.PropTypes.string,
-  next: React.PropTypes.string,
-  children: React.PropTypes.node
+  title: t.string,
+  previous: t.string,
+  next: t.string,
+  children: t.node
 };
 
 module.exports = Story;

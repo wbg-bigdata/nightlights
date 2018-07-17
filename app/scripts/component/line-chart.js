@@ -1,9 +1,10 @@
-let React = require('react');
-let d3 = require('d3');
-let compose = require('../lib/compose');
-let Line = require('./line');
-let Axis = require('./axis');
-let LineMarker = require('./line-marker');
+const React = require('react');
+const t = require('prop-types');
+const d3 = require('d3');
+const compose = require('../lib/compose');
+const Line = require('./line');
+const Axis = require('./axis');
+const LineMarker = require('./line-marker');
 
 class LineChart extends React.Component {
   constructor () {
@@ -183,18 +184,18 @@ class LineChart extends React.Component {
 LineChart.displayName = 'LineChart';
 
 LineChart.propTypes = {
-  Actions: React.PropTypes.object,
-  series: React.PropTypes.array.isRequired,
-  center: React.PropTypes.array,
-  envelope: React.PropTypes.array,
-  x: React.PropTypes.object.isRequired,
-  y: React.PropTypes.object.isRequired,
-  markers: React.PropTypes.array,
-  markerClass: React.PropTypes.func,
-  emphasized: React.PropTypes.array,
-  onCursorClick: React.PropTypes.func,
-  legend: React.PropTypes.node,
-  showSeriesEnvelopes: React.PropTypes.bool
+  Actions: t.object,
+  series: t.array.isRequired,
+  center: t.array,
+  envelope: t.array,
+  x: t.object.isRequired,
+  y: t.object.isRequired,
+  markers: t.array,
+  markerClass: t.func,
+  emphasized: t.array,
+  onCursorClick: t.func,
+  legend: t.node,
+  showSeriesEnvelopes: t.bool
 };
 
 module.exports = LineChart;

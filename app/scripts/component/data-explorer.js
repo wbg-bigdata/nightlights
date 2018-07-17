@@ -1,23 +1,23 @@
-let React = require('react');
-let Router = require('react-router');
-let d3 = require('d3');
-let TimeSeriesStore = require('../store/time-series');
-let VillageStore = require('../store/village');
-let VillageCurveStore = require('../store/village-curve');
-let RegionStore = require('../store/region');
-let RegionDetail = require('./region-detail');
-let VillageDetail = require('./village-detail');
-let LightMap = require('./light-map');
-let LightCurves = require('./light-curves');
-let DateControl = require('./date-control');
-let Modal = require('./modal');
-let NoData = require('./no-data');
-let Actions = require('../actions');
-let timespan = require('../lib/timespan');
-let config = require('../config');
-let interval = config.interval;
-let dataThreshold = config.dataThreshold;
-let welcomeText = config.welcome;
+const React = require('react');
+const t = require('prop-types');
+const d3 = require('d3');
+const TimeSeriesStore = require('../store/time-series');
+const VillageStore = require('../store/village');
+const VillageCurveStore = require('../store/village-curve');
+const RegionStore = require('../store/region');
+const RegionDetail = require('./region-detail');
+const VillageDetail = require('./village-detail');
+const LightMap = require('./light-map');
+const LightCurves = require('./light-curves');
+const DateControl = require('./date-control');
+const Modal = require('./modal');
+const NoData = require('./no-data');
+const Actions = require('../actions');
+const timespan = require('../lib/timespan');
+const config = require('../config');
+const interval = config.interval;
+const dataThreshold = config.dataThreshold;
+const welcomeText = config.welcome;
 
 /**
  * The data explorer.  This is basically a wrapper for the:
@@ -27,69 +27,61 @@ let welcomeText = config.welcome;
  *  - RegionDetail (info box)
  *  - ChartBox (light curves)
  */
-let DataExplorer = React.createClass({
-  displayName: 'DataExplorer',
-  propTypes: {
-    params: React.PropTypes.object
-  },
-
-  mixins: [ Router.State ],
-
-  statics: {
-    willTransitionTo: function (transition, params, query) {
-      let valid = timespan.getValid(params);
-      if (+valid.year !== +params.year || +valid.month !== +params.month) {
-        // TODO: redirect to the desired region.  The problem is that
-        // because of how react-router works, we don't actually know which
-        // route was being attempted at this point.
-        transition.redirect('nation', valid, {});
-      }
-      RegionStore.setRegion(params);
-      VillageCurveStore.setSelectedVillages(query.v || []);
-    }
-  },
-
-  getInitialState () {
-    return {
+class DataExplorer extends React.Component {
+  constructor (props) {
+    super(props);
+    this.state = {
       region: RegionStore.getInitialState(),
       timeSeries: TimeSeriesStore.getInitialState(),
       villages: VillageStore.getInitialState(),
       villageCurves: VillageCurveStore.getInitialState()
     };
-  },
-
-  componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionStore.listen(this.onRegion));
     this.unsubscribe.push(VillageStore.listen(this.onVillages));
     this.unsubscribe.push(VillageCurveStore.listen(this.onVillageCurves));
     this.unsubscribe.push(TimeSeriesStore.listen(this.onTimeSeries));
     this.unsubscribe.push(Actions.toggleRggvy.listen(this.onToggleRggvy));
-  },
+    this.statics = {
+      willTransitionTo: function (transition, params, query) {
+        let valid = timespan.getValid(params);
+        if (+valid.year !== +params.year || +valid.month !== +params.month) {
+          // TODO: redirect to the desired region.  The problem is that
+          // because of how react-router works, we don't actually know which
+          // route was being attempted at this point.
+          transition.redirect('nation', valid, {});
+        }
+        RegionStore.setRegion(params);
+        VillageCurveStore.setSelectedVillages(query.v || []);
+      }
+    };
+  }
+
+  // mixins: [ Router.State ],
 
   componentWillUnmount () {
     this.unsubscribe.forEach((unsub) => unsub());
-  },
+  }
 
   onRegion (regionState) {
     this.setState({region: regionState});
-  },
+  }
 
   onVillages (villages) {
     this.setState({villages});
-  },
+  }
 
   onVillageCurves (villageCurves) {
     this.setState({villageCurves});
-  },
+  }
 
   onTimeSeries (timeSeries) {
     this.setState({timeSeries});
-  },
+  }
 
   onToggleRggvy () {
     this.setState({rggvyFocus: !this.state.rggvyFocus});
-  },
+  }
 
   render () {
     let {region, timeSeries, villages, villageCurves} = this.state;
@@ -176,6 +168,10 @@ let DataExplorer = React.createClass({
       </div>
     );
   }
-});
+};
+
+DataExplorer.propTypes = {
+  params: t.object
+}
 
 module.exports = DataExplorer;

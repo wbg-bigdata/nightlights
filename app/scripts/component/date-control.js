@@ -1,7 +1,8 @@
-let React = require('react');
-let Link = require('react-router').Link;
-let timespan = require('../lib/timespan');
-let interval = require('../config').interval;
+const React = require('react');
+const t = require('prop-types');
+const { Link } = require('react-router-dom');
+const timespan = require('../lib/timespan');
+const interval = require('../config').interval;
 
 class DateControl extends React.Component {
   render () {
@@ -51,12 +52,11 @@ class DateControl extends React.Component {
   }
 }
 
-DateControl.displayName = 'DateControl';
 DateControl.propTypes = {
-  year: React.PropTypes.number,
-  month: React.PropTypes.number,
-  interval: React.PropTypes.string,
-  region: React.PropTypes.object
+  year: t.number,
+  month: t.number,
+  interval: t.string,
+  region: t.object
 };
 
 module.exports = DateControl;

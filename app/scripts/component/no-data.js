@@ -1,4 +1,5 @@
-let React = require('react');
+const React = require('react');
+const t = require('prop-types');
 
 class NoData extends React.Component {
   render () {
@@ -13,8 +14,7 @@ class NoData extends React.Component {
   }
 };
 
-NoData.displayName = 'NoData';
 NoData.propTypes = {
-  hasData: React.PropTypes.bool
+  hasData: t.bool
 };
 module.exports = NoData;
