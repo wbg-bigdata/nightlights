@@ -1,67 +1,42 @@
 'use strict';
 
-require('./console-message')();
+const React = require('react');
+const { render } = require('react-dom');
+const { HashRouter, Route, Switch, Redirect } = require('react-router-dom');
+const difference = require('lodash.difference');
+const union = require('lodash.union');
 
-var React = require('react');
-var Router = require('react-router');
-var Redirect = Router.Redirect;
-var Route = Router.Route;
-var difference = require('lodash.difference');
-var union = require('lodash.union');
+const Actions = require('./actions');
+const App = require('./component/app');
+const DataExplorer = require('./component/data-explorer');
+const StoryHub = require('./component/story-hub');
+const About = require('./component/about');
 
-var Actions = require('./actions');
-var App = require('./component/app');
-var DataExplorer = require('./component/data-explorer');
-var StoryHub = require('./component/story-hub');
-var About = require('./component/about');
-
-var routes = (
-  <Route name='app' path='/' handler={App}>
-
-    <Route name='nation'
-      path='nation/:year/:month' handler={DataExplorer}/>
-
-    <Route name='state'
-      path='/state/:state/:year/:month'
-      handler={DataExplorer}/>
-
-    <Route name='district'
-      path='/state/:state/district/:district/:year/:month'
-      handler={DataExplorer}/>
-
-    <Route name='stories'
-      path='stories'
-      handler={StoryHub} />
-
-    <Route name='story'
-      path='stories/:story'
-      handler={StoryHub} />
-
-    <Route name='about'
-      path='about'
-      handler={About} />
-
-    <Redirect from='*' to='nation'
-    params={{
-      year: 2006,
-      month: 12
-    }}/>
-  </Route>
+const Root = () => (
+  <HashRouter>
+    <App>
+      <Switch>
+        <Route exact name='nation' path='/nation/:year/:month' component={DataExplorer} />
+        <Route exact name='state' path='/state/:state/:year/:month' component={DataExplorer} />
+        <Route exact name='district' path='/state/:state/district/:district/:year/:month' component={DataExplorer} />
+        <Route name='stories' path='/stories' component={StoryHub} />
+        <Route name='story' path='/stories/:story' component={StoryHub} />
+        <Route name='about' path='/about' component={About} />
+        <Redirect from='*' to='nation' params={{ year: 2006, month: 12 }}/>
+      </Switch>
+    </App>
+  </HashRouter>
 );
 
-var router = Router.create({
-  routes,
-  location: Router.HashLocation
-});
-
-router.run((Root, routeState) => {
-  React.render(<Root/>, document.getElementById('site-canvas'));
-});
+render(
+  <Root />,
+  document.getElementById('site-canvas')
+);
 
 // When the user selects a region (`key`), go to the appropriate route.
 Actions.select.listen(function (key) {
   let {state, year, month} = router.getCurrentParams();
-  var route = state ? 'district' : 'state';
+  let route = state ? 'district' : 'state';
   router.transitionTo(route, {
     state: state ? state : key,
     district: state ? key : undefined,
@@ -77,7 +52,7 @@ Actions.selectParent.listen(function () {
   // if we're already up at nation view, do nothing
   if (!state) { return; }
   // navigate up from district to state, or from state to nation
-  var route = district ? 'state' : 'nation';
+  let route = district ? 'state' : 'nation';
   router.transitionTo(route, {
     state: district ? state : undefined,
     year,
