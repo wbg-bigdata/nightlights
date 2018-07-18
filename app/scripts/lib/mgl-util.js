@@ -9,12 +9,12 @@ module.exports = {
 /**
  * Set the visibility of the given layer.
  */
-function showLayer (map, batch, layer, show) {
+function showLayer (map, layer, show) {
   let currentVisibility = map.getLayoutProperty(layer, 'visibility');
   if (show && currentVisibility !== 'visible') {
-    batch.setLayoutProperty(layer, 'visibility', 'visible');
+    map.setLayoutProperty(layer, 'visibility', 'visible');
   } else if (!show && currentVisibility === 'visible') {
-    batch.setLayoutProperty(layer, 'visibility', 'none');
+    map.setLayoutProperty(layer, 'visibility', 'none');
   }
 }
 

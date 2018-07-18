@@ -98,7 +98,9 @@ class LightMap extends React.Component {
   }
 
   componentWillUnmount () {
-    this._unsubscribe.forEach((unsub) => unsub());
+    if (Array.isArray(this._unsubscribe)) {
+      this._unsubscribe.forEach((unsub) => unsub());
+    }
     if (this.map) {
       this.map.remove();
     }
@@ -153,10 +155,8 @@ class LightMap extends React.Component {
       return;
     }
 
-    var self = this;
-
-    window.glMap = self.map = new mgl.Map({
-      container: React.findDOMNode(this).querySelector('.map-inner'),
+    window.glMap = this.map = new mgl.Map({
+      container: this.refs.node,
       center: [79.667, 20.018],
       zoom: 2.5,
       minZoom: 2.5,
@@ -169,122 +169,117 @@ class LightMap extends React.Component {
     console.info('The Mapbox GL map is available as `window.glMap`');
 
     // Interaction handlers
-    self.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
-    self.map.on('click', debounce(this.onClick.bind(this), 200));
+    this.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
+    this.map.on('click', debounce(this.onClick.bind(this), 200));
 
     // Track which map sources have been loaded.
-    self.map.on('source.load', function onSourceLoad ({source}) {
-      self.setState({
-        sourcesLoaded: assign(self.state.sourcesLoaded, { [source.id]: true })
+    this.map.on('source.load', ({source}) => {
+      this.setState({
+        sourcesLoaded: assign(this.state.sourcesLoaded, { [source.id]: true })
       });
-      self.mapMaybeLoaded();
+      this.mapMaybeLoaded();
     });
 
     // suppress 'undefined' message
-    self.map.off('tile.error', self.map.onError);
+    this.map.off('tile.error', this.map.onError);
 
-    self.map.once('style.load', () => {
-      let emphasizedFeatureSource,
-        districtVillagesSource,
-        selectedVillagesSource;
+    this.map.once('style.load', () => {
 
-      self.map.batch(function (batch) {
-        // Setup a GeoJSON source to use to power the emphasized (hover) feature
-        // styling.
-        emphasizedFeatureSource = new mgl.GeoJSONSource({
-          data: { type: 'FeatureCollection', features: [ ] }
-        });
-        batch.addSource('emphasis-features', emphasizedFeatureSource);
+      // Setup a GeoJSON source to use to power the emphasized (hover) feature
+      // styling.
+      const emphasizedFeatureSource = new mgl.GeoJSONSource({
+        data: { type: 'FeatureCollection', features: [ ] }
+      });
+      this.map.addSource('emphasis-features', emphasizedFeatureSource);
 
-        // Setup a GeoJSON source to use for showing all the villages within a
-        // district.
-        districtVillagesSource = new mgl.GeoJSONSource({
-          data: { type: 'FeatureCollection', features: [ ] },
-          buffer: 128
-        });
-        batch.addSource('district-villages', districtVillagesSource);
+      // Setup a GeoJSON source to use for showing all the villages within a
+      // district.
+      const districtVillagesSource = new mgl.GeoJSONSource({
+        data: { type: 'FeatureCollection', features: [ ] },
+        buffer: 128
+      });
+      this.map.addSource('district-villages', districtVillagesSource);
 
-        // Setup a GeoJSON source to use for showing the currently selected
-        // (plotted) villages
-        selectedVillagesSource = new mgl.GeoJSONSource({
-          data: { type: 'FeatureCollection', features: [ ] },
-          buffer: 128
-        });
-        batch.addSource('selected-villages-source', selectedVillagesSource);
+      // Setup a GeoJSON source to use for showing the currently selected
+      // (plotted) villages
+      const selectedVillagesSource = new mgl.GeoJSONSource({
+        data: { type: 'FeatureCollection', features: [ ] },
+        buffer: 128
+      });
+      this.map.addSource('selected-villages-source', selectedVillagesSource);
 
-        // Setup the color scale for the village light visualization: this is
-        // actually a series of N separate layers, each with a different color.
-        // `setFilters` makes it so that each one only applies to points with
-        // the relevant range of `vis_median` values.
+      // Setup the color scale for the village light visualization: this is
+      // actually a series of N separate layers, each with a different color.
+      // `setFilters` makes it so that each one only applies to points with
+      // the relevant range of `vis_median` values.
 
-        let base = self.map.getLayer('villages-base');
-        showLayer(self.map, batch, 'villages-base', false);
+      let base = this.map.getLayer('villages-base');
+      showLayer(this.map, 'villages-base', false);
 
-        // 1. the 'lightsX' layers, which style the vector tile village points
-        // used in national and state view.
-        lightStyles.create(base, 'lights', {}, stops.length)
-        .forEach(layer => batch.addLayer(layer, 'cities'));
+      // 1. the 'lightsX' layers, which style the vector tile village points
+      // used in national and state view.
+      lightStyles.create(base, 'lights', {}, stops.length)
+      .forEach(layer => this.map.addLayer(layer, 'cities'));
 
-        // 2. the 'district-lightsX' layers, which will style the geojson source
-        // of villages in district view.
-        lightStyles.create(base, 'district-lights', {
-          source: 'district-villages'
-        }, stops.length)
-        .forEach((layer) => {
-          layer.interactive = true;
-          batch.addLayer(layer, 'cities');
-        });
-
-        // 3. the 'rggvy-lightsX' layers, which will style the same geojson
-        // source as 2, but filtered only for rggvy villages.
-        lightStyles.create(base, 'rggvy-lights', {
-          source: 'district-villages',
-          visibility: 'none'
-        }, stops.length)
-        .forEach((layer) => {
-          batch.addLayer(layer, 'cities');
-        });
-
-        // Add style for selected villages
-        var selectedVillages = cloneVillageLayer(
-          base._layer,
-          'selected-villages',
-          'selected-villages-source',
-          '#e64b3b'
-        );
-        batch.addLayer(selectedVillages, 'cities');
-
-        // Add style for emphasized features
-        batch.addLayer({
-          'id': 'emphasis',
-          'type': 'line',
-          'source': 'emphasis-features',
-          'paint': {
-            'line-color': '#fff',
-            'line-width': {
-              'base': 1,
-              'stops': [ [ 1, 0.5 ], [ 6, 1 ], [ 12, 1.5 ] ]
-            }
-          }
-        }, 'cities');
-
-        var emVillages = cloneVillageLayer(
-          base._layer,
-          'emphasis-villages',
-          'emphasis-features',
-          '#fff'
-        );
-        batch.addLayer(emVillages, 'cities');
+      // 2. the 'district-lightsX' layers, which will style the geojson source
+      // of villages in district view.
+      lightStyles.create(base, 'district-lights', {
+        source: 'district-villages'
+      }, stops.length)
+      .forEach((layer) => {
+        layer.interactive = true;
+        this.map.addLayer(layer, 'cities');
       });
 
-      self.setState({
+      // 3. the 'rggvy-lightsX' layers, which will style the same geojson
+      // source as 2, but filtered only for rggvy villages.
+      lightStyles.create(base, 'rggvy-lights', {
+        source: 'district-villages',
+        visibility: 'none'
+      }, stops.length)
+      .forEach((layer) => {
+        this.map.addLayer(layer, 'cities');
+      });
+
+      // Add style for selected villages
+      var selectedVillages = cloneVillageLayer(
+        base._layer,
+        'selected-villages',
+        'selected-villages-source',
+        '#e64b3b'
+      );
+      this.map.addLayer(selectedVillages, 'cities');
+
+      // Add style for emphasized features
+      this.map.addLayer({
+        'id': 'emphasis',
+        'type': 'line',
+        'source': 'emphasis-features',
+        'paint': {
+          'line-color': '#fff',
+          'line-width': {
+            'base': 1,
+            'stops': [ [ 1, 0.5 ], [ 6, 1 ], [ 12, 1.5 ] ]
+          }
+        }
+      }, 'cities');
+
+      var emVillages = cloneVillageLayer(
+        base._layer,
+        'emphasis-villages',
+        'emphasis-features',
+        '#fff'
+      );
+      this.map.addLayer(emVillages, 'cities');
+
+      this.setState({
         stylesLoaded: true,
-        sourcesPending: [ 'villages-base', 'states' ].map(l => self.map.getLayer(l).source),
+        sourcesPending: [ 'villages-base', 'states' ].map(l => this.map.getLayer(l).source),
         emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource
       });
-      self.mapMaybeLoaded();
+      this.mapMaybeLoaded();
     });
   }
 
@@ -382,13 +377,10 @@ class LightMap extends React.Component {
    */
   componentWillReceiveProps (newProps) {
     if (this.isMapLoaded()) {
-      let self = this;
-      this.map.batch(function (batch) {
-        self.setTime(batch, self.state.region, newProps.time);
-        if (newProps.rggvyFocus !== self.props.rggvyFocus) {
-          self.setRggvyFocus(batch, newProps.rggvyFocus);
-        }
-      });
+      this.setTime(self.state.region, newProps.time);
+      if (newProps.rggvyFocus !== self.props.rggvyFocus) {
+        this.setRggvyFocus(newProps.rggvyFocus);
+      }
     }
   }
 
@@ -423,12 +415,10 @@ class LightMap extends React.Component {
         let s = stops.map((d, i) => i / (stops.length - 1));
         let quantiles = ss.quantile(villagesState.data.features
           .map(feat => feat.properties.vis_median), s);
-        this.map.batch(function (batch) {
-          lightStyles.setFilters(batch, 'district-lights', quantiles, 'vis_median',
-            [[ '==', 'rggvy', false ]]);
-          lightStyles.setFilters(batch, 'rggvy-lights', quantiles, 'vis_median',
-            [[ '==', 'rggvy', true ]]);
-        });
+        lightStyles.setFilters(this.map, 'district-lights', quantiles, 'vis_median',
+          [[ '==', 'rggvy', false ]]);
+        lightStyles.setFilters(this.map, 'rggvy-lights', quantiles, 'vis_median',
+          [[ '==', 'rggvy', true ]]);
       }
     }
     this.setState({villages: villagesState});
@@ -440,7 +430,7 @@ class LightMap extends React.Component {
   /**
    * Set whether the RGGVY villages are focused.
    */
-  setRggvyFocus (batch, focus) {
+  setRggvyFocus (focus) {
     if (this.isMapLoaded() &&
       this.state.region &&
       !this.state.region.loading &&
@@ -448,7 +438,7 @@ class LightMap extends React.Component {
       // set filter based on whether we want to see all villages or just
       // rggvy ones
       lightStyles.forEach('district-lights', stops, layer =>
-        showLayer(this.map, batch, layer, focus));
+        showLayer(this.map, layer, focus));
     }
   }
 
@@ -487,18 +477,15 @@ class LightMap extends React.Component {
    * Update the map according to the current region and month
    */
   updateMap (region, time) {
-    var self = this;
-    this.map.batch(function (batch) {
-      self.setEmphasized(batch, region);
-      self.setTime(batch, region, time);
-      if (!region.loading && region.key !== self.state.currentRegionKey) {
-        self.setRegionStyles(batch, region);
-      }
-    });
+    this.setEmphasized(region);
+    this.setTime(region, time);
+    if (!region.loading && region.key !== this.state.currentRegionKey) {
+      this.setRegionStyles(region);
+    }
 
-    if (!region.loading && region.key !== self.state.currentRegionKey) {
-      self.flyToRegion(region);
-      self.setState({ currentRegionKey: region.key });
+    if (!region.loading && region.key !== this.state.currentRegionKey) {
+      this.flyToRegion(region);
+      this.setState({ currentRegionKey: region.key });
     }
   }
 
@@ -507,9 +494,9 @@ class LightMap extends React.Component {
    * applies to `nation` and `state` levels -- `district`-level styling
    * happens in onVillages
    */
-  setTime (batch, region, time) {
-    let {year, month} = time;
-    let doUpdateTime = this.isMapLoaded() && !region.district &&
+  setTime (region, time) {
+    const {year, month} = time;
+    const doUpdateTime = this.isMapLoaded() && !region.district &&
       (!this.state.time ||
       year !== this.state.time.year ||
       month !== this.state.time.month ||
@@ -517,30 +504,30 @@ class LightMap extends React.Component {
 
     if (!doUpdateTime) { return; }
 
-    let property = year + '-' + month;
-    let regionFilter = region.state ? [[ '==', 'skey', region.state ]] : [];
-    lightStyles.setFilters(batch, 'lights', stops, property, regionFilter);
+    const property = year + '-' + month;
+    const regionFilter = region.state ? [[ '==', 'skey', region.state ]] : [];
+    lightStyles.setFilters(this.map, 'lights', stops, property, regionFilter);
     this.setState({time});
   }
 
   /**
    * Update the emphasized region source
    */
-  setEmphasized (batch, region) {
+  setEmphasized (region) {
     if (region.loading) { return; }
     // If there's an emphasized region, and it's different than the
     // existing one, then style it.
-    let currentEmphasized = (region.emphasized || [])[0];
+    const currentEmphasized = (region.emphasized || [])[0];
     if (currentEmphasized) {
-      let map = this.map;
+      const map = this.map;
       let fc;
       if (region.district && this.state.villages.data) {
         let features = this.state.villages.data.features
           .filter((feat) => region.emphasized.indexOf(feat.properties.key) >= 0);
         fc = { type: 'FeatureCollection', features };
         this.state.emphasizedFeatureSource.setData(fc);
-        showLayer(map, batch, 'emphasis-villages', true);
-        showLayer(map, batch, 'emphasis', false);
+        showLayer(map, 'emphasis-villages', true);
+        showLayer(map, 'emphasis', false);
       } else if (region.subregions[currentEmphasized]) {
         fc = {
           type: 'Feature',
@@ -548,8 +535,8 @@ class LightMap extends React.Component {
           geometry: region.subregions[currentEmphasized].geometry
         };
         this.state.emphasizedFeatureSource.setData(fc);
-        showLayer(map, batch, 'emphasis-villages', false);
-        showLayer(map, batch, 'emphasis', true);
+        showLayer(map, 'emphasis-villages', false);
+        showLayer(map, 'emphasis', true);
         this.showTooltip(fc);
       }
     } else {
@@ -565,17 +552,17 @@ class LightMap extends React.Component {
    * level method that does NOT check whether we're already at the given
    * region
    */
-  setRegionStyles (batch, region) {
+  setRegionStyles (region) {
     if (region.loading) { return; }
 
-    let visibility = {
+    const visibility = {
       'current-state-districts': ['district', 'state'],
       'states': ['nation', 'state']
     };
 
     for (let layer in visibility) {
       let visible = visibility[layer].indexOf(region.level) >= 0;
-      showLayer(this.map, batch, layer, visible);
+      showLayer(this.map, layer, visible);
     }
 
     // Distinguish districts of the current state, or just the current
@@ -584,11 +571,11 @@ class LightMap extends React.Component {
     if (region.level === 'district') {
       filters.push([ '==', 'key', region.district ]);
     }
-    batch.setFilter('districts', ['none'].concat(filters));
-    batch.setFilter('current-state-districts', ['all'].concat(filters));
+    this.map.setFilter('districts', ['none'].concat(filters));
+    this.map.setFilter('current-state-districts', ['all'].concat(filters));
 
     lightStyles.forEach('lights', stops, (layer) => {
-      showLayer(this.map, batch, layer, !region.district);
+      showLayer(this.map, layer, !region.district);
     });
   }
 
@@ -658,7 +645,7 @@ class LightMap extends React.Component {
     return (
       <div className='light-map'>
         { loading ? <Loading errors={errors} /> : '' }
-        <div className='map-inner' />
+        <div className='map-inner' ref='node' />
       </div>
     );
   }
