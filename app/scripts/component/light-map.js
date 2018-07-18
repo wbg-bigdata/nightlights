@@ -4,7 +4,6 @@ const mgl = require('mapbox-gl');
 const extent = require('turf-extent');
 const centroid = require('turf-centroid');
 const assign = require('object-assign');
-const throttle = require('lodash.throttle');
 const debounce = require('lodash.debounce');
 const ss = require('simple-statistics');
 
@@ -29,15 +28,9 @@ mgl.accessToken = config.mapboxAccessToken;
 const stops = config.villageLightStops;
 
 class LightMap extends React.Component {
-  constructor () {
-    super();
+  constructor (props) {
+    super(props);
     this.state = {
-      emphasizedFeatureSource: null,
-      districtVillagesSource: null,
-      selectedVillagesSource: null,
-      sourcesPending: [],
-      sourcesLoaded: {},
-      stylesLoaded: false,
       stateBoundaries: {},
       currentRegionKey: 'never been set'
     };
@@ -121,28 +114,22 @@ class LightMap extends React.Component {
    */
   mapMaybeLoaded () {
     if (this.isMapLoaded()) { return; }
+    this._mapLoaded = true;
+    this.setState({
+      region: {loading: true},
+      villages: {loading: true}
+    });
+    this.onRegion(RegionStore.getInitialState());
+    this.onVillages(VillageStore.getInitialState());
+    this.onVillageCurves(VillageCurveStore.getInitialState());
 
-    let loaded = this.state.stylesLoaded &&
-      this.state.sourcesPending.every(s => this.state.sourcesLoaded[s]);
-
-    if (loaded && !this.isMapLoaded()) {
-      this._mapLoaded = true;
-      this.setState({
-        region: {loading: true},
-        villages: {loading: true}
-      });
-      this.onRegion(RegionStore.getInitialState());
-      this.onVillages(VillageStore.getInitialState());
-      this.onVillageCurves(VillageCurveStore.getInitialState());
-
-      this._unsubscribe = [];
-      this._unsubscribe.push(VillageStore.listen(this.onVillages.bind(this)));
-      this._unsubscribe.push(VillageCurveStore
-        .listen(this.onVillageCurves.bind(this)));
-      this._unsubscribe.push(RegionStore.listen(this.onRegion.bind(this)));
-      this._unsubscribe.push(Actions.recenterMap
-        .listen(this.resetView.bind(this)));
-    }
+    this._unsubscribe = [];
+    this._unsubscribe.push(VillageStore.listen(this.onVillages.bind(this)));
+    this._unsubscribe.push(VillageCurveStore
+      .listen(this.onVillageCurves.bind(this)));
+    this._unsubscribe.push(RegionStore.listen(this.onRegion.bind(this)));
+    this._unsubscribe.push(Actions.recenterMap
+      .listen(this.resetView.bind(this)));
   }
 
   /**
@@ -166,23 +153,14 @@ class LightMap extends React.Component {
       attributionControl: false,
       style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
-    console.info('The Mapbox GL map is available as `window.glMap`');
-
-    // Interaction handlers
-    map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
-    map.on('click', debounce(this.onClick.bind(this), 200));
-
-    // Track which map sources have been loaded.
-    map.on('source.load', ({source}) => {
-      this.setState({
-        sourcesLoaded: assign(this.state.sourcesLoaded, { [source.id]: true })
-      });
-      this.mapMaybeLoaded();
-    });
 
     // suppress 'undefined' message
     map.off('tile.error', map.onError);
-    map.once('style.load', () => {
+    map.once('load', () => {
+
+      // Interaction handlers
+      map.on('mousemove', this.onMouseMove.bind(this));
+      map.on('click', this.onClick.bind(this));
 
       // Setup a GeoJSON source to use to power the emphasized (hover) feature
       // styling.
@@ -291,20 +269,11 @@ class LightMap extends React.Component {
       );
       delete emVillages['source-layer'];
       map.addLayer(emVillages, 'cities');
-
-      this.setState({
-        stylesLoaded: true,
-        sourcesPending: [ 'villages-base', 'states' ].map(l => map.getLayer(l).source),
-        emphasizedFeatureSource,
-        districtVillagesSource,
-        selectedVillagesSource
-      });
       this.mapMaybeLoaded();
     });
   }
 
-  onMouseMove (e) {
-    if (!this.isMapLoaded() || this.isInFlight()) { return; }
+  onMouseMove ({point}) {
     if (this._tooltip) {
       this._tooltip.remove();
       this._tooltip = null;
@@ -318,14 +287,12 @@ class LightMap extends React.Component {
       'district': /^(district-lights|rggvy-lights)/
     })[region.level] || /x^/;
 
-    this.map.featuresAt(e.point, {
-      radius: 10,
-      includeGeometry: true
-    }, (err, features) => {
-      if (err) { return console.error(err); }
-      if (this.isInFlight()) { return; } // double check to avoid race
-      let subregionFeatures = features
-        .filter((feat) => subregionPattern.test(feat.layer.id));
+    const features = this.map.queryRenderedFeatures([
+      [point.x - 5, point.y - 5],
+      [point.x + 5, point.y + 5]
+    ]);
+    if (features.length) {
+      let subregionFeatures = features.filter((feat) => subregionPattern.test(feat.layer.id));
       // save the `hoverFeature` so that we can optimistically start zooming
       // to it if the user clicks.
       Actions.emphasize(subregionFeatures.map((feat) => feat.properties.key));
@@ -342,9 +309,9 @@ class LightMap extends React.Component {
       });
 
       if (subregionFeatures.length > 0) {
-        this.showTooltip(e.point);
+        this.showTooltip(point);
       }
-    });
+    }
   }
 
   onClick (e) {
@@ -430,7 +397,7 @@ class LightMap extends React.Component {
    */
   onVillages (villagesState) {
     if (!villagesState.loading && this.isMapLoaded()) {
-      this.state.districtVillagesSource.setData(villagesState.data);
+      this.map.getSource('district-villages').setData(villagesState.data);
       if (villagesState.data.features.length > 0) {
         let s = stops.map((d, i) => i / (stops.length - 1));
         let quantiles = ss.quantile(villagesState.data.features
@@ -479,7 +446,7 @@ class LightMap extends React.Component {
         features: villagePoints.features.filter((feat) =>
           selectedVillages.indexOf(feat.properties.key) >= 0)
       };
-      this.state.selectedVillagesSource.setData(selectedFeatureCollection);
+      this.map.getSource('selected-villages-source').setData(selectedFeatureCollection);
       this.setState({pendingVillageCurves: false});
     }
   }
@@ -545,7 +512,7 @@ class LightMap extends React.Component {
         let features = this.state.villages.data.features
           .filter((feat) => region.emphasized.indexOf(feat.properties.key) >= 0);
         fc = { type: 'FeatureCollection', features };
-        this.state.emphasizedFeatureSource.setData(fc);
+        this.map.getSource('emphasis-features').setData(fc);
         showLayer(map, 'emphasis-villages', true);
         showLayer(map, 'emphasis', false);
       } else if (region.subregions[currentEmphasized]) {
@@ -554,13 +521,13 @@ class LightMap extends React.Component {
           properties: {},
           geometry: region.subregions[currentEmphasized].geometry
         };
-        this.state.emphasizedFeatureSource.setData(fc);
+        this.map.getSource('emphasis-features').setData(fc);
         showLayer(map, 'emphasis-villages', false);
         showLayer(map, 'emphasis', true);
         this.showTooltip(fc);
       }
     } else {
-      this.state.emphasizedFeatureSource.setData({
+      this.map.getSource('emphasis-features').setData({
         type: 'FeatureCollection',
         features: []
       });
