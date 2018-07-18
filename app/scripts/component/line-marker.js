@@ -2,10 +2,6 @@ const React = require('react');
 const t = require('prop-types');
 
 class LineMarker extends React.Component {
-  constructor (props) {
-    super();
-  }
-
   render () {
     let {
       locations,

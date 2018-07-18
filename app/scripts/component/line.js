@@ -7,7 +7,7 @@ const config = require('../config');
 
 class Line extends React.Component {
   constructor (props) {
-    super();
+    super(props);
     this.state = {
       hover: false,
       data: [],
