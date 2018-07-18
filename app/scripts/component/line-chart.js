@@ -7,12 +7,14 @@ const Axis = require('./axis');
 const LineMarker = require('./line-marker');
 
 class LineChart extends React.Component {
-  constructor () {
-    super();
+  constructor (props) {
+    super(props);
     this.state = { x: {}, y: {} };
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.onClick = this.onClick.bind(this);
   }
 
-  componentWillMount () {
+  componentDidMount () {
     this.updateScales(this.props);
   }
 
@@ -35,31 +37,25 @@ class LineChart extends React.Component {
     }
   }
 
-  componentDidMount () {
-    let node = React.findDOMNode(this);
-    let s = d3.select(node);
-    let self = this;
+  onMouseMove () {
+    const sx = this.props.x.scale;
+    const sy = this.props.y.scale;
+    const [renderX, renderY] = d3.mouse(node);
+    const x = sx.invert(renderX);
+    const y = sy.invert(renderY);
 
-    s.on('mousemove', function () {
-      let sx = self.props.x.scale;
-      let sy = self.props.y.scale;
-      let [renderX, renderY] = d3.mouse(node);
-      let x = sx.invert(renderX);
-      let y = sy.invert(renderY);
+    if (this.props.onCursorClick) {
+      this.setState({ cursor: {
+        dataCoordinates: [x, y],
+        renderCoordinates: [sx(x), sy(y)]
+      } });
+    }
+  }
 
-      if (self.props.onCursorClick) {
-        self.setState({ cursor: {
-          dataCoordinates: [x, y],
-          renderCoordinates: [sx(x), sy(y)]
-        } });
-      }
-    });
-
-    s.on('click', function () {
-      if (self.props.onCursorClick) {
-        self.props.onCursorClick(self.state.cursor.dataCoordinates);
-      }
-    });
+  onClick () {
+    if (typeof this.props.onCursorClick === 'function') {
+      this.props.onCursorClick(this.state.cursor.dataCoordinates);
+    }
   }
 
   render () {
@@ -101,7 +97,7 @@ class LineChart extends React.Component {
     }
 
     return (
-      <g>
+      <g ref='node' onClick={this.onClick} onMouseMove={this.onMouseMove}>
         <rect className='mouse-catcher'
           style={{fill: 'rgba(0,0,0,.01)'}}
           x={0} y={0} width={10000} height={10000} />

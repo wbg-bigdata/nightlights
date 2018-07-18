@@ -69,8 +69,8 @@ function processSeries (values, doSmoothing) {
  */
 class LightCurves extends React.Component {
 
-  constructor ({expanded}) {
-    super();
+  constructor (props) {
+    super(props);
     this.state = {
       timeSeries: {},
       villageCurves: {},
@@ -82,31 +82,24 @@ class LightCurves extends React.Component {
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
-      expanded: !!expanded
+      expanded: !!props.expanded
     };
+    this.handleResize = debounce(this.handleResize.bind(this), 100);
   }
 
   componentDidMount () {
-    let self = this;
-
     // capture initial height (presumably set in css)
-    let node = React.findDOMNode(self);
-    self.setState({ height: node.offsetHeight });
-
-    // mimick width: 100% using resize handler
-    function handleResize () {
-      let node = React.findDOMNode(self);
-      self.setState(self._calcScales(assign({}, self.state, {
-        width: node.offsetWidth,
-        height: node.offsetHeight
-      })));
-    }
-
-    this.handleResize = debounce(handleResize, 100);
-
     window.addEventListener('resize', this.handleResize);
     this._handleData(this.props);
-    this.handleResize(this.state);
+    this.handleResize();
+  }
+
+  handleResize () {
+    const node = this.refs.node;
+    this.setState(this._calcScales(Object.assign({}, this.state, {
+      width: node.offsetWidth,
+      height: node.offsetHeight
+    })));
   }
 
   componentWillUnmount () {
@@ -308,7 +301,7 @@ class LightCurves extends React.Component {
     let apiUrl = timeSeries ? timeSeries.url : 'http://api.nightlights.io/';
 
     return (
-      <div className={classnames('light-curves', region.level, {expanded})}>
+      <div className={classnames('light-curves', region.level, {expanded})} ref='node'>
         <div className='footer'>
           {apiUrl ? <div className='api-url'>
             <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>

@@ -3,7 +3,7 @@ const Markdown = require('../markdown');
 const d3 = require('d3');
 
 const body = (
-    <div className='diwali'>
+    <div className='diwali' ref='node'>
       <Markdown>{`
 
   Each year, people from around India gather to celebrate Diwali, the festival
@@ -45,71 +45,73 @@ const body = (
 
 
 class Content extends React.Component {
-  render () { return body; }
+  constructor (props) {
+    super(props);
+    this.updateChart = this.updateChart.bind(this);
+  }
+
+  updateChart (data, chartNode, xTicks, selYear, margin, width, height, switchYear) {
+    // ignoring animation for now
+    chartNode.selectAll('.axis').remove();
+    chartNode.selectAll('rect').remove();
+    chartNode.selectAll('.dot').remove();
+
+    let x = d3.time.scale()
+              .domain(d3.extent(data, function(d) { return d.date; }))
+              .range([ 0, width ]);
+
+    let y = d3.scale.linear()
+              .domain([0, d3.max(data, function(d) { return d.value; }) + 3])
+              .range([ height, 0 ]);
+
+    let xAxis = d3.svg.axis()
+                  .scale(x)
+                  .orient('bottom')
+                  .ticks(xTicks);
+
+    chartNode.append('g')
+        .attr('transform', 'translate(0,' + height + ')')
+        .attr('class', 'main axis date')
+        .call(xAxis);
+
+    let yAxis = d3.svg.axis()
+                  .scale(y)
+                  .orient('left')
+                  .ticks(5);
+
+    chartNode.append('g')
+        .attr('transform', 'translate(0,0)')
+        .attr('class', 'main axis value')
+        .call(yAxis);
+
+    chartNode.append('rect')
+        .attr('class','envelope')
+        .attr('width', width / 60)
+        .attr('height', height)
+        .attr('x', x(diwaliDates[String(selYear)]) - width / 120)
+        .attr('y',0);
+
+    chartNode.selectAll('dot')
+        .data(data)
+        .enter().append('circle')
+        .attr('class', 'dot')
+        .attr('cx', function (d) { return x(d.date); } )
+        .attr('cy', function (d) { return y(d.value); } )
+        .attr('r', width / 120);
+
+    if (switchYear) {
+      d3.select('#year-switcher span').html(selYear)
+    }
+
+    d3.selectAll('.axis.value .tick').each(function(){
+      if (d3.select(this).select('text').html() === '0') {
+        d3.select(this).select('text').html('');
+        d3.select(this).select('line').remove();
+      }
+    });
+  }
 
   componentDidMount () {
-
-    function updateChart (data, chartNode, xTicks, selYear, margin, width, height, switchYear) {
-      // ignoring animation for now
-      chartNode.selectAll('.axis').remove();
-      chartNode.selectAll('rect').remove();
-      chartNode.selectAll('.dot').remove();
-
-      let x = d3.time.scale()
-                .domain(d3.extent(data, function(d) { return d.date; }))
-                .range([ 0, width ]);
-
-      let y = d3.scale.linear()
-                .domain([0, d3.max(data, function(d) { return d.value; }) + 3])
-                .range([ height, 0 ]);
-
-      let xAxis = d3.svg.axis()
-                    .scale(x)
-                    .orient('bottom')
-                    .ticks(xTicks);
-
-      chartNode.append('g')
-          .attr('transform', 'translate(0,' + height + ')')
-          .attr('class', 'main axis date')
-          .call(xAxis);
-
-      let yAxis = d3.svg.axis()
-                    .scale(y)
-                    .orient('left')
-                    .ticks(5);
-
-      chartNode.append('g')
-          .attr('transform', 'translate(0,0)')
-          .attr('class', 'main axis value')
-          .call(yAxis);
-
-      chartNode.append('rect')
-          .attr('class','envelope')
-          .attr('width', width / 60)
-          .attr('height', height)
-          .attr('x', x(diwaliDates[String(selYear)]) - width / 120)
-          .attr('y',0);
-
-      chartNode.selectAll('dot')
-          .data(data)
-          .enter().append('circle')
-          .attr('class', 'dot')
-          .attr('cx', function (d) { return x(d.date); } )
-          .attr('cy', function (d) { return y(d.value); } )
-          .attr('r', width / 120);
-
-      if (switchYear) {
-        d3.select('#year-switcher span').html(selYear)
-      }
-
-      d3.selectAll('.axis.value .tick').each(function(){
-        if (d3.select(this).select('text').html() === '0') {
-          d3.select(this).select('text').html('');
-          d3.select(this).select('line').remove();
-        }
-      });
-    };
-
     function csvHelper (row) {
       row.value = +row.vis || +row.value;
       row.year = +row.year;
@@ -117,7 +119,7 @@ class Content extends React.Component {
       return row;
     };
 
-    let node = React.findDOMNode(this);
+    let node = this.refs.node;
     let margin = {top: 20, right: 40, bottom: 30, left: 60}
 
     let width = node.offsetWidth - margin.left - margin.right;
@@ -159,7 +161,7 @@ class Content extends React.Component {
           return d.year === year;
         });
 
-        updateChart(yearData, main, 10, year, margin, width, height, true);
+        this.updateChart(yearData, main, 10, year, margin, width, height, true);
 
         d3.selectAll('.bttn').on('click', function(){
           let indexShift = (d3.select(this).classed('bttn-next')) ? 1 : -1;
@@ -206,9 +208,13 @@ class Content extends React.Component {
 
         let year = 2007;
 
-        updateChart(data, little, 2, year, margin, width, height, false);
+        this.updateChart(data, little, 2, year, margin, width, height, false);
       });
     });
+  }
+
+  render () {
+    return body;
   }
 };
 

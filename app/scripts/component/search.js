@@ -24,7 +24,7 @@ class Search extends React.Component {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionListStore.listen(data => {
       /* eslint react/no-did-mount-set-state: [2, "allow-in-func"] */
-      this.setState({ fuse: fuse(data) });
+      // this.setState({ fuse: fuse(data) });
     }));
   }
 
@@ -33,11 +33,11 @@ class Search extends React.Component {
   }
 
   onClick () {
-    this.setState({active: true});
+    // this.setState({active: true});
   }
 
   componentWillReceiveProps (nextProps) {
-    this.setState({currentValue: nextProps.initialValue});
+    // this.setState({currentValue: nextProps.initialValue});
   }
 
   onKeyPress (event) {
@@ -45,7 +45,7 @@ class Search extends React.Component {
       // enter key
       let best = this.getSuggestions(this.state.currentValue)[0];
       if (!best || !best.name) {
-        var node = React.findDOMNode(this.refs.search);
+        var node = null;
         // Remove error class.
         node.className = node.className.replace(/ ?no-results/, '');
         // Add it back on next tick so that css animation is triggered.
