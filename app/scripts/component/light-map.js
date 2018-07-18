@@ -155,7 +155,7 @@ class LightMap extends React.Component {
       return;
     }
 
-    window.glMap = this.map = new mgl.Map({
+    const map = window.glMap = this.map = new mgl.Map({
       container: this.refs.node,
       center: [79.667, 20.018],
       zoom: 2.5,
@@ -169,11 +169,11 @@ class LightMap extends React.Component {
     console.info('The Mapbox GL map is available as `window.glMap`');
 
     // Interaction handlers
-    this.map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
-    this.map.on('click', debounce(this.onClick.bind(this), 200));
+    map.on('mousemove', throttle(this.onMouseMove.bind(this), 100));
+    map.on('click', debounce(this.onClick.bind(this), 200));
 
     // Track which map sources have been loaded.
-    this.map.on('source.load', ({source}) => {
+    map.on('source.load', ({source}) => {
       this.setState({
         sourcesLoaded: assign(this.state.sourcesLoaded, { [source.id]: true })
       });
@@ -181,54 +181,71 @@ class LightMap extends React.Component {
     });
 
     // suppress 'undefined' message
-    this.map.off('tile.error', this.map.onError);
-
-    this.map.once('style.load', () => {
+    map.off('tile.error', map.onError);
+    map.once('style.load', () => {
 
       // Setup a GeoJSON source to use to power the emphasized (hover) feature
       // styling.
-      const emphasizedFeatureSource = new mgl.GeoJSONSource({
+      const emphasizedFeatureSource = {
+        type: 'geojson',
         data: { type: 'FeatureCollection', features: [ ] }
-      });
-      this.map.addSource('emphasis-features', emphasizedFeatureSource);
+      };
+      map.addSource('emphasis-features', emphasizedFeatureSource);
 
       // Setup a GeoJSON source to use for showing all the villages within a
       // district.
-      const districtVillagesSource = new mgl.GeoJSONSource({
+      const districtVillagesSource = {
+        type: 'geojson',
         data: { type: 'FeatureCollection', features: [ ] },
         buffer: 128
-      });
-      this.map.addSource('district-villages', districtVillagesSource);
+      }
+      map.addSource('district-villages', districtVillagesSource);
 
       // Setup a GeoJSON source to use for showing the currently selected
       // (plotted) villages
-      const selectedVillagesSource = new mgl.GeoJSONSource({
+      const selectedVillagesSource = {
+        type: 'geojson',
         data: { type: 'FeatureCollection', features: [ ] },
         buffer: 128
-      });
-      this.map.addSource('selected-villages-source', selectedVillagesSource);
+      }
+      map.addSource('selected-villages-source', selectedVillagesSource);
 
       // Setup the color scale for the village light visualization: this is
       // actually a series of N separate layers, each with a different color.
       // `setFilters` makes it so that each one only applies to points with
       // the relevant range of `vis_median` values.
 
-      let base = this.map.getLayer('villages-base');
-      showLayer(this.map, 'villages-base', false);
+      let base = assign({}, map.getLayer('villages-base'));
+
+      // The new mapbox GL spec doesn't return a valid paint object, instead
+      // populating it with internal values, so replace it.
+      base.paint = {
+        'circle-color': '#efc20d',
+        'circle-blur': {
+          'base': 1,
+          'stops': [ [ 5, 0.666 ], [ 8, 1.25 ] ]
+        },
+        'circle-radius': {
+          'base': 1,
+          'stops': [ [ 0, 2.5 ], [ 3, 5 ], [ 10, 8 ] ]
+        }
+      };
+      showLayer(map, 'villages-base', false);
 
       // 1. the 'lightsX' layers, which style the vector tile village points
       // used in national and state view.
       lightStyles.create(base, 'lights', {}, stops.length)
-      .forEach(layer => this.map.addLayer(layer, 'cities'));
+      .forEach(layer => map.addLayer(layer, 'cities'));
 
       // 2. the 'district-lightsX' layers, which will style the geojson source
       // of villages in district view.
       lightStyles.create(base, 'district-lights', {
         source: 'district-villages'
-      }, stops.length)
-      .forEach((layer) => {
+      }, stops.length).forEach((layer) => {
         layer.interactive = true;
-        this.map.addLayer(layer, 'cities');
+        // since this is a geojson layer, remove the source-layer
+        delete layer['source-layer'];
+        map.addLayer(layer, 'cities');
       });
 
       // 3. the 'rggvy-lightsX' layers, which will style the same geojson
@@ -238,20 +255,22 @@ class LightMap extends React.Component {
         visibility: 'none'
       }, stops.length)
       .forEach((layer) => {
-        this.map.addLayer(layer, 'cities');
+        delete layer['source-layer'];
+        map.addLayer(layer, 'cities');
       });
 
       // Add style for selected villages
       var selectedVillages = cloneVillageLayer(
-        base._layer,
+        base,
         'selected-villages',
         'selected-villages-source',
         '#e64b3b'
       );
-      this.map.addLayer(selectedVillages, 'cities');
+      delete selectedVillages['source-layer'];
+      map.addLayer(selectedVillages, 'cities');
 
       // Add style for emphasized features
-      this.map.addLayer({
+      map.addLayer({
         'id': 'emphasis',
         'type': 'line',
         'source': 'emphasis-features',
@@ -265,16 +284,17 @@ class LightMap extends React.Component {
       }, 'cities');
 
       var emVillages = cloneVillageLayer(
-        base._layer,
+        base,
         'emphasis-villages',
         'emphasis-features',
         '#fff'
       );
-      this.map.addLayer(emVillages, 'cities');
+      delete emVillages['source-layer'];
+      map.addLayer(emVillages, 'cities');
 
       this.setState({
         stylesLoaded: true,
-        sourcesPending: [ 'villages-base', 'states' ].map(l => this.map.getLayer(l).source),
+        sourcesPending: [ 'villages-base', 'states' ].map(l => map.getLayer(l).source),
         emphasizedFeatureSource,
         districtVillagesSource,
         selectedVillagesSource
@@ -659,10 +679,8 @@ LightMap.propTypes = {
 module.exports = LightMap;
 
 function cloneVillageLayer (base, id, source, color) {
-  var layer = assign({}, base, {
-    id: id,
-    source: source
-  });
+  let layer = lightStyles.clone(base);
+  assign(layer, { id, source });
   layer.paint = assign({}, layer.paint, {
     'circle-color': color,
     'circle-opacity': 1,
