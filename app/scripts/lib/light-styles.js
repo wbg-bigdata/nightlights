@@ -1,4 +1,18 @@
 let assign = require('object-assign');
+
+function clone (baseStyle) {
+  let style = assign({}, baseStyle);
+  Object.keys(style).forEach(key => {
+    // internal properties start with '_'
+    if (style[key] === undefined || key.charAt(0) === '_') {
+      delete style[key];
+    }
+  });
+  style['source-layer'] = style.sourceLayer;
+  delete style.sourceLayer;
+  return style;
+}
+
 /**
  * Create a series of mapbox gl styles to use as a property-based color scale
  * for visualizing village lights
@@ -7,7 +21,8 @@ let assign = require('object-assign');
  */
 function create (baseStyle, idPrefix, layerProperties, numStops) {
   return (Array.apply(null, {length: numStops})).map(function (_, i) {
-    let style = assign({}, baseStyle._layer, { id: idPrefix + i }, layerProperties);
+    let style = clone(baseStyle);
+    assign(style, { id: idPrefix + i }, layerProperties);
     style.paint = assign({}, style.paint);
     assign(style.paint, {'circle-opacity': (i + 1) / numStops});
     return style;
@@ -40,6 +55,7 @@ function forEach (idPrefix, stops, cb) {
 }
 
 module.exports = {
+  clone,
   create,
   setFilters,
   forEach
