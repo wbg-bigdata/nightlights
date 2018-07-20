@@ -1,4 +1,5 @@
 const React = require('react');
+const { render } = require('react-dom');
 const t = require('prop-types');
 const mgl = require('mapbox-gl');
 const extent = require('turf-extent');
@@ -34,60 +35,7 @@ class LightMap extends React.Component {
       stateBoundaries: {},
       currentRegionKey: 'never been set'
     };
-
-    let self = this;
-    /**
-     * Takes either a screen coordinate (e.g. from a mouse event) or a
-     * GeoJSON Feature (e.g. a polygon) as the location at which to show
-     * the tooltip
-     */
-    this.showTooltip = debounce(function (pointOrFeature) {
-      // determine location for the popup
-      let point;
-      if (pointOrFeature.type === 'Feature') {
-        let cent = centroid(pointOrFeature);
-        point = cent.geometry.coordinates;
-      } else if (pointOrFeature.type === 'FeatureCollection' && (pointOrFeature.features || []).length > 0) {
-        let cent = centroid(pointOrFeature);
-        point = cent.geometry.coordinates;
-      } else {
-        if (!self.state.region.emphasized || self.state.region.emphasized.length === 0) {
-          return;
-        }
-        point = self.map.unproject(pointOrFeature);
-      }
-
-      // remove old popup if it exists
-      if (self._tooltip) {
-        self._tooltip.remove();
-        self._tooltip = null;
-      }
-
-      // add tooltip
-      let content = React.renderToStaticMarkup(
-        <Tooltip region={self.state.region} villages={self.state.villages} />
-      );
-      if (!/tooltip/.test(content)) {
-        return;
-      }
-      self._tooltip = new mgl.Popup({ closeOnClick: false })
-      .setLngLat(point)
-      .setHTML(content);
-      self._tooltip.addTo(self.map);
-
-      // swallow scroll and mousewheel events to prevent the whole page
-      // (rather than the map) from getting weirdly zoomed
-      let el = document.querySelector('.tooltip');
-      el.addEventListener('wheel', pass, false);
-      el.addEventListener('mousewheel', pass, false);
-      el.addEventListener('click', () => {
-        if (!this.state.region.district && this.state.region.emphasized &&
-          this.state.region.emphasized.length > 0) {
-          Actions.select(this.state.region.emphasized[0]);
-        }
-      });
-      function pass (e) { e.preventDefault(); }
-    }, 300);
+    this.showTooltip = this.showTooltip.bind(this);
   }
 
   componentWillUnmount () {
@@ -98,6 +46,52 @@ class LightMap extends React.Component {
       this.map.remove();
     }
   }
+
+  /**
+   * Takes either a screen coordinate (e.g. from a mouse event) or a
+   * GeoJSON Feature (e.g. a polygon) as the location at which to show
+   * the tooltip
+   */
+  showTooltip (pointOrFeature) {
+    // determine location for the popup
+    let point;
+    if (pointOrFeature.type === 'Feature') {
+      let cent = centroid(pointOrFeature);
+      point = cent.geometry.coordinates;
+    } else if (pointOrFeature.type === 'FeatureCollection' && (pointOrFeature.features || []).length > 0) {
+      let cent = centroid(pointOrFeature);
+      point = cent.geometry.coordinates;
+    } else {
+      if (!this.state.region.emphasized || this.state.region.emphasized.length === 0) {
+        return;
+      }
+      point = this.map.unproject(pointOrFeature);
+    }
+
+    // remove old popup if it exists
+    if (this._tooltip) {
+      this._tooltip.remove();
+      this._tooltip = null;
+    }
+
+    // add tooltip
+    let content = document.createElement('div');
+    render(<Tooltip region={this.state.region} villages={this.state.villages} />, content);
+    this._tooltip = new mgl.Popup({ closeOnClick: false })
+    .setLngLat(point)
+    .setDOMContent(content.children[0]);
+    this._tooltip.addTo(this.map);
+
+    /*
+    el.addEventListener('click', () => {
+      if (!this.state.region.district && this.state.region.emphasized &&
+        this.state.region.emphasized.length > 0) {
+        Actions.select(this.state.region.emphasized[0]);
+      }
+    });
+    */
+  }
+
 
   isMapLoaded () {
     return !!this._mapLoaded;
@@ -273,13 +267,20 @@ class LightMap extends React.Component {
     });
   }
 
-  onMouseMove ({point}) {
-    if (this._tooltip) {
-      this._tooltip.remove();
-      this._tooltip = null;
-      this.showTooltip.cancel();
+  /**
+   * Receive new props: specifically, the year and month for rendering
+   * the right village light data
+   */
+  componentWillReceiveProps (newProps) {
+    if (this.isMapLoaded()) {
+      this.setTime(self.state.region, newProps.time);
+      if (newProps.rggvyFocus !== self.props.rggvyFocus) {
+        this.setRggvyFocus(newProps.rggvyFocus);
+      }
     }
+  }
 
+  onMouseMove ({point}) {
     let region = this.state.region;
     let subregionPattern = ({
       'nation': /^states/,
@@ -354,19 +355,6 @@ class LightMap extends React.Component {
         }, self.props.time);
       } else {
         Actions.select(emphasized[0]);
-      }
-    }
-  }
-
-  /**
-   * Receive new props: specifically, the year and month for rendering
-   * the right village light data
-   */
-  componentWillReceiveProps (newProps) {
-    if (this.isMapLoaded()) {
-      this.setTime(self.state.region, newProps.time);
-      if (newProps.rggvyFocus !== self.props.rggvyFocus) {
-        this.setRggvyFocus(newProps.rggvyFocus);
       }
     }
   }
