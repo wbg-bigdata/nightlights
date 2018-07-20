@@ -4,8 +4,28 @@ const { combineReducers } = require('redux');
 const { inflight, failed, success } = require('./util');
 let sampleCount = require('../../data/sample-counts.json');
 
+/**
+ * Models app state relating to the current region of interest.
+ *
+ * @property {object} error - API or transport error.
+ * @property {boolean} loading - true if waiting on any API response
+ * @property {string} key - unique key
+ * @property {string} name - display name
+ * @property {string} level - 'nation', 'state', 'district'
+ * @property {string} state - unique key of state; undefined if level === 'nation'
+ * @property {string} district - unique key of district; undefined if irrelevant
+ * @property {Geometry} boundary - GeoJSON boundary of current district
+ * @property {object} subregions - an object that maps subregions' `key`s to
+ * GeoJSON boundaries.  Used by the map component to highlight subregion
+ * boundaries.
+ * @property {array} emphasized - an array of keys of currently emphasized
+ * regions.  Should be subregions of the current `region`.
+ */
+
 const initialState = {
-  loading: false,
+  loading: true,
+  initialLoad: false,
+  level: 'nation',
   emphasized: []
 };
 
@@ -20,6 +40,8 @@ function boundaries (state = initialState, action) {
     case 'query-region-boundaries-success':
       state = Object.assign({}, state, parseResponse(action));
       break;
+    case 'emphasize':
+      state = Object.assign({}, state, emphasize(action, state));
   }
   return state;
 }
@@ -60,6 +82,13 @@ function parseResponse ({results, context}) {
       loading: false,
     }
   }
+}
+
+function emphasize ({keys}, {subregions, level}) {
+  const _keys = Array.isArray(keys) ? keys : [keys];
+  return {
+    emphasized: _keys.filter(k => level === 'district' || !subregions || subregions[k])
+  };
 }
 
 module.exports = combineReducers({boundaries});
