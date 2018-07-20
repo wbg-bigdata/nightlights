@@ -3,9 +3,11 @@
 const React = require('react');
 const { render } = require('react-dom');
 const { HashRouter, Route, Switch, Redirect } = require('react-router-dom');
+const { Provider } = require('react-redux');
 const difference = require('lodash.difference');
 const union = require('lodash.union');
 
+const store = require('./lib/store');
 const Actions = require('./actions');
 const App = require('./component/app');
 const DataExplorer = require('./component/data-explorer');
@@ -15,19 +17,21 @@ const About = require('./component/about');
 const DefaultRoute = ({...args}) => <Route {...args} render={() => <Redirect to='/nation/2006/12' />} />;
 
 const Root = () => (
-  <HashRouter>
-    <App>
-      <Switch>
-        <Route exact name='nation' path='/nation/:year/:month' component={DataExplorer} />
-        <Route exact name='state' path='/state/:state/:year/:month' component={DataExplorer} />
-        <Route exact name='district' path='/state/:state/district/:district/:year/:month' component={DataExplorer} />
-        <Route name='stories' path='/stories' component={StoryHub} />
-        <Route name='story' path='/stories/:story' component={StoryHub} />
-        <Route name='about' path='/about' component={About} />
-        <Route component={DefaultRoute} />
-      </Switch>
-    </App>
-  </HashRouter>
+  <Provider store={store}>
+    <HashRouter>
+      <App>
+        <Switch>
+          <Route exact name='nation' path='/nation/:year/:month' component={DataExplorer} />
+          <Route exact name='state' path='/state/:state/:year/:month' component={DataExplorer} />
+          <Route exact name='district' path='/state/:state/district/:district/:year/:month' component={DataExplorer} />
+          <Route name='stories' path='/stories' component={StoryHub} />
+          <Route name='story' path='/stories/:story' component={StoryHub} />
+          <Route name='about' path='/about' component={About} />
+          <Route component={DefaultRoute} />
+        </Switch>
+      </App>
+    </HashRouter>
+  </Provider>
 );
 
 render(
