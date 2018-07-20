@@ -3,9 +3,20 @@ const t = require('prop-types');
 const titlecase = require('titlecase');
 
 class Tooltip extends React.Component {
+  constructor(props) {
+    super(props);
+    this.select = this.select.bind(this);
+  }
+
+  pass (e) {
+    e.preventDefault();
+  }
+
+  select (e) {
+  }
+
   render () {
     const {region, villages} = this.props;
-
     let name = '';
     if (!region.loading && region.emphasized && region.emphasized.length > 0) {
       if (region.level === 'district' && villages && villages.data) {
@@ -24,7 +35,10 @@ class Tooltip extends React.Component {
     }
 
     return name.length ? (
-      <div className='tooltip'>{name}</div>
+      <div className='tooltip'
+        onWheel={this.pass}
+        onClick={this.select}
+      >{name}</div>
     ) : null;
   }
 }
