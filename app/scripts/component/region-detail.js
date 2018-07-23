@@ -1,4 +1,5 @@
 const React = require('react');
+const { withRouter } = require('react-router');
 const { Link } = require('react-router-dom');
 const t = require('prop-types');
 const titlecase = require('titlecase');
@@ -7,15 +8,8 @@ const Actions = require('../actions');
 const Search = require('./search');
 
 class RegionDetail extends React.Component {
-  // mixins: [Router.State],
-
   render () {
-    let {
-      level,
-      properties,
-      loading
-    } = this.props.region;
-
+    let {level, properties, loading} = this.props.region;
     level = level || 'nation';
     properties = properties || {};
 
@@ -51,18 +45,15 @@ class RegionDetail extends React.Component {
     return (
       <section className='spane region-detail'>
         <header className='spane-header'>
-
           <h1 className='spane-title'>{name}</h1>
-
           <a className='bttn-center-map'
             onClick={Actions.recenterMap.bind(Actions)}
             title='Zoom to location bounds'>
             <span>Zoom to location bounds</span>
           </a>
-
           <Search initialValue={name} />
-
         </header>
+
         <div className='spane-body'>
           <dl className='spane-details'>
             <dt>Level</dt>
@@ -98,5 +89,4 @@ RegionDetail.propTypes = {
   selectedVillages: t.array,
   regionMedian: t.number
 }
-
 module.exports = RegionDetail;

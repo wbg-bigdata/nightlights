@@ -1,10 +1,15 @@
+'use strict';
+const url = require('url');
 const React = require('react');
+const { connect } = require('react-redux');
 const t = require('prop-types');
 const d3 = require('d3');
+
 const TimeSeriesStore = require('../store/time-series');
 const VillageStore = require('../store/village');
 const VillageCurveStore = require('../store/village-curve');
 const RegionStore = require('../store/region');
+
 const RegionDetail = require('./region-detail');
 const VillageDetail = require('./village-detail');
 const LightMap = require('./light-map');
@@ -14,10 +19,12 @@ const Modal = require('./modal');
 const NoData = require('./no-data');
 const Actions = require('../actions');
 const timespan = require('../lib/timespan');
-const config = require('../config');
-const interval = config.interval;
-const dataThreshold = config.dataThreshold;
-const welcomeText = config.welcome;
+const { interval, dataThreshold, welcome: welcomeText } = require('../config');
+
+const {
+  queryRegionBoundaries,
+  queryRegionTimeseries,
+} = require('../actions');
 
 /**
  * The data explorer.  This is basically a wrapper for the:
@@ -31,40 +38,31 @@ class DataExplorer extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      region: RegionStore.getInitialState(),
-      timeSeries: TimeSeriesStore.getInitialState(),
       villages: VillageStore.getInitialState(),
       villageCurves: VillageCurveStore.getInitialState()
     };
-    this.unsubscribe = [];
-    this.unsubscribe.push(RegionStore.listen(this.onRegion));
-    this.unsubscribe.push(VillageStore.listen(this.onVillages));
-    this.unsubscribe.push(VillageCurveStore.listen(this.onVillageCurves));
-    this.unsubscribe.push(TimeSeriesStore.listen(this.onTimeSeries));
-    this.unsubscribe.push(Actions.toggleRggvy.listen(this.onToggleRggvy));
-    this.statics = {
-      willTransitionTo: function (transition, params, query) {
-        let valid = timespan.getValid(params);
-        if (+valid.year !== +params.year || +valid.month !== +params.month) {
-          // TODO: redirect to the desired region.  The problem is that
-          // because of how react-router works, we don't actually know which
-          // route was being attempted at this point.
-          transition.redirect('nation', valid, {});
-        }
-        RegionStore.setRegion(params);
-        VillageCurveStore.setSelectedVillages(query.v || []);
-      }
-    };
   }
 
-  // mixins: [ Router.State ],
-
-  componentWillUnmount () {
-    this.unsubscribe.forEach((unsub) => unsub());
+  componentDidMount () {
+    this.updateOnUrlChange(this.props.match.params, this.props.location.search);
   }
 
-  onRegion (regionState) {
-    this.setState({region: regionState});
+  componentDidUpdate (prevProps, prevState) {
+    if (this.props.location.pathname !== prevProps.location.pathname) {
+      this.updateOnUrlChange(this.props.match.params, this.props.location.search);
+    }
+  }
+
+  updateOnUrlChange (params, query) {
+    const valid = timespan.getValid(params);
+    if (+valid.year !== +params.year || +valid.month !== +params.month) {
+      this.props.history.push(url.resolve('/nation', `${valid.year}/${valid.month}`));
+    } else {
+      // RegionStore.setRegion(params);
+      this.props.queryRegionBoundaries(params);
+      this.props.queryRegionTimeseries(params);
+      VillageCurveStore.setSelectedVillages(query || []);
+    }
   }
 
   onVillages (villages) {
@@ -75,16 +73,13 @@ class DataExplorer extends React.Component {
     this.setState({villageCurves});
   }
 
-  onTimeSeries (timeSeries) {
-    this.setState({timeSeries});
-  }
-
   onToggleRggvy () {
     this.setState({rggvyFocus: !this.state.rggvyFocus});
   }
 
   render () {
-    let {region, timeSeries, villages, villageCurves} = this.state;
+    const { region, timeSeries } = this.props;
+    let {villages, villageCurves} = this.state;
     // get year and month from router params
     let {year, month, interval } = this.props.match.params;
     year = +year;
@@ -106,9 +101,7 @@ class DataExplorer extends React.Component {
 
     // region median
     let median;
-    if (!timeSeries.loading
-    && !timeSeries.error
-    && region.level !== 'nation') {
+    if (!timeSeries.loading && !timeSeries.error && region.level !== 'nation') {
       let nowData = timeSeries.results.filter(d =>
         +d.year === year && +d.month === month && d.key === region.key);
       median = d3.mean(nowData, d => d.vis_median);
@@ -132,12 +125,17 @@ class DataExplorer extends React.Component {
     return (
       <div className='data-container'>
         <div className='now-showing'>
-          <DateControl year={year} month={month} interval={interval}
-            region={region} />
+          <DateControl
+            year={year}
+            month={month}
+            interval={interval}
+            region={region}
+          />
           <VillageDetail
             region={region}
             villages={selectedVillages}
-            villageNames={selectedVillageNames} />
+            villageNames={selectedVillageNames}
+          />
         </div>
         <RegionDetail
           region={region}
@@ -146,8 +144,11 @@ class DataExplorer extends React.Component {
           rggvyFocus={this.state.rggvyFocus}
           selectedVillages={selectedVillages}
           regionMedian={median}
-          />
-        <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus} />
+        />
+        <LightMap
+          time={{year, month}}
+          rggvyFocus={this.state.rggvyFocus}
+        />
         <LightCurves
           year={year}
           month={month}
@@ -171,7 +172,24 @@ class DataExplorer extends React.Component {
 };
 
 DataExplorer.propTypes = {
-  params: t.object
+  match: t.object,
+  location: t.object,
+
+  queryRegionBoundaries: t.func,
+  queryRegionTimeseries: t.func,
+
+  region: t.object,
+  timeSeries: t.object
 }
 
-module.exports = DataExplorer;
+const select = (state) => ({
+  region: state.region.boundaries,
+  timeSeries: state.timeSeries.months
+});
+
+const dispatch = {
+  queryRegionBoundaries,
+  queryRegionTimeseries,
+}
+
+module.exports = connect(select, dispatch)(DataExplorer);

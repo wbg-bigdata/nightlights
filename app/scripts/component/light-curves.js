@@ -78,7 +78,7 @@ class LightCurves extends React.Component {
       data: null,
       centerline: null,
       series: [],
-      scales: {x: (x) => x, y: (x) => x},
+      scales: {x: null, y: null},
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
@@ -90,8 +90,11 @@ class LightCurves extends React.Component {
   componentDidMount () {
     // capture initial height (presumably set in css)
     window.addEventListener('resize', this.handleResize);
-    this._handleData(this.props);
     this.handleResize();
+  }
+
+  componentWillUnmount () {
+    window.removeEventListener('resize', this.handleResize);
   }
 
   handleResize () {
@@ -102,16 +105,51 @@ class LightCurves extends React.Component {
     })));
   }
 
-  componentWillUnmount () {
-    window.removeEventListener('resize', this.handleResize);
+  toggle (e) {
+    if (e) { e.preventDefault(); }
+    this.setState({ expanded: !this.state.expanded });
   }
 
-  componentWillReceiveProps (props) {
-    let {expanded} = props;
-    if (typeof expanded !== 'undefined' && this.state.expanded !== expanded) {
-      this.toggle();
+  componentDidUpdate (prevProps, prevState) {
+    const { expanded } = this.state;
+    if (expanded !== prevState.expanded) {
+      this.handleResize();
     }
-    this._handleData(props);
+
+    // TODO consider using getDerivedStateFromProps for this
+    const { timeSeries, villageCurves, region } = this.props;
+    if (!timeSeries.loading && prevProps.timeSeries.loading) {
+      let nextState = this.processResults(false, timeSeries.results);
+      // districts have centerlines
+      if (region.district === timeSeries.adminName && !centerline) {
+        nextState.centerline = processSeries(timeSeries.results, this.props.smoothing);
+      } else if (!region.district && this.state.centerline) {
+        nextState.centerline = null;
+      }
+      Object.assign(nextState, this._calcScales({
+        margins: this.props.margins,
+        width: this.state.width,
+        height: this.state.height,
+        data: nextState.data,
+        centerline: nextState.centerline
+      }));
+      this.setState(nextState);
+    }
+  }
+
+  processResults (isDistrict, _data) {
+    // filter out Delhi, it totally screws up the scale
+    const data = _data.filter(d => d.key !== 'delhi');
+    // group the flat data per subregion
+    const series = d3.nest().key(d => isDistrict ? d.villagecode : d.key)
+    .entries(data);
+
+    let processed = [];
+    series.forEach(entry => {
+      entry.values = processSeries(entry.values, this.props.smoothing);
+      processed.push(...entry.values);
+    });
+    return { series, data: processed };
   }
 
   /*
@@ -119,10 +157,8 @@ class LightCurves extends React.Component {
    * for any processing and transforming of the incoming data that's
    * needed before rendering it.
    */
-  _handleData ({timeSeries, villageCurves, region, margins, smoothing}) {
-    // If we're waiting for data, don't try doing any data processing.
-    if (timeSeries.loading) { return; }
-
+  _handleData () {
+    let {timeSeries, villageCurves, region, margins, smoothing} = this.props;
     let {series, centerline, data, rawData} = this.state;
 
     // set this flag if we handle any new data, because in that case, we
@@ -187,8 +223,8 @@ class LightCurves extends React.Component {
    */
   _calcScales ({data, centerline, width, height}) {
     // set up scales
-    let {margins} = this.props;
-    let {expanded} = this.state;
+    const {margins} = this.props;
+    const {expanded} = this.state;
 
     let allData = (data || []).concat(centerline || []);
     let ydata = [];
@@ -237,33 +273,19 @@ class LightCurves extends React.Component {
     };
   }
 
-  toggle (e) {
-    if (e) { e.preventDefault(); }
-    this.setState({
-      expanded: !this.state.expanded
-    });
-
-    // HACK: since we know that changing the `expanded` state will
-    // cause a height change post-render, we trigger handleResize
-    // to force a second call to render after the container has its
-    // new height so that the line chart is rendered with the correct
-    // height too
-    setTimeout(this.handleResize);
-  }
-
   selectDate ([date]) {
     Actions.selectDate(parseDate(date));
   }
 
   render () {
-    let {
+    const {
       timeSeries,
       villageCurves,
       region,
       margins
     } = this.props;
 
-    let {
+    const {
       series,
       centerline,
       scales,
@@ -310,7 +332,7 @@ class LightCurves extends React.Component {
             Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
           </div>
         </div>
-        <a href='#' className='bttn-expand' onClick={this.toggle.bind(this)}><span>Expand/Collapse</span></a>
+        <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
 
         {loading ? <Loading message={region.loadingMessage} errors={errors} />
         : <svg style={{width, height}}>

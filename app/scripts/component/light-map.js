@@ -1,5 +1,7 @@
 const React = require('react');
+const { withRouter } = require('react-router');
 const { render } = require('react-dom');
+const { connect } = require('react-redux');
 const t = require('prop-types');
 const mgl = require('mapbox-gl');
 const extent = require('turf-extent');
@@ -10,6 +12,9 @@ const ss = require('simple-statistics');
 
 const {showLayer} = require('../lib/mgl-util');
 const Actions = require('../actions');
+
+const { emphasize } = require('../actions');
+
 const RegionStore = require('../store/region');
 const VillageStore = require('../store/village');
 const VillageCurveStore = require('../store/village-curve');
@@ -33,97 +38,12 @@ class LightMap extends React.Component {
     super(props);
     this.state = {
       stateBoundaries: {},
-      currentRegionKey: 'never been set'
     };
     this.showTooltip = this.showTooltip.bind(this);
-  }
-
-  componentWillUnmount () {
-    if (Array.isArray(this._unsubscribe)) {
-      this._unsubscribe.forEach((unsub) => unsub());
-    }
-    if (this.map) {
-      this.map.remove();
-    }
-  }
-
-  /**
-   * Takes either a screen coordinate (e.g. from a mouse event) or a
-   * GeoJSON Feature (e.g. a polygon) as the location at which to show
-   * the tooltip
-   */
-  showTooltip (pointOrFeature) {
-    // determine location for the popup
-    let point;
-    if (pointOrFeature.type === 'Feature') {
-      let cent = centroid(pointOrFeature);
-      point = cent.geometry.coordinates;
-    } else if (pointOrFeature.type === 'FeatureCollection' && (pointOrFeature.features || []).length > 0) {
-      let cent = centroid(pointOrFeature);
-      point = cent.geometry.coordinates;
-    } else {
-      if (!this.state.region.emphasized || this.state.region.emphasized.length === 0) {
-        return;
-      }
-      point = this.map.unproject(pointOrFeature);
-    }
-
-    // remove old popup if it exists
-    if (this._tooltip) {
-      this._tooltip.remove();
-      this._tooltip = null;
-    }
-
-    // add tooltip
-    let content = document.createElement('div');
-    render(<Tooltip region={this.state.region} villages={this.state.villages} />, content);
-    this._tooltip = new mgl.Popup({ closeOnClick: false })
-    .setLngLat(point)
-    .setDOMContent(content.children[0]);
-    this._tooltip.addTo(this.map);
-
-    /*
-    el.addEventListener('click', () => {
-      if (!this.state.region.district && this.state.region.emphasized &&
-        this.state.region.emphasized.length > 0) {
-        Actions.select(this.state.region.emphasized[0]);
-      }
-    });
-    */
-  }
-
-
-  isMapLoaded () {
-    return !!this._mapLoaded;
-  }
-
-  /*
-   * We're waiting for a few asynchronous things to land before we can
-   * treat the map as being actually loaded.  Once it *is* loaded, we
-   * need to handle our initial state (i.e. styles based on what region
-   * we're in, village dots, selected villages...).  So this method gets
-   * called at the end of each of the asychronous things we're waiting for;
-   * each time, check if they're all done, and if so, handle that initial
-   * state.
-   */
-  mapMaybeLoaded () {
-    if (this.isMapLoaded()) { return; }
-    this._mapLoaded = true;
-    this.setState({
-      region: {loading: true},
-      villages: {loading: true}
-    });
-    this.onRegion(RegionStore.getInitialState());
-    this.onVillages(VillageStore.getInitialState());
-    this.onVillageCurves(VillageCurveStore.getInitialState());
-
-    this._unsubscribe = [];
-    this._unsubscribe.push(VillageStore.listen(this.onVillages.bind(this)));
-    this._unsubscribe.push(VillageCurveStore
-      .listen(this.onVillageCurves.bind(this)));
-    this._unsubscribe.push(RegionStore.listen(this.onRegion.bind(this)));
-    this._unsubscribe.push(Actions.recenterMap
-      .listen(this.resetView.bind(this)));
+    this.onClick = this.onClick.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
+    this.callOnMap = this.callOnMap.bind(this);
+    this.mapQueue = [];
   }
 
   /**
@@ -153,8 +73,8 @@ class LightMap extends React.Component {
     map.once('load', () => {
 
       // Interaction handlers
-      map.on('mousemove', this.onMouseMove.bind(this));
-      map.on('click', this.onClick.bind(this));
+      map.on('mousemove', this.onMouseMove);
+      map.on('click', this.onClick);
 
       // Setup a GeoJSON source to use to power the emphasized (hover) feature
       // styling.
@@ -263,7 +183,12 @@ class LightMap extends React.Component {
       );
       delete emVillages['source-layer'];
       map.addLayer(emVillages, 'cities');
-      this.mapMaybeLoaded();
+
+      if (this.mapQueue.length) {
+        this.mapQueue.forEach(fn => fn.call(this));
+      }
+      this.mapQueue = null;
+      this._mapLoaded = true;
     });
   }
 
@@ -272,31 +197,101 @@ class LightMap extends React.Component {
    * the right village light data
    */
   componentWillReceiveProps (newProps) {
-    if (this.isMapLoaded()) {
-      this.setTime(self.state.region, newProps.time);
-      if (newProps.rggvyFocus !== self.props.rggvyFocus) {
+    if (this.mapLoaded()) {
+      if (newProps.rggvyFocus !== this.props.rggvyFocus) {
         this.setRggvyFocus(newProps.rggvyFocus);
       }
     }
   }
 
+  componentDidUpdate (prevProps) {
+    const { region, match } = this.props;
+    if (!region.loading && prevProps.region.key !== region.key) {
+      this.callOnMap(() => {
+        this.setRegionStyles(region);
+        this.flyToRegion(region);
+        this.setEmphasized(region);
+      })
+    }
+
+    const { year, month } = match.params;
+    if (year !== prevProps.match.params.year || month !== prevProps.match.params.month) {
+      const property = `${year} - ${month}`;
+      const regionFilter = this.props.region.state ? [['==', 'skey', this.props.region.state]] : [];
+      this.callOnMap(() => {
+        lightStyles.setFilters(this.map, 'lights', stops, property, regionFilter);
+      });
+    }
+  }
+
+  componentWillUnmount () {
+    if (this.map) {
+      this.map.remove();
+    }
+  }
+
+  callOnMap (fn) {
+    if (this.mapLoaded()) {
+      fn.call(this);
+    } else {
+      this.mapQueue.push(fn);
+    }
+  }
+
+  mapLoaded () {
+    return !!this._mapLoaded;
+  }
+
+  /**
+   * Takes either a screen coordinate (e.g. from a mouse event) or a
+   * GeoJSON Feature (e.g. a polygon) as the location at which to show
+   * the tooltip
+   */
+  showTooltip (pointOrFeature) {
+    // determine location for the popup
+    let point;
+    if (pointOrFeature.type === 'Feature') {
+      let cent = centroid(pointOrFeature);
+      point = cent.geometry.coordinates;
+    } else if (pointOrFeature.type === 'FeatureCollection' && (pointOrFeature.features || []).length > 0) {
+      let cent = centroid(pointOrFeature);
+      point = cent.geometry.coordinates;
+    } else {
+      if (!this.props.region.emphasized || this.props.region.emphasized.length === 0) {
+        return;
+      }
+      point = this.map.unproject(pointOrFeature);
+    }
+
+    // remove old popup if it exists
+    if (this._tooltip) {
+      this._tooltip.remove();
+      this._tooltip = null;
+    }
+
+    // add tooltip
+    let content = document.createElement('div');
+    render(<Tooltip region={this.props.region} villages={this.state.villages} />, content);
+    this._tooltip = new mgl.Popup({ closeOnClick: false })
+    .setLngLat(point)
+    .setDOMContent(content.children[0]);
+    this._tooltip.addTo(this.map);
+  }
+
   onMouseMove ({point}) {
-    let region = this.state.region;
+    const { region } = this.props;
     let subregionPattern = ({
       'nation': /^states/,
       'state': /^current-state-districts/,
       'district': /^(district-lights|rggvy-lights)/
-    })[region.level] || /x^/;
-
-    const features = this.map.queryRenderedFeatures([
-      [point.x - 5, point.y - 5],
-      [point.x + 5, point.y + 5]
-    ]);
+    })[region.level];
+    const features = this.map.queryRenderedFeatures(point);
     if (features.length) {
       let subregionFeatures = features.filter((feat) => subregionPattern.test(feat.layer.id));
       // save the `hoverFeature` so that we can optimistically start zooming
       // to it if the user clicks.
-      Actions.emphasize(subregionFeatures.map((feat) => feat.properties.key));
+      // Actions.emphasize(subregionFeatures.map((feat) => feat.properties.key));
+      this.props.emphasize(subregionFeatures.map((feat) => feat.properties.key));
 
       // if any of these features have a key that maches the current region,
       // then we know that the mouse is within the current region.
@@ -316,75 +311,54 @@ class LightMap extends React.Component {
   }
 
   onClick (e) {
-    if (!this.isMapLoaded() || this.isInFlight()) { return; }
-
-    let self = this;
-    let region = self.state.region;
-    let emphasized = region.emphasized || [];
+    const { region } = this.props;
+    const emphasized = region.emphasized || [];
 
     if (region.level === 'district') {
       if (emphasized.length) {
         Actions.selectVillages(emphasized);
-      } else if (!self.state.currentRegionHover) {
-        if (self.state.stateBoundaries[region.state]) {
-          self.postFlight(() => Actions.selectParent());
-          self.updateMap({
+      } else if (!this.state.currentRegionHover) {
+        if (this.state.stateBoundaries[region.state]) {
+          this.postFlight(() => Actions.selectParent());
+          this.updateMap({
             level: 'state',
             key: region.state,
             state: region.state,
-            boundary: self.state.stateBoundaries[region.state].geometry
-          }, self.props.time);
+            boundary: this.state.stateBoundaries[region.state].geometry
+          }, this.props.time);
         } else {
           Actions.selectParent();
         }
       }
-    } else if (region.level === 'state' && !self.state.currentRegionHover && emphasized.length === 0) {
-      self.postFlight(() => Actions.selectParent());
-      self.updateMap({ level: 'nation' }, self.props.time);
+    } else if (region.level === 'state' && !this.state.currentRegionHover && emphasized.length === 0) {
+      this.postFlight(() => Actions.selectParent());
+      this.updateMap({ level: 'nation' }, this.props.time);
     } else if (emphasized.length) {
       // we're hovering over a state or district -- zoom in to it.
-      if (self.state.hoverFeature) {
-        self.postFlight(Actions.select.bind(Actions, emphasized[0]));
-        let key = self.state.hoverFeature.properties.key;
-        self.updateMap({
+      if (this.state.hoverFeature) {
+        this.postFlight(Actions.select.bind(Actions, emphasized[0]));
+        let key = this.state.hoverFeature.properties.key;
+        /*
+        this.updateMap({
           level: region.level === 'nation' ? 'state' : 'district',
           state: region.state || key,
           district: region.state ? key : undefined,
           key: key,
-          boundary: self.state.hoverFeature.geometry
-        }, self.props.time);
+          boundary: this.state.hoverFeature.geometry
+        }, this.props.time);
+        */
       } else {
         Actions.select(emphasized[0]);
       }
     }
   }
 
-  /**
-   * Receive new region state from the store
-   */
-  onRegion (regionState) {
-    let stateBoundaries = this.state.stateBoundaries;
-    if (regionState.level === 'nation' && !regionState.loading && regionState.subregions && Object.keys(stateBoundaries).length === 0
-    ) {
-      stateBoundaries = assign({}, regionState.subregions);
-    }
-
-    if (!regionState.loading && this.isMapLoaded()) {
-      this.updateMap(regionState, this.props.time);
-      this.setState({region: regionState, stateBoundaries});
-    } else {
-      // if we're not updating the map, DON'T save the region to
-      // the state, because our lazy update logic relies on the saved
-      // state to know what actually needs updating.
-      this.setState({stateBoundaries});
-    }
-  }
 
   /**
    * Receive new village point features from the store
    */
   onVillages (villagesState) {
-    if (!villagesState.loading && this.isMapLoaded()) {
+    if (!villagesState.loading && this.mapLoaded()) {
       this.map.getSource('district-villages').setData(villagesState.data);
       if (villagesState.data.features.length > 0) {
         let s = stops.map((d, i) => i / (stops.length - 1));
@@ -406,10 +380,10 @@ class LightMap extends React.Component {
    * Set whether the RGGVY villages are focused.
    */
   setRggvyFocus (focus) {
-    if (this.isMapLoaded() &&
-      this.state.region &&
-      !this.state.region.loading &&
-      this.state.region.district) {
+    if (this.mapLoaded() &&
+      this.props.region &&
+      !this.props.region.loading &&
+      this.props.region.district) {
       // set filter based on whether we want to see all villages or just
       // rggvy ones
       lightStyles.forEach('district-lights', stops, layer =>
@@ -427,7 +401,7 @@ class LightMap extends React.Component {
       this.setState({pendingVillageCurves: villageCurves});
       return;
     }
-    if (!loading && villagePoints && this.isMapLoaded()) {
+    if (!loading && villagePoints && this.mapLoaded()) {
       let selectedVillages = villageCurves.villages;
       let selectedFeatureCollection = {
         type: 'FeatureCollection',
@@ -443,8 +417,8 @@ class LightMap extends React.Component {
    * Reset the map view to the current region.
    */
   resetView () {
-    if (this.isMapLoaded() && !this.state.region.loading) {
-      this.flyToRegion(this.state.region);
+    if (this.mapLoaded() && !this.props.region.loading) {
+      this.flyToRegion(this.props.region);
     }
   }
 
@@ -453,36 +427,6 @@ class LightMap extends React.Component {
    */
   updateMap (region, time) {
     this.setEmphasized(region);
-    this.setTime(region, time);
-    if (!region.loading && region.key !== this.state.currentRegionKey) {
-      this.setRegionStyles(region);
-    }
-
-    if (!region.loading && region.key !== this.state.currentRegionKey) {
-      this.flyToRegion(region);
-      this.setState({ currentRegionKey: region.key });
-    }
-  }
-
-  /**
-   * Style the light points according to the current month. Only
-   * applies to `nation` and `state` levels -- `district`-level styling
-   * happens in onVillages
-   */
-  setTime (region, time) {
-    const {year, month} = time;
-    const doUpdateTime = this.isMapLoaded() && !region.district &&
-      (!this.state.time ||
-      year !== this.state.time.year ||
-      month !== this.state.time.month ||
-      region.level !== this.state.region.level);
-
-    if (!doUpdateTime) { return; }
-
-    const property = year + '-' + month;
-    const regionFilter = region.state ? [[ '==', 'skey', region.state ]] : [];
-    lightStyles.setFilters(this.map, 'lights', stops, property, regionFilter);
-    this.setState({time});
   }
 
   /**
@@ -528,26 +472,24 @@ class LightMap extends React.Component {
    * region
    */
   setRegionStyles (region) {
-    if (region.loading) { return; }
-
     const visibility = {
       'current-state-districts': ['district', 'state'],
       'states': ['nation', 'state']
     };
-
     for (let layer in visibility) {
       let visible = visibility[layer].indexOf(region.level) >= 0;
       showLayer(this.map, layer, visible);
     }
-
-    // Distinguish districts of the current state, or just the current
-    // district if we're in district view.
-    let filters = [[ '==', 'state_key', region.state ]];
-    if (region.level === 'district') {
-      filters.push([ '==', 'key', region.district ]);
+    if (region.state) {
+      // Distinguish districts of the current state, or just the current
+      // district if we're in district view.
+      let filters = ['all', [ '==', 'state_key', region.state ]];
+      if (region.level === 'district') {
+        filters.push([ '==', 'key', region.district ]);
+      }
+      this.map.setFilter('districts', ['none'].concat(filters));
+      this.map.setFilter('current-state-districts', ['all'].concat(filters));
     }
-    this.map.setFilter('districts', ['none'].concat(filters));
-    this.map.setFilter('current-state-districts', ['all'].concat(filters));
 
     lightStyles.forEach('lights', stops, (layer) => {
       showLayer(this.map, layer, !region.district);
@@ -559,25 +501,12 @@ class LightMap extends React.Component {
    * check whether we're already at the given region.
    */
   flyToRegion (region) {
-    if (typeof this._flights === 'undefined') { this._flights = 0; }
-    this._flights += 1;
-    this.map.once('moveend', () => { this._flights -= 1; });
-    if (this._flights > 1) { console.warn('Multiple flyTo calls.'); }
-
-    if (region.loading) { return; }
     // Fly to the current region.
     if (region.boundary) {
       this.flyToFeature({ type: 'Feature', geometry: region.boundary });
     } else {
       this.flyToNation();
     }
-  }
-
-  /**
-   * Answers if the map is currently in flight from one view to another.
-   */
-  isInFlight () {
-    return (this._flights > 0);
   }
 
   flyToFeature (feature) {
@@ -610,12 +539,12 @@ class LightMap extends React.Component {
       );
     }
 
-    let loading = !this.isMapLoaded() ||
-      !this.state.region || !this.state.villages ||
-      this.state.region.loading ||
+    let loading = !this.mapLoaded() ||
+      !this.props.region || !this.state.villages ||
+      this.props.region.loading ||
       this.state.villages.loading;
-    let errors = (!this.state.region || !this.state.villages) ? []
-      : [this.state.region, this.state.villages].map(s => s.error);
+    let errors = (!this.props.region || !this.state.villages) ? []
+      : [this.props.region, this.state.villages].map(s => s.error);
 
     return (
       <div className='light-map'>
@@ -624,14 +553,45 @@ class LightMap extends React.Component {
       </div>
     );
   }
+
+  /*
+  mapMaybeLoaded () {
+    if (this.mapLoaded()) { return; }
+    this.setState({
+      villages: {loading: true}
+    });
+    // this.onRegion(RegionStore.getInitialState());
+    // this.onVillages(VillageStore.getInitialState());
+    // this.onVillageCurves(VillageCurveStore.getInitialState());
+
+    this._unsubscribe = [];
+    /*
+    this._unsubscribe.push(VillageStore.listen(this.onVillages.bind(this)));
+    this._unsubscribe.push(VillageCurveStore
+    .listen(this.onVillageCurves.bind(this)));
+    this._unsubscribe.push(RegionStore.listen(this.onRegion.bind(this)));
+    this._unsubscribe.push(Actions.recenterMap
+      .listen(this.resetView.bind(this)));
+  }
+  */
 }
 
 LightMap.propTypes = {
+  match: t.object,
+
   time: t.object.isRequired,
   rggvyFocus: t.bool
 };
 
-module.exports = LightMap;
+const selector = (state) => ({
+  region: state.region.boundaries
+});
+
+const dispatch = {
+  emphasize
+};
+
+module.exports = withRouter(connect(selector, dispatch)(LightMap));
 
 function cloneVillageLayer (base, id, source, color) {
   let layer = lightStyles.clone(base);

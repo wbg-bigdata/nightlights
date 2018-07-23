@@ -40,7 +40,7 @@ class LineChart extends React.Component {
   onMouseMove () {
     const sx = this.props.x.scale;
     const sy = this.props.y.scale;
-    const [renderX, renderY] = d3.mouse(node);
+    const [renderX, renderY] = d3.mouse(d3.select(this.refs.node));
     const x = sx.invert(renderX);
     const y = sy.invert(renderY);
 
@@ -69,6 +69,9 @@ class LineChart extends React.Component {
       emphasized,
       showSeriesEnvelopes
     } = this.props;
+
+    console.log(this.props);
+    if (!x.scale || !y.scale) return null;
 
     let {
       cursor

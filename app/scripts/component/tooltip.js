@@ -13,6 +13,14 @@ class Tooltip extends React.Component {
   }
 
   select (e) {
+    /*
+    el.addEventListener('click', () => {
+      if (!this.state.region.district && this.state.region.emphasized &&
+        this.state.region.emphasized.length > 0) {
+        Actions.select(this.state.region.emphasized[0]);
+      }
+    });
+    */
   }
 
   render () {
