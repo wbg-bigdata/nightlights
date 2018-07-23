@@ -15,6 +15,17 @@
   height: 100%;
   position: absolute;
   overflow: hidden;
+
+  // side-by-side layout
+  .compare & { width: 50%; }
+  .compare & + & { 
+    left: 50%; 
+    border-left: 1px solid #484848;
+    .legend {
+      display: none;
+    }
+  }
+
   canvas {
     outline: none;
   }
@@ -36,7 +47,26 @@
   }
   // the close button
   .mapboxgl-popup-close-button { display: none; }
+
+  .mapboxgl-ctrl-top-right { top: 140px; }
+  .mapboxgl-ctrl-group {
+    background: rgba(#fff, 0.2);
+  }
+  .mapboxgl-ctrl-icon.mapboxgl-ctrl-zoom-in { 
+    background-image: none;
+    border-bottom-color: rgba(#fff, .1);
+    &:before { @extend .icon-s-add; }
+  }
+  .mapboxgl-ctrl-icon.mapboxgl-ctrl-zoom-out { 
+    background-image: none;
+    border-bottom: 0;
+    &:after { @extend .icon-s-subtract; }
+  }
+  // hide the compass button, because we keep orientation locked
+  .mapboxgl-ctrl-compass { display: none; }
 }
+
+.light-map_left .mapboxgl-ctrl-group { display: none; }
 
 .mapboxgl-ctrl-attrib {
   background: transparent;

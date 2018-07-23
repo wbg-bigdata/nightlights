@@ -31,7 +31,9 @@ module.exports = Reflux.createActions({
   'selectVillages': {},
   'unselectVillages': {},
   'recenterMap': {},
-  'toggleRggvy': {}
+  'toggleRggvy': {},
+  'toggleChartExpanded': {},
+  'toggleCompareMode': {}
 });
 
 const inflight = (action) => action + '-inflight';

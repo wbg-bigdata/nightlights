@@ -1,4 +1,5 @@
 const d3 = require('d3');
+const numeral = require('numeral');
 const React = require('react');
 const t = require('prop-types');
 const classnames = require('classnames');
@@ -8,6 +9,7 @@ const Actions = require('../actions');
 const LineChart = require('./line-chart');
 const Legend = require('./legend');
 const Loading = require('./loading');
+const DateControl = require('./date-control');
 const smooth = require('../lib/moving-average');
 const {satelliteAdjustment} = require('../config');
 
@@ -36,6 +38,11 @@ const smoothedProp = {
 function processSeries (values, doSmoothing) {
   let properties = Object.keys(smoothedProp);
 
+  let averageCount = values.reduce((memo, x) => memo + x.count / values.length, 0);
+  if (!isNaN(averageCount)) {
+    values = values.filter((x) => x.count > (0.05 * averageCount));
+  }
+
   // average satellite values
   values = d3.nest()
     .key(x)
@@ -44,7 +51,7 @@ function processSeries (values, doSmoothing) {
       let newValue = assign({}, values[0]);
       properties.forEach((prop) => {
         let fn = acc(prop);
-        let val = d3.mean(values, value =>
+        let val = d3.mean(values, (value) =>
           fn(value) - (satelliteAdjustment[value.satellite] || 0));
         newValue[prop] = val;
       });
@@ -55,7 +62,7 @@ function processSeries (values, doSmoothing) {
 
   if (values.length > 0) {
     let smoothFn = doSmoothing ? smooth : (values, fn, prop) =>
-      values.forEach(d => d[prop] = fn(d));
+      values.forEach((d) => { d[prop] = fn(d); });
     smoothFn(values, acc('vis_median'), 'smoothedMedian');
     smoothFn(values, acc('quintile1'), 'smoothedQuintile1');
     smoothFn(values, acc('quintile4'), 'smoothedQuintile4');
@@ -78,19 +85,39 @@ class LightCurves extends React.Component {
       data: null,
       centerline: null,
       series: [],
-      scales: {x: null, y: null},
+      scales: {x: d3.scale.linear(), y: d3.scale.linear()},
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
       expanded: !!props.expanded
     };
-    this.handleResize = debounce(this.handleResize.bind(this), 100);
+    this.toggleCompareMode = this.toggleCompareMode.bind(this);
+    this.toggle = this.toggle.bind(this);
+    this.selectDate = this.selectDate.bind(this);
   }
 
   componentDidMount () {
     // capture initial height (presumably set in css)
     window.addEventListener('resize', this.handleResize);
-    this.handleResize();
+    this._handleData(this.props);
+    this.handleResize(this.state);
+
+    Actions.toggleChartExpanded.listen(function () {
+      this.setState({
+        expanded: !this.state.expanded
+      });
+
+      // HACK: since we know that changing the `expanded` state will
+      // cause a height change post-render, we trigger handleResize
+      // to force a second call to render after the container has its
+      // new height so that the line chart is rendered with the correct
+      // height too
+      setTimeout(this.handleResize);
+    }.bind(this));
+    // same as the above hack, but for toggling split screen mode
+    Actions.toggleCompareMode.listen(function () {
+      setTimeout(this.handleResize);
+    }.bind(this));
   }
 
   componentWillUnmount () {
@@ -265,6 +292,7 @@ class LightCurves extends React.Component {
       .domain(domainY)
       .range([height - margins.top, margins.bottom]);
 
+    console.log(domainY.join(','), height, this.props.compareMode);
     return {
       scales: { x: scaleX, y: scaleY },
       domains: { x: domainX, y: domainY },
@@ -273,14 +301,25 @@ class LightCurves extends React.Component {
     };
   }
 
+  toggle (e) {
+    if (e) { e.preventDefault(); }
+    Actions.toggleChartExpanded();
+  }
+
+  toggleCompareMode (e) {
+    if (e) { e.preventDefault(); }
+    Actions.toggleCompareMode();
+  }
+
   selectDate ([date]) {
-    Actions.selectDate(parseDate(date));
+    this.props.onChangeDate(parseDate(date));
   }
 
   render () {
     const {
       timeSeries,
       villageCurves,
+      villages,
       region,
       margins
     } = this.props;
@@ -296,12 +335,36 @@ class LightCurves extends React.Component {
     } = this.state;
 
     let errors = [timeSeries, region, villageCurves]
-      .filter(s => s.error)
-      .map(s => s.error);
+      .filter((s) => s.error)
+      .map((s) => s.error);
     let loading = errors.length > 0 ||
       timeSeries.loading ||
       region.loading ||
       (region.district && villageCurves.loading);
+
+    // village count
+    let date = `${this.props.year}.${this.props.month}`;
+    let features = !villages[date] || villages[date].loading
+      ? [] : villages[date].data.features;
+    let rggvy = features
+      .filter((feat) => feat.properties.energ_date)
+      .map((feat) => feat.properties.key);
+    let allVillages = features.map((feat) => feat.properties.key);
+    let highlightButton = region.district && rggvy.length ? (
+      <a className='bttn-select-rggvy'
+        onClick={function () { Actions.toggleRggvy(); }}>
+        <div>{this.props.rggvyFocus ? 'Show All' : 'Highlight'}</div>
+      </a>
+    ) : '';
+
+    // region median
+    let median;
+    if (!timeSeries.loading && !timeSeries.error && region.level !== 'nation') {
+      let nowData = timeSeries.results.filter((d) =>
+        +d.year === +this.props.year && +d.month === +this.props.month && d.key === region.key);
+      median = d3.mean(nowData, (d) => d.vis_median);
+      median = numeral(median).format('0.00');
+    }
 
     let markers = [ ];
     let onCursorClick;
@@ -320,26 +383,51 @@ class LightCurves extends React.Component {
       acc('smoothedQuintile4')
     ] : undefined;
 
-    let apiUrl = timeSeries ? timeSeries.url : 'http://api.nightlights.io/';
+    return (<div ref='node' className={classnames('container-light-curves', {expanded})}>
+      <div className={classnames('light-curves', region.level)}>
+        <div className='now-showing'>
+          <DateControl year={this.props.year} month={this.props.month}
+            interval={this.props.interval}
+            region={region}
+            onChangeDate={this.props.onChangeDate}
+          />
+          {this.props.compareMode === false
+            ? <a href='#' className='bttn-compare clearfix'
+              onClick={this.toggleCompareMode}>Compare Points in Time</a>
+            : ''}
+          {this.props.compareMode === 'left'
+            ? <a href='#' className='bttn-compare clearfix'
+              onClick={this.toggleCompareMode}>Hide Comparison</a>
+            : ''}
 
-    return (
-      <div className={classnames('light-curves', region.level, {expanded})} ref='node'>
-        <div className='footer'>
-          {apiUrl ? <div className='api-url'>
-            <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
-          </div> : []}
-          <div className='attribution'>
-            Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
-          </div>
+          {this.props.compareMode !== 'left'
+            ? <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
+            : ''}
+
+          <ul className='spane-details'>
+          {median ? [
+            <li>
+              <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
+              <span className='spane-details-description' key='median-value'>{median}</span>
+            </li>
+          ] : []}
+
+          {region.district && allVillages.length ? [
+            <li>
+              <h5 className='spane-details-title'>Villages in Electification Program
+                (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
+              </h5>
+              <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
+            </li>
+          ] : []}
+          </ul>
         </div>
-        <a href='#' className='bttn-expand' onClick={this.toggle}><span>Expand/Collapse</span></a>
 
         {loading ? <Loading message={region.loadingMessage} errors={errors} />
         : <svg style={{width, height}}>
 
           <g transform={`translate(${margins.left}, ${margins.top})`}
             className='data-availability'>
-
           </g>
 
           <LineChart
@@ -361,23 +449,31 @@ class LightCurves extends React.Component {
               domain: domains.y
             }}
             markers={markers}
-            markerClass={(m) => m.className || ''}
+            markerClass={function (m) { return m.className || ''; }}
             emphasized={region.emphasized || []}
             margins={margins}
-            legend={legend}
             onCursorClick={onCursorClick} />
+
+          <g className='legend' transform={`translate(${scales.x(0)}, ${height - 32})`}>
+            {this.props.compareMode === 'right' ? false : legend}
+          </g>
         </svg>
         }
       </div>
-    );
+    </div>);
   }
 }
 
 LightCurves.propTypes = {
   year: t.number,
   month: t.number,
+  interval: t.string,
+  compareMode: t.oneOf(['left', 'right', false]),
+  onChangeDate: t.func,
   timeSeries: t.object,
+  villages: t.object,
   villageCurves: t.object,
+  rggvyFocus: t.bool,
   margins: t.object,
   region: t.object,
   expanded: t.bool,

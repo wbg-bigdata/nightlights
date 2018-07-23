@@ -44,7 +44,11 @@ class RegionDetail extends React.Component {
 
     return (
       <section className='spane region-detail'>
-        <header className='spane-header'>
+        <div className='spane-header'>
+        <ul>
+          <li className="breadcrumbs">Region</li>
+        </ul>
+        <div className='spane-header'>
           <h1 className='spane-title'>{name}</h1>
           <a className='bttn-center-map'
             onClick={Actions.recenterMap.bind(Actions)}
@@ -52,17 +56,14 @@ class RegionDetail extends React.Component {
             <span>Zoom to location bounds</span>
           </a>
           <Search initialValue={name} />
-        </header>
-
+        </div>
         <div className='spane-body'>
           <dl className='spane-details'>
-            <dt>Level</dt>
-            <dd>{titlecase(level)}</dd>
-            <dt>Population</dt>
+            <dt>Population (census 2011)</dt>
             <dd>{population}</dd>
 
             {regionMedian ? [
-              <dt key='median-label'>Median Light Output (0-63)</dt>,
+              <dt key='median-label'>Median Light Output</dt>,
               <dd key='median-value'>{regionMedian}</dd>
             ] : []}
 

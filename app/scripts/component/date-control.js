@@ -4,45 +4,57 @@ const { Link } = require('react-router-dom');
 const timespan = require('../lib/timespan');
 const getPath = require('../lib/path');
 const interval = require('../config').interval;
+const months = require('../lib/months');
 
 class DateControl extends React.Component {
+  constructor () {
+    super();
+    this.next = this.next.bind(this);
+    this.prev = this.prev.bind(this);
+  }
+
+  next (e) {
+    this.props.onChangeDate(timespan.next(timespan.getValid(this.props)));
+    e.preventDefault();
+  }
+
+  prev (e) {
+    this.props.onChangeDate(timespan.prev(timespan.getValid(this.props)));
+    e.preventDefault();
+  }
+
   render () {
-    let {year, month, region} = this.props;
-    let {level, state, district} = region;
-    level = level || 'nation';
-
-    // validate checks if a year is possible, ie
-    // it won't allow year: 2020 or month: 15
-    let valid = timespan.getValid({year: year, month: month});
-    let next = timespan.next(valid);
-    let prev = timespan.prev(valid);
-
-    let nextClassName = timespan.isLast(valid) ?
-      'bttn-next inactive' : 'bttn-next';
-    let prevClassName = timespan.isFirst(valid) ?
-      'bttn-prev inactive' : 'bttn-prev';
-
-    let content = region.loading ? '' : (
-      <ul className='browse-date'>
-        <li><Link to={getPath(prev.year, prev.month, state, district, interval)}
-            className={prevClassName}
-            title='Show previous month'
-            ><span>Previous Month</span></Link></li>
-        <li><Link to={getPath(next.year, next.month, state, district, interval)}
-            className={nextClassName}
-            title='Show next month'
-            ><span>Next Month</span></Link></li>
-      </ul>
-    );
+    let valid = timespan.getValid({year: this.props.year, month: this.props.month});
+    let currentMonth = months[valid.month - 1] + ' ' + valid.year;
+    let nextClassName = timespan.isLast(valid)
+      ? 'bttn-next inactive' : 'bttn-next';
+    let prevClassName = timespan.isFirst(valid)
+      ? 'bttn-prev inactive' : 'bttn-prev';
 
     return (
-    <div className='month-label'>
-      <h1 className='spane-title'>
-        <small>Now Showing</small>
-        <strong>{valid.month} / {valid.year}</strong>
-      </h1>
-      {content}
-    </div>);
+      <div className='month-label'>
+        <div className='spane-title'>
+          <span>Viewing:</span>
+          <span>{currentMonth}</span>
+          <a href='#help-box' className='bttn-info' onClick={e => e.preventDefault()}><span>Help</span></a>
+          <p className='info-box' id='help-box'>Use these arrows to move through time, and click on the map to navigate into specific regions</p>
+          {this.props.region.loading ? '' : (
+          <div className='browse-date'>
+            <ul>
+              <li>
+                <a href='#' className={prevClassName} onClick={this.prev}
+                  title='Show previous month'><span>Previous Month</span></a>
+              </li>
+              <li>
+                <a href='#' className={nextClassName} onClick={this.next}
+                  title='Show next month'><span>Next Month</span></a>
+              </li>
+            </ul>
+          </div>
+        )}
+        </div>
+      </div>
+    );
   }
 }
 
@@ -50,7 +62,8 @@ DateControl.propTypes = {
   year: t.number,
   month: t.number,
   interval: t.string,
-  region: t.object
+  region: t.object,
+  onChangeDate: t.func
 };
 
 module.exports = DateControl;

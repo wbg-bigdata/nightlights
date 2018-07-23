@@ -1,4 +1,5 @@
-let React = require('react');
+const React = require('react');
+const t = require('prop-types');
 
 class Legend extends React.Component {
   render () {
@@ -36,7 +37,7 @@ class Legend extends React.Component {
     }
   }
 }
-
-Legend.displayName = 'Legend';
-
+Legend.propTypes = {
+  admin: t.string
+};
 module.exports = Legend;

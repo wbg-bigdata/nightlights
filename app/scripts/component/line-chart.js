@@ -80,7 +80,7 @@ class LineChart extends React.Component {
     let markerValues = markers.map(x.value);
     let markerLocations = markerValues.map(x.scale);
     let markerClasses = markers
-      .map(markerClass ? markerClass : () => '')
+      .map(markerClass || (() => ''))
       .map((klass) => 'marker ' + klass);
 
     if (cursor) {
@@ -146,13 +146,9 @@ class LineChart extends React.Component {
               data={entry.values}
               x={this.state.xValue}
               y={this.state.yValue}
-              emphasized={true}
+              emphasized
               />
           )}
-        </g>
-
-        <g className='legend' transform={`translate(${x.scale(0)},12)`}>
-          {this.props.legend || []}
         </g>
 
         <g transform={`translate(${x.scale(0)},0)`}>
@@ -174,7 +170,6 @@ class LineChart extends React.Component {
             tickClasses={markerClasses}
           />
         </g>
-
       </g>
     );
   }
@@ -193,7 +188,6 @@ LineChart.propTypes = {
   markerClass: t.func,
   emphasized: t.array,
   onCursorClick: t.func,
-  legend: t.node,
   showSeriesEnvelopes: t.bool
 };
 

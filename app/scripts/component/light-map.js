@@ -9,6 +9,7 @@ const centroid = require('turf-centroid');
 const assign = require('object-assign');
 const debounce = require('lodash.debounce');
 const ss = require('simple-statistics');
+const classnames = require('classnames');
 
 const {showLayer} = require('../lib/mgl-util');
 const Actions = require('../actions');
@@ -46,6 +47,18 @@ class LightMap extends React.Component {
     this.mapQueue = [];
   }
 
+  componentWillUnmount () {
+    this._unsubscribe.forEach((unsub) => unsub());
+    if (this._removeMap) {
+      this._removeMap();
+      this.map = this._removeMap = null;
+    }
+  }
+
+  isMapLoaded () {
+    return !!this._mapLoaded;
+  }
+
   /**
    * Initialize the map.
    */
@@ -67,6 +80,8 @@ class LightMap extends React.Component {
       attributionControl: false,
       style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
     });
+    // map.addControl(new mgl.Navigation({position: 'top-right'}));
+    this._removeMap = this.props.onMapCreated(self.map);
 
     // suppress 'undefined' message
     map.off('tile.error', map.onError);
@@ -174,15 +189,6 @@ class LightMap extends React.Component {
           }
         }
       }, 'cities');
-
-      var emVillages = cloneVillageLayer(
-        base,
-        'emphasis-villages',
-        'emphasis-features',
-        '#fff'
-      );
-      delete emVillages['source-layer'];
-      map.addLayer(emVillages, 'cities');
 
       if (this.mapQueue.length) {
         this.mapQueue.forEach(fn => fn.call(this));
@@ -296,7 +302,7 @@ class LightMap extends React.Component {
       // if any of these features have a key that maches the current region,
       // then we know that the mouse is within the current region.
       let currentRegionHover = features
-        .map(f => f.properties.key && f.properties.key === region.key)
+        .map((f) => f.properties.key && f.properties.key === region.key)
         .reduce((a, b) => a || b, false);
 
       this.setState({
@@ -353,21 +359,65 @@ class LightMap extends React.Component {
     }
   }
 
+  /**
+   * Receive new props: specifically, the year and month for rendering
+   * the right village light data
+   */
+  componentWillReceiveProps (newProps) {
+    if (this.isMapLoaded()) {
+      let self = this;
+      this.map.batch(function (batch) {
+        self.setTime(batch, self.state.region, newProps.time);
+        if (newProps.rggvyFocus !== self.props.rggvyFocus) {
+          self.setRggvyFocus(batch, newProps.rggvyFocus);
+        }
+      });
+      if (newProps.compareMode !== this.props.compareMode) {
+        this.map.resize();
+      }
+    }
+  }
+
+  /**
+   * Receive new region state from the store
+   */
+  onRegion (regionState) {
+    let stateBoundaries = this.state.stateBoundaries;
+    if (regionState.level === 'nation' && !regionState.loading && regionState.subregions && Object.keys(stateBoundaries).length === 0
+    ) {
+      stateBoundaries = assign({}, regionState.subregions);
+    }
+
+    if (!regionState.loading && this.isMapLoaded()) {
+      this.updateMap(regionState, this.props.time);
+      this.setState({region: regionState, stateBoundaries});
+    } else {
+      // if we're not updating the map, DON'T save the region to
+      // the state, because our lazy update logic relies on the saved
+      // state to know what actually needs updating.
+      this.setState({stateBoundaries});
+    }
+  }
 
   /**
    * Receive new village point features from the store
    */
   onVillages (villagesState) {
-    if (!villagesState.loading && this.mapLoaded()) {
-      this.map.getSource('district-villages').setData(villagesState.data);
+    let date = `${this.props.time.year}.${this.props.time.month}`;
+    villagesState = villagesState[date] ||
+      { loading: false, data: { type: 'FeatureCollection', features: [] } };
+    if (!villagesState.loading && this.isMapLoaded()) {
+      this.state.districtVillagesSource.setData(villagesState.data);
       if (villagesState.data.features.length > 0) {
         let s = stops.map((d, i) => i / (stops.length - 1));
         let quantiles = ss.quantile(villagesState.data.features
-          .map(feat => feat.properties.vis_median), s);
-        lightStyles.setFilters(this.map, 'district-lights', quantiles, 'vis_median',
-          [[ '==', 'rggvy', false ]]);
-        lightStyles.setFilters(this.map, 'rggvy-lights', quantiles, 'vis_median',
-          [[ '==', 'rggvy', true ]]);
+          .map((feat) => feat.properties.vis_median), s);
+        this.map.batch(function (batch) {
+          lightStyles.setFilters(batch, 'district-lights', quantiles, 'vis_median',
+            [[ '==', 'rggvy', false ]]);
+          lightStyles.setFilters(batch, 'rggvy-lights', quantiles, 'vis_median',
+            [[ '==', 'rggvy', true ]]);
+        });
       }
     }
     this.setState({villages: villagesState});
@@ -531,10 +581,14 @@ class LightMap extends React.Component {
   }
 
   render () {
+    let cn = classnames('light-map', {
+      ['light-map_' + this.props.compareMode]: this.props.compareMode
+    });
+
     if (this.state.unsupported) {
       return (
-        <div className='light-map'>
-          <Modal isOn={true} isPermanent={true} content={unsupportedText} />
+        <div className={cn}>
+          <Modal isOn isPermanent content={unsupportedText} />
         </div>
       );
     }
@@ -547,7 +601,7 @@ class LightMap extends React.Component {
       : [this.props.region, this.state.villages].map(s => s.error);
 
     return (
-      <div className='light-map'>
+      <div className={cn}>
         { loading ? <Loading errors={errors} /> : '' }
         <div className='map-inner' ref='node' />
       </div>
@@ -577,10 +631,13 @@ class LightMap extends React.Component {
 }
 
 LightMap.propTypes = {
+  time: t.object.isRequired,
   match: t.object,
 
   time: t.object.isRequired,
-  rggvyFocus: t.bool
+  rggvyFocus: t.bool,
+  onMapCreated: t.func.isRequired,
+  compareMode: t.oneOf(['left', 'right', false])
 };
 
 const selector = (state) => ({
@@ -603,6 +660,6 @@ function cloneVillageLayer (base, id, source, color) {
   });
   layer.paint['circle-radius'] = assign({}, layer.paint['circle-radius']);
   layer.paint['circle-radius'].stops = layer.paint['circle-radius'].stops
-    .map(stop => [stop[0], stop[1] * 0.667]);
+    .map((stop) => [stop[0], stop[1] * 0.667]);
   return layer;
 }

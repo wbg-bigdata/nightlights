@@ -3,8 +3,7 @@ const t = require('prop-types');
 
 class NoData extends React.Component {
   render () {
-    let className = this.props.noData ?
-      'no-data active' : 'no-data';
+    let className = this.props.noData ? 'no-data active' : 'no-data';
     return (
       <div className={className}>
         <p><strong>Are the lights out?</strong></p>
@@ -12,9 +11,9 @@ class NoData extends React.Component {
       </div>
     );
   }
-};
+}
 
 NoData.propTypes = {
-  hasData: t.bool
+  noData: t.bool
 };
 module.exports = NoData;

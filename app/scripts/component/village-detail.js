@@ -11,28 +11,33 @@ class VillageDetail extends React.Component {
     let region = this.props.region;
     let emphasized = region.emphasized || [];
 
-    if (villages.length === 0) { return <div></div>; }
+    if (!this.props.region.district || !villages.length) { return <div></div>; }
 
     let emphasize = (village) => () => Actions.emphasize(village);
     let unselect = (villages) => () => Actions.unselectVillages(villages);
     return (
       <div className='village-detail'>
-        <h1>Selected Villages</h1>
-        <ul>
-          {villages.map((village, i) =>
-            <li key={village} onMouseEnter={emphasize(village)}
-              className={classnames({active: emphasized.indexOf(village) >= 0})}
-            >
-              {titlecase(villageNames[i].toLowerCase())}
-              <a className='bttn-cancel'
-                onClick={unselect([village])} >
-                <span>Remove Village</span>
-              </a>
-            </li>
-          )}
-        </ul>
-        <a className='bttn-clear-selection'
-          onClick={unselect(villages)}>Clear Selection</a>
+        {villages.length > 0
+          ? [
+            <h1>Selected Villages</h1>,
+            <ul>
+              {villages.map((village, i) =>
+                <li key={village} onMouseEnter={emphasize(village)}
+                  className={classnames({active: emphasized.indexOf(village) >= 0})}
+                >
+                  {titlecase(villageNames[i].toLowerCase())}
+                  <a className='bttn-cancel'
+                    onClick={unselect([village])} >
+                    <span>Remove Village</span>
+                  </a>
+                </li>
+              )}
+            </ul>,
+            <a className='bttn-clear-selection'
+              onClick={unselect(villages)}>Clear Selection</a>
+          ]
+          : ''
+        }
       </div>
     );
   }

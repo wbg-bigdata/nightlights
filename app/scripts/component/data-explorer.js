@@ -1,6 +1,9 @@
 'use strict';
 const url = require('url');
 const React = require('react');
+const titlecase = require('titlecase');
+const numeral = require('numeral');
+const classnames = require('classnames');
 const { connect } = require('react-redux');
 const t = require('prop-types');
 const d3 = require('d3');
@@ -10,7 +13,7 @@ const VillageStore = require('../store/village');
 const VillageCurveStore = require('../store/village-curve');
 const RegionStore = require('../store/region');
 
-const RegionDetail = require('./region-detail');
+const Search = require('./search');
 const VillageDetail = require('./village-detail');
 const LightMap = require('./light-map');
 const LightCurves = require('./light-curves');
@@ -20,6 +23,7 @@ const NoData = require('./no-data');
 const Actions = require('../actions');
 const timespan = require('../lib/timespan');
 const { interval, dataThreshold, welcome: welcomeText } = require('../config');
+const syncMaps = require('../lib/sync-maps');
 
 const {
   queryRegionBoundaries,
@@ -41,6 +45,7 @@ class DataExplorer extends React.Component {
       villages: VillageStore.getInitialState(),
       villageCurves: VillageCurveStore.getInitialState()
     };
+    this.maps = [];
   }
 
   componentDidMount () {
@@ -77,16 +82,32 @@ class DataExplorer extends React.Component {
     this.setState({rggvyFocus: !this.state.rggvyFocus});
   }
 
-  render () {
-    const { region, timeSeries } = this.props;
-    let {villages, villageCurves} = this.state;
-    // get year and month from router params
-    let {year, month, interval } = this.props.match.params;
-    year = +year;
-    month = +month;
+  onChangeDate (params) {
+    Actions.selectDate(params);
+  }
 
+  onChangeCompareDate (params) {
+    Actions.selectDate(Object.assign({compare: true}, params));
+  }
+
+  onMapCreated (map) {
+    /*
+    this.maps.push(map);
+    if (this.maps.length === 2) {
+      syncMaps(this.maps[0], this.maps[1]);
+    }
+    return function () {
+      var i = this.maps.indexOf(map);
+      if (i >= 0) { this.maps.splice(i, 1); }
+      map.remove();
+    }.bind(this);
+    */
+  }
+
+  hasNoData (region, villages, year, month) {
     // Decide if we need to show the no-data indicator.
     let noData = false;
+    let date = `${year}.${month}`;
     if (!region.district && region.count) {
       let count = region.count.filter((a) => a.month === month && a.year === year)[0];
       // If count is not present, assume there are no readings for this month.
@@ -95,77 +116,170 @@ class DataExplorer extends React.Component {
         count !== undefined && count.hasOwnProperty('count') && count.count < dataThreshold)) {
         noData = true;
       }
-    } else if (region.district && !villages.loading) {
-      noData = villages.data.features.length === 0;
+    } else if (region.district && villages[date] && !villages[date].loading) {
+      noData = villages[date].data.features.length === 0;
     }
-
     // region median
     let median;
-    if (!timeSeries.loading && !timeSeries.error && region.level !== 'nation') {
-      let nowData = timeSeries.results.filter(d =>
+    if (!this.props.timeSeries.loading && !this.props.timeSeries.error && region.level !== 'nation') {
+      let nowData = this.props.timeSeries.results.filter(d =>
         +d.year === year && +d.month === month && d.key === region.key);
       median = d3.mean(nowData, d => d.vis_median);
     }
+  }
+
+  selectParent (e) {
+    e.preventDefault();
+    Actions.selectParent();
+  }
+
+  selectNation (e) {
+    e.preventDefault();
+    Actions.select();
+  }
+
+  render () {
+    const { region, timeSeries } = this.props;
+    let {villages, villageCurves} = this.state;
+    // get year and month from router params
+    let { year, month, interval } = this.props.match.params;
+    year = +year;
+    month = +month;
+    let date = `${year}.${month}`;
+
+    let query = this.props.location.search;
+    let compare;
+    if (query.compare) {
+      var [cy, cm] = query.compare.split('.');
+      compare = { year: cy, month: cm };
+    }
+
+    // search & breadcrumbs
+    let {
+      level,
+      properties,
+      loading
+    } = region;
+    level = level || 'nation';
+    properties = properties || {};
+    // region name for search box
+    let name = loading ? '' : properties.name;
+    name = titlecase(name.toLowerCase());
+    let stateName = titlecase((region.state || '').replace(/-/g, ' '));
+
+    let breadcrumbs = [];
+    if (level !== 'nation') {
+      breadcrumbs.push(<a href='#' onClick={this.selectNation}>India</a>);
+    }
+    if (level === 'district') {
+      breadcrumbs.push(<a href='#' onClick={this.selectParent}>{stateName}</a>);
+    }
+    breadcrumbs.push(
+      <span><a className='bttn-center-map'
+          onClick={Actions.recenterMap.bind(Actions)}
+          title={'Recenter map on ' + name}>
+            <span>{name}</span>
+        </a>
+      </span>
+    );
+
+    // population
+    let population = 'Unknown';
+    if (!isNaN(properties.tot_pop)) {
+      population = numeral(properties.tot_pop).format('0,0');
+    }
 
     // villages
-    let rggvy = villages.loading ? [] : villages.data.features
-      .filter(feat => feat.properties.energ_date)
-      .map(feat => feat.properties.key);
-    let allVillages = villages.loading ? [] : villages.data.features
-      .map(feat => feat.properties.key);
+    let hasRggvyVillages = !villages[date] || villages[date].loading
+      ? false
+      : villages[date].data.features.filter((feat) => feat.properties.energ_date).length > 0;
     let selectedVillages = villageCurves.loading ? [] : villageCurves.villages;
     let selectedVillageNames = selectedVillages;
-    if (this.state.villages && this.state.villages.data) {
-      let features = this.state.villages.data.features;
+    if (villages && villages[date] && villages[date].data) {
+      let features = villages[date].data.features;
       selectedVillageNames = selectedVillages
-        .map(v => [v, features.filter(f => f.properties.key === v)])
+        .map((v) => [v, features.filter((f) => f.properties.key === v)])
         .map(([v, names]) => names.length ? names[0].properties.name : v);
     }
 
+    let apiUrl = timeSeries ? timeSeries.url : 'http://api.nightlights.io/';
+
     return (
-      <div className='data-container'>
-        <div className='now-showing'>
-          <DateControl
-            year={year}
-            month={month}
-            interval={interval}
-            region={region}
-          />
-          <VillageDetail
-            region={region}
-            villages={selectedVillages}
-            villageNames={selectedVillageNames}
-          />
-        </div>
-        <RegionDetail
+      <div className={classnames('data-container', { compare: !!compare })}>
+        <VillageDetail
           region={region}
-          villages={allVillages}
-          rggvyVillages={rggvy}
-          rggvyFocus={this.state.rggvyFocus}
-          selectedVillages={selectedVillages}
-          regionMedian={median}
+          villages={selectedVillages}
+          villageNames={selectedVillageNames}
+          hasRggvyVillages={hasRggvyVillages}
         />
-        <LightMap
-          time={{year, month}}
-          rggvyFocus={this.state.rggvyFocus}
-        />
+        <section className='spane region-detail'>
+          <ul>
+            {breadcrumbs.map((b) => <li key={b} className='breadcrumbs'>{b}</li>)}
+          </ul>
+          <div className='spane-header'>
+            <h1 className='spane-title'>{name}</h1>
+            <Search initialValue={name} />
+          </div>
+          <div className='spane-body'>
+            <dl className='spane-details'>
+              <dt>Population (census 2011)</dt>
+              <dd>{population}</dd>
+            </dl>
+          </div>
+        </section>
+        <LightMap time={{year, month}} rggvyFocus={this.state.rggvyFocus}
+          compareMode={compare ? 'left' : false}
+          onMapCreated={this.onMapCreated} />
+        {compare
+          ? <LightMap time={compare} rggvyFocus={this.state.rggvyFocus}
+            compareMode={'right'}
+            onMapCreated={this.onMapCreated} />
+          : ''}
         <LightCurves
           year={year}
           month={month}
+          interval={interval}
+          compareMode={compare ? 'left' : false}
+          onChangeDate={this.onChangeDate}
           timeSeries={timeSeries}
+          villages={villages}
+          rggvyFocus={this.state.rggvyFocus}
           villageCurves={villageCurves}
-          smoothing={true}
+          smoothing
           region={region}
-          margins={{left: 36, right: 36, top: 48, bottom: 48}}
+          margins={{left: 36, right: 36, top: 70, bottom: 48}}
         />
-        <NoData
-          noData={noData}
-        />
+        {compare
+          ? <LightCurves
+            year={compare.year}
+            month={compare.month}
+            interval={interval}
+            compareMode={'right'}
+            onChangeDate={this.onChangeCompareDate}
+            timeSeries={timeSeries}
+            villages={villages}
+            rggvyFocus={this.state.rggvyFocus}
+            villageCurves={villageCurves}
+            smoothing
+            region={region}
+            margins={{left: 36, right: 36, top: 70, bottom: 48}}
+            />
+          : ''
+        }
+        <NoData noData={this.hasNoData(region, villages, year, month)} />
         <Modal
-          isOn={true}
+          isOn
           content={welcomeText}
           cookieKey='welcomeModalHasPlayed'
         />
+      <div className='footer'>
+        {apiUrl ? <div className='api-url'>
+          <a target='_blank' href={apiUrl}>JSON API: {apiUrl}</a>
+        </div> : []}
+        <div className='attribution'>
+          Map data and imagery © <a href='https://mapbox.com'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> © <a href='https://www.digitalglobe.com'>DigitalGlobe</a> © <a href='https://www.mlinfomap.com/'>MLInfomap</a>
+        </div>
+      </div>
       </div>
     );
   }
