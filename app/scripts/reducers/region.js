@@ -38,7 +38,7 @@ function boundaries (state = initialState, action) {
       state = failed(state, action);
       break;
     case 'query-region-boundaries-success':
-      state = Object.assign({}, state, parseResponse(action));
+      state = Object.assign(success(state, action), parseResponse(action));
       break;
     case 'emphasize':
       state = Object.assign({}, state, emphasize(action, state));
@@ -78,8 +78,7 @@ function parseResponse ({results, context}) {
       subregions,
       count,
       state: context.state,
-      district: context.district,
-      loading: false,
+      district: context.district
     }
   }
 }

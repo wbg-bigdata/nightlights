@@ -9,5 +9,5 @@ module.exports.failed = function (state, action) {
 }
 
 module.exports.success = function (state, action) {
-  return Object.assign({}, state, {loading: false, results: action.results });
+  return Object.assign({}, state, {loading: false, error: null, results: action.results, initialLoad: true});
 }
