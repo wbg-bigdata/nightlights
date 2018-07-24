@@ -72,9 +72,9 @@ class Line extends React.Component {
 Line.propTypes = {
   Actions: t.object,
   seriesKey: t.string,
-  data: t.array.isRequired,
-  x: AccessorType.isRequired,
-  y: AccessorType.isRequired,
+  data: t.array,
+  x: AccessorType,
+  y: AccessorType,
   envelope: t.array,
   emphasized: t.bool
 };
