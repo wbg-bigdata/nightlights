@@ -113,6 +113,24 @@ class LightMap extends React.Component {
       }
       map.addSource('selected-villages-source', selectedVillagesSource);
 
+      // Monkey-patch some fill layers.
+      // Newer versions of GL don't recognize mouseover events on line layers,
+      // unless you're actually hovering over the line.
+      const boundarySource = {
+        type: 'vector',
+        url: 'mapbox://devseed.08hn3z6b'
+      };
+
+      map.addLayer({
+        id: 'states-fill',
+        type: 'fill',
+        source: Object.assign({}, boundarySource),
+        'source-layer': 'states',
+        paint: {
+          'fill-opacity': 0
+        }
+      }, 'states');
+
       // Setup the color scale for the village light visualization: this is
       // actually a series of N separate layers, each with a different color.
       // `setFilters` makes it so that each one only applies to points with
@@ -187,6 +205,15 @@ class LightMap extends React.Component {
         }
       }, 'cities');
 
+      var emVillages = cloneVillageLayer(
+        base,
+        'emphasis-villages',
+        'emphasis-features',
+        '#fff'
+      );
+      delete emVillages['source-layer'];
+      map.addLayer(emVillages, 'cities');
+
       if (this.mapQueue.length) {
         this.mapQueue.forEach(fn => fn.call(this));
       }
@@ -213,8 +240,11 @@ class LightMap extends React.Component {
       this.callOnMap(() => {
         this.setRegionStyles(region);
         this.flyToRegion(region);
-        this.setEmphasized(region);
       })
+    }
+
+    if (region.emphasized !== prevProps.region.emphasized) {
+      this.setEmphasized(region);
     }
 
     const { year, month } = match.params;
@@ -284,7 +314,7 @@ class LightMap extends React.Component {
   onMouseMove ({point}) {
     const { region } = this.props;
     let subregionPattern = ({
-      'nation': /^states/,
+      'nation': /^states-fill/,
       'state': /^current-state-districts/,
       'district': /^(district-lights|rggvy-lights)/
     })[region.level];
@@ -293,7 +323,6 @@ class LightMap extends React.Component {
       let subregionFeatures = features.filter((feat) => subregionPattern.test(feat.layer.id));
       // save the `hoverFeature` so that we can optimistically start zooming
       // to it if the user clicks.
-      // Actions.emphasize(subregionFeatures.map((feat) => feat.properties.key));
       this.props.emphasize(subregionFeatures.map((feat) => feat.properties.key));
 
       // if any of these features have a key that maches the current region,
@@ -477,36 +506,27 @@ class LightMap extends React.Component {
    * Update the emphasized region source
    */
   setEmphasized (region) {
-    if (region.loading) { return; }
-    // If there's an emphasized region, and it's different than the
-    // existing one, then style it.
-    const currentEmphasized = (region.emphasized || [])[0];
-    if (currentEmphasized) {
-      const map = this.map;
-      let fc;
-      if (region.district && this.state.villages.data) {
-        let features = this.state.villages.data.features
-          .filter((feat) => region.emphasized.indexOf(feat.properties.key) >= 0);
-        fc = { type: 'FeatureCollection', features };
-        this.map.getSource('emphasis-features').setData(fc);
-        showLayer(map, 'emphasis-villages', true);
-        showLayer(map, 'emphasis', false);
-      } else if (region.subregions[currentEmphasized]) {
-        fc = {
-          type: 'Feature',
-          properties: {},
-          geometry: region.subregions[currentEmphasized].geometry
-        };
-        this.map.getSource('emphasis-features').setData(fc);
-        showLayer(map, 'emphasis-villages', false);
-        showLayer(map, 'emphasis', true);
-        this.showTooltip(fc);
-      }
-    } else {
-      this.map.getSource('emphasis-features').setData({
-        type: 'FeatureCollection',
-        features: []
+    const { district, emphasized, subregions } = region;
+    const key = Array.isArray(emphasized) && emphasized.length ? emphasized[0] : null;
+    const type = 'FeatureCollection';
+    const source = this.map.getSource('emphasis-features');
+    if (!key) {
+      this.callOnMap(() => {
+        source.setData({type, features: []});
       });
+    } else {
+      if (district && this.state.villages.data) {
+        const { features } = this.state.villages.data;
+        this.callOnMap(() => {
+          source.setData({type, features: features.filter(f => emphasized.indexOf(f.properties.key) >= 0)});
+          showLayer(this.map, 'emphasis-villages', true);
+          showLayer(this.map, 'emphasis', false);
+        });
+      } else if (subregions[key]) {
+        source.setData({type: 'Feature', geometry: subregions[key].geometry});
+        showLayer(this.map, 'emphasis-villages', false);
+        showLayer(this.map, 'emphasis', true);
+      }
     }
   }
 
