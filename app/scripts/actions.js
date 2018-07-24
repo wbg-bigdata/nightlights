@@ -73,6 +73,10 @@ module.exports.emphasize = function (keys) {
   return {type: 'emphasize', keys};
 }
 
+module.exports.select = function (key) {
+  return {type: 'select', key};
+}
+
 module.exports.queryRegionTimeseries = function (params) {
   const {state, district} = params;
   let timeseriesPath = ['months', interval];

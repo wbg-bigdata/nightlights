@@ -26,7 +26,8 @@ const initialState = {
   loading: true,
   initialLoad: false,
   level: 'nation',
-  emphasized: []
+  emphasized: [],
+  selected: null
 };
 
 function boundaries (state = initialState, action) {
@@ -42,6 +43,11 @@ function boundaries (state = initialState, action) {
       break;
     case 'emphasize':
       state = Object.assign({}, state, emphasize(action, state));
+    case 'select':
+      state = Object.assign({}, state, {
+        selected: action.key
+      });
+      break;
   }
   return state;
 }

@@ -14,7 +14,7 @@ const classnames = require('classnames');
 const {showLayer} = require('../lib/mgl-util');
 const Actions = require('../actions');
 
-const { emphasize } = require('../actions');
+const { emphasize, select } = require('../actions');
 
 const RegionStore = require('../store/region');
 const VillageStore = require('../store/village');
@@ -23,6 +23,7 @@ const Loading = require('./loading');
 const Tooltip = require('./tooltip');
 const Modal = require('./modal');
 const lightStyles = require('../lib/light-styles');
+const { getChildRoute } = require('../lib/route');
 const unsupportedText = require('../config').unsupported;
 const config = require('../config');
 
@@ -38,6 +39,7 @@ class LightMap extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
+      currentRegionHover: false,
       loaded: false
     };
     this.showTooltip = this.showTooltip.bind(this);
@@ -321,20 +323,14 @@ class LightMap extends React.Component {
     const features = this.map.queryRenderedFeatures(point);
     if (features.length) {
       let subregionFeatures = features.filter((feat) => subregionPattern.test(feat.layer.id));
-      // save the `hoverFeature` so that we can optimistically start zooming
-      // to it if the user clicks.
       this.props.emphasize(subregionFeatures.map((feat) => feat.properties.key));
-
       // if any of these features have a key that maches the current region,
       // then we know that the mouse is within the current region.
       let currentRegionHover = features
         .map((f) => f.properties.key && f.properties.key === region.key)
         .reduce((a, b) => a || b, false);
 
-      this.setState({
-        hoverFeature: subregionFeatures[0],
-        currentRegionHover
-      });
+      this.setState({currentRegionHover});
 
       if (subregionFeatures.length > 0) {
         this.showTooltip(point);
@@ -366,22 +362,8 @@ class LightMap extends React.Component {
       this.postFlight(() => Actions.selectParent());
       this.updateMap({ level: 'nation' }, this.props.time);
     } else if (emphasized.length) {
-      // we're hovering over a state or district -- zoom in to it.
-      if (this.state.hoverFeature) {
-        this.postFlight(Actions.select.bind(Actions, emphasized[0]));
-        let key = this.state.hoverFeature.properties.key;
-        /*
-        this.updateMap({
-          level: region.level === 'nation' ? 'state' : 'district',
-          state: region.state || key,
-          district: region.state ? key : undefined,
-          key: key,
-          boundary: this.state.hoverFeature.geometry
-        }, this.props.time);
-        */
-      } else {
-        Actions.select(emphasized[0]);
-      }
+      this.props.select(emphasized[0]);
+      this.props.history.push(getChildRoute(this.props, emphasized[0]));
     }
   }
 
@@ -646,10 +628,12 @@ LightMap.propTypes = {
   time: t.object.isRequired,
   match: t.object,
 
+  emphasize: t.func,
+  select: t.func,
+
   region: t.object,
   villages: t.object,
 
-  time: t.object.isRequired,
   rggvyFocus: t.bool,
   onMapCreated: t.func.isRequired,
   compareMode: t.oneOf(['left', 'right', false])
@@ -660,10 +644,7 @@ const selector = (state) => ({
   villages: state.village.districts
 });
 
-const dispatch = {
-  emphasize
-};
-
+const dispatch = { emphasize, select };
 module.exports = withRouter(connect(selector, dispatch)(LightMap));
 
 function cloneVillageLayer (base, id, source, color) {
