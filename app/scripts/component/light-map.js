@@ -38,12 +38,13 @@ class LightMap extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      stateBoundaries: {},
+      loaded: false
     };
     this.showTooltip = this.showTooltip.bind(this);
     this.onClick = this.onClick.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.callOnMap = this.callOnMap.bind(this);
+    this.mapLoaded = this.mapLoaded.bind(this);
     this.mapQueue = [];
   }
 
@@ -53,10 +54,6 @@ class LightMap extends React.Component {
       this._removeMap();
       this.map = this._removeMap = null;
     }
-  }
-
-  isMapLoaded () {
-    return !!this._mapLoaded;
   }
 
   /**
@@ -194,7 +191,7 @@ class LightMap extends React.Component {
         this.mapQueue.forEach(fn => fn.call(this));
       }
       this.mapQueue = null;
-      this._mapLoaded = true;
+      this.setState({loaded: true});
     });
   }
 
@@ -203,7 +200,7 @@ class LightMap extends React.Component {
    * the right village light data
    */
   componentWillReceiveProps (newProps) {
-    if (this.mapLoaded()) {
+    if (this.state.loaded) {
       if (newProps.rggvyFocus !== this.props.rggvyFocus) {
         this.setRggvyFocus(newProps.rggvyFocus);
       }
@@ -211,7 +208,7 @@ class LightMap extends React.Component {
   }
 
   componentDidUpdate (prevProps) {
-    const { region, match } = this.props;
+    const { region, villages, match } = this.props;
     if (!region.loading && prevProps.region.key !== region.key) {
       this.callOnMap(() => {
         this.setRegionStyles(region);
@@ -237,7 +234,7 @@ class LightMap extends React.Component {
   }
 
   callOnMap (fn) {
-    if (this.mapLoaded()) {
+    if (this.state.loaded) {
       fn.call(this);
     } else {
       this.mapQueue.push(fn);
@@ -245,7 +242,7 @@ class LightMap extends React.Component {
   }
 
   mapLoaded () {
-    return !!this._mapLoaded;
+    return !!this.state.loaded;
   }
 
   /**
@@ -324,13 +321,13 @@ class LightMap extends React.Component {
       if (emphasized.length) {
         Actions.selectVillages(emphasized);
       } else if (!this.state.currentRegionHover) {
-        if (this.state.stateBoundaries[region.state]) {
+        if (region.subregions && region.subregions[region.state]) {
           this.postFlight(() => Actions.selectParent());
           this.updateMap({
             level: 'state',
             key: region.state,
             state: region.state,
-            boundary: this.state.stateBoundaries[region.state].geometry
+            boundary: region.subregions[region.state].geometry
           }, this.props.time);
         } else {
           Actions.selectParent();
@@ -364,38 +361,19 @@ class LightMap extends React.Component {
    * the right village light data
    */
   componentWillReceiveProps (newProps) {
-    if (this.isMapLoaded()) {
+    if (this.state.loaded) {
       let self = this;
+      /*
       this.map.batch(function (batch) {
         self.setTime(batch, self.state.region, newProps.time);
         if (newProps.rggvyFocus !== self.props.rggvyFocus) {
           self.setRggvyFocus(batch, newProps.rggvyFocus);
         }
       });
+      */
       if (newProps.compareMode !== this.props.compareMode) {
         this.map.resize();
       }
-    }
-  }
-
-  /**
-   * Receive new region state from the store
-   */
-  onRegion (regionState) {
-    let stateBoundaries = this.state.stateBoundaries;
-    if (regionState.level === 'nation' && !regionState.loading && regionState.subregions && Object.keys(stateBoundaries).length === 0
-    ) {
-      stateBoundaries = assign({}, regionState.subregions);
-    }
-
-    if (!regionState.loading && this.isMapLoaded()) {
-      this.updateMap(regionState, this.props.time);
-      this.setState({region: regionState, stateBoundaries});
-    } else {
-      // if we're not updating the map, DON'T save the region to
-      // the state, because our lazy update logic relies on the saved
-      // state to know what actually needs updating.
-      this.setState({stateBoundaries});
     }
   }
 
@@ -406,18 +384,20 @@ class LightMap extends React.Component {
     let date = `${this.props.time.year}.${this.props.time.month}`;
     villagesState = villagesState[date] ||
       { loading: false, data: { type: 'FeatureCollection', features: [] } };
-    if (!villagesState.loading && this.isMapLoaded()) {
+    if (!villagesState.loading && this.state.loaded) {
       this.state.districtVillagesSource.setData(villagesState.data);
       if (villagesState.data.features.length > 0) {
         let s = stops.map((d, i) => i / (stops.length - 1));
         let quantiles = ss.quantile(villagesState.data.features
           .map((feat) => feat.properties.vis_median), s);
+          /*
         this.map.batch(function (batch) {
           lightStyles.setFilters(batch, 'district-lights', quantiles, 'vis_median',
             [[ '==', 'rggvy', false ]]);
           lightStyles.setFilters(batch, 'rggvy-lights', quantiles, 'vis_median',
             [[ '==', 'rggvy', true ]]);
         });
+        */
       }
     }
     this.setState({villages: villagesState});
@@ -430,7 +410,7 @@ class LightMap extends React.Component {
    * Set whether the RGGVY villages are focused.
    */
   setRggvyFocus (focus) {
-    if (this.mapLoaded() &&
+    if (this.state.loaded &&
       this.props.region &&
       !this.props.region.loading &&
       this.props.region.district) {
@@ -451,7 +431,7 @@ class LightMap extends React.Component {
       this.setState({pendingVillageCurves: villageCurves});
       return;
     }
-    if (!loading && villagePoints && this.mapLoaded()) {
+    if (!loading && villagePoints && this.state.loaded) {
       let selectedVillages = villageCurves.villages;
       let selectedFeatureCollection = {
         type: 'FeatureCollection',
@@ -467,7 +447,7 @@ class LightMap extends React.Component {
    * Reset the map view to the current region.
    */
   resetView () {
-    if (this.mapLoaded() && !this.props.region.loading) {
+    if (this.state.loaded && !this.props.region.loading) {
       this.flyToRegion(this.props.region);
     }
   }
@@ -476,7 +456,21 @@ class LightMap extends React.Component {
    * Update the map according to the current region and month
    */
   updateMap (region, time) {
-    this.setEmphasized(region);
+    var self = this;
+    /*
+    this.map.batch(function (batch) {
+      self.setEmphasized(batch, region);
+      self.setTime(batch, region, time);
+      if (!region.loading && region.key !== self.state.currentRegionKey) {
+        self.setRegionStyles(batch, region);
+      }
+    });
+
+    if (!region.loading && region.key !== self.state.currentRegionKey) {
+      self.flyToRegion(region);
+      self.setState({ currentRegionKey: region.key });
+    }
+    */
   }
 
   /**
@@ -593,10 +587,8 @@ class LightMap extends React.Component {
       );
     }
 
-    let loading = !this.mapLoaded() ||
-      !this.props.region || !this.state.villages ||
-      this.props.region.loading ||
-      this.state.villages.loading;
+    let loading = !this.state.loaded ||
+      this.props.region.loading;
     let errors = (!this.props.region || !this.state.villages) ? []
       : [this.props.region, this.state.villages].map(s => s.error);
 
@@ -634,6 +626,9 @@ LightMap.propTypes = {
   time: t.object.isRequired,
   match: t.object,
 
+  region: t.object,
+  villages: t.object,
+
   time: t.object.isRequired,
   rggvyFocus: t.bool,
   onMapCreated: t.func.isRequired,
@@ -641,7 +636,8 @@ LightMap.propTypes = {
 };
 
 const selector = (state) => ({
-  region: state.region.boundaries
+  region: state.region.boundaries,
+  villages: state.village.districts
 });
 
 const dispatch = {
