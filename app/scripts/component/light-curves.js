@@ -94,6 +94,7 @@ class LightCurves extends React.Component {
     this.toggleCompareMode = this.toggleCompareMode.bind(this);
     this.toggle = this.toggle.bind(this);
     this.selectDate = this.selectDate.bind(this);
+    this.handleResize = this.handleResize.bind(this);
   }
 
   componentDidMount () {
