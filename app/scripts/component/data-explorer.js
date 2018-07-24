@@ -28,6 +28,8 @@ const syncMaps = require('../lib/sync-maps');
 const {
   queryRegionBoundaries,
   queryRegionTimeseries,
+  clearVillageDistricts,
+  queryVillageDistrict,
 } = require('../actions');
 
 /**
@@ -42,7 +44,6 @@ class DataExplorer extends React.Component {
   constructor (props) {
     super(props);
     this.state = {
-      villages: VillageStore.getInitialState(),
       villageCurves: VillageCurveStore.getInitialState()
     };
     this.maps = [];
@@ -66,12 +67,13 @@ class DataExplorer extends React.Component {
       // RegionStore.setRegion(params);
       this.props.queryRegionBoundaries(params);
       this.props.queryRegionTimeseries(params);
+      if (params.district) {
+        this.props.queryVillageDistrict(params);
+      } else {
+        this.props.clearVillageDistricts();
+      }
       VillageCurveStore.setSelectedVillages(query || []);
     }
-  }
-
-  onVillages (villages) {
-    this.setState({villages});
   }
 
   onVillageCurves (villageCurves) {
@@ -139,8 +141,8 @@ class DataExplorer extends React.Component {
   }
 
   render () {
-    const { region, timeSeries } = this.props;
-    let {villages, villageCurves} = this.state;
+    const {region, timeSeries, villages} = this.props;
+    let {villageCurves} = this.state;
     // get year and month from router params
     let { year, month, interval } = this.props.match.params;
     year = +year;
@@ -291,19 +293,25 @@ DataExplorer.propTypes = {
 
   queryRegionBoundaries: t.func,
   queryRegionTimeseries: t.func,
+  clearVillageDistricts: t.func,
+  queryVillageDistrict: t.func,
 
   region: t.object,
-  timeSeries: t.object
+  timeSeries: t.object,
+  villages: t.object
 }
 
 const select = (state) => ({
   region: state.region.boundaries,
-  timeSeries: state.timeSeries.months
+  timeSeries: state.timeSeries.months,
+  villages: state.village.districts
 });
 
 const dispatch = {
   queryRegionBoundaries,
   queryRegionTimeseries,
+  clearVillageDistricts,
+  queryVillageDistrict,
 }
 
 module.exports = connect(select, dispatch)(DataExplorer);
