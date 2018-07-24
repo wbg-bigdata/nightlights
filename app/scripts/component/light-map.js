@@ -44,7 +44,6 @@ class LightMap extends React.Component {
     this.onClick = this.onClick.bind(this);
     this.onMouseMove = this.onMouseMove.bind(this);
     this.callOnMap = this.callOnMap.bind(this);
-    this.mapLoaded = this.mapLoaded.bind(this);
     this.mapQueue = [];
   }
 
@@ -140,6 +139,7 @@ class LightMap extends React.Component {
       // used in national and state view.
       lightStyles.create(base, 'lights', {}, stops.length)
       .forEach(layer => map.addLayer(layer, 'cities'));
+      this.setLightFilters();
 
       // 2. the 'district-lightsX' layers, which will style the geojson source
       // of villages in district view.
@@ -218,12 +218,9 @@ class LightMap extends React.Component {
     }
 
     const { year, month } = match.params;
-    if (year !== prevProps.match.params.year || month !== prevProps.match.params.month) {
-      const property = `${year} - ${month}`;
-      const regionFilter = this.props.region.state ? [['==', 'skey', this.props.region.state]] : [];
-      this.callOnMap(() => {
-        lightStyles.setFilters(this.map, 'lights', stops, property, regionFilter);
-      });
+    const prev = prevProps.match.params;
+    if (year !== prev.year || month !== prev.month) {
+      this.setLightFilters();
     }
   }
 
@@ -241,8 +238,11 @@ class LightMap extends React.Component {
     }
   }
 
-  mapLoaded () {
-    return !!this.state.loaded;
+  setLightFilters () {
+    const { year, month } = this.props.match.params;
+    const regionFilter = this.props.region.state ? [['==', 'skey', this.props.region.state]] : [];
+    const property = `${year}-${month}`;
+    lightStyles.setFilters(this.map, 'lights', stops, property, regionFilter);
   }
 
   /**

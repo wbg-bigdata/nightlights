@@ -70,7 +70,6 @@ class LineChart extends React.Component {
       showSeriesEnvelopes
     } = this.props;
 
-    console.log(this.props);
     if (!x.scale || !y.scale) return null;
 
     let {
