@@ -113,3 +113,15 @@ module.exports.queryRegionTimeseries = function (params) {
     });
   };
 }
+
+module.exports.clearVillageDistricts = function (keep) {
+  return {type: 'clear-village-districts', keep};
+}
+
+module.exports.queryVillageDistrict = function ({district, year, month}) {
+  const date = year + '.' + month;
+  const path = `districts/${district}/villages?month=${date}`;
+  const villageApi = url.resolve(apiUrl, path);
+  const action = 'query-village-district';
+  return request({url: villageApi}, action, {date});
+}
