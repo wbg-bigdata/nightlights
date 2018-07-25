@@ -72,20 +72,19 @@ function parseResponse ({results, context}) {
           memo + (+feat.properties.tot_pop), 0)
       };
     }
-    const admin = level === 'nation' ? 'nation' : key;
-    const count = sampleCount.map(obj => obj.key === admin ? obj : null)
-      .filter(Boolean);
-
-    return {
-      key,
-      level,
-      boundary,
-      properties,
-      subregions,
-      count,
-      state: context.state,
-      district: context.district
-    }
+  }
+  const admin = level === 'nation' ? 'nation' : key;
+  const count = sampleCount.map(obj => obj.key === admin ? obj : null)
+    .filter(Boolean);
+  return {
+    key,
+    level,
+    boundary,
+    properties,
+    subregions,
+    count,
+    state: context.state,
+    district: context.district
   }
 }
 
