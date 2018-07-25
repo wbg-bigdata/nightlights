@@ -529,9 +529,9 @@ class LightMap extends React.Component {
     if (region.state) {
       // Distinguish districts of the current state, or just the current
       // district if we're in district view.
-      let filters = ['all', [ '==', 'state_key', region.state ]];
+      let filters = [['==', 'state_key', region.state]];
       if (region.level === 'district') {
-        filters.push([ '==', 'key', region.district ]);
+        filters.push(['==', 'key', region.district]);
       }
       this.map.setFilter('districts', ['none'].concat(filters));
       this.map.setFilter('current-state-districts', ['all'].concat(filters));
