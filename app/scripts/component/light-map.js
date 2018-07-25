@@ -133,6 +133,16 @@ class LightMap extends React.Component {
         }
       }, 'states');
 
+      map.addLayer({
+        id: 'current-state-districts-fill',
+        type: 'fill',
+        source: Object.assign({}, boundarySource),
+        'source-layer': 'districts',
+        paint: {
+          'fill-opacity': 0
+        }
+      }, 'current-state-districts');
+
       // Setup the color scale for the village light visualization: this is
       // actually a series of N separate layers, each with a different color.
       // `setFilters` makes it so that each one only applies to points with
@@ -317,7 +327,7 @@ class LightMap extends React.Component {
     const { region } = this.props;
     let subregionPattern = ({
       'nation': /^states-fill/,
-      'state': /^current-state-districts/,
+      'state': /^current-state-districts-fill/,
       'district': /^(district-lights|rggvy-lights)/
     })[region.level];
     const features = this.map.queryRenderedFeatures(point);
