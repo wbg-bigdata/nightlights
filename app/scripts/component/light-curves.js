@@ -406,21 +406,20 @@ class LightCurves extends React.Component {
             : ''}
 
           <ul className='spane-details'>
-          {median ? [
-            <li>
-              <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
-              <span className='spane-details-description' key='median-value'>{median}</span>
-            </li>
-          ] : []}
-
-          {region.district && allVillages.length ? [
-            <li>
-              <h5 className='spane-details-title'>Villages in Electification Program
-                (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
-              </h5>
-              <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
-            </li>
-          ] : []}
+            {median ? (
+              <li>
+                <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
+                <span className='spane-details-description' key='median-value'>{median}</span>
+              </li>
+            ) : null}
+            {region.district && allVillages.length ? (
+              <li>
+                <h5 className='spane-details-title'>Villages in Electification Program
+                  (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
+                </h5>
+                <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
+              </li>
+            ) : null}
           </ul>
         </div>
 

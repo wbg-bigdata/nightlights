@@ -216,7 +216,7 @@ class DataExplorer extends React.Component {
         />
         <section className='spane region-detail'>
           <ul>
-            {breadcrumbs.map((b) => <li key={b} className='breadcrumbs'>{b}</li>)}
+            {breadcrumbs.map((b, i) => <li key={`breadcrumb-${i}`} className='breadcrumbs'>{b}</li>)}
           </ul>
           <div className='spane-header'>
             <h1 className='spane-title'>{name}</h1>
