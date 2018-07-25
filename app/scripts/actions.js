@@ -102,7 +102,7 @@ module.exports.queryRegionTimeseries = function (params) {
     q.defer(ajax, {url: timeseriesApi});
     // if this is a state, then grab the state time series line as well.
     if (adminType === 'state') {
-      q.defer(ajax, {url: timeseriesPath.slice(0, -1).join('/')});
+      q.defer(ajax, {url: url.resolve(apiUrl, timeseriesPath.slice(0, -1).join('/'))});
     }
     q.await((err, results, stateResults) => {
       if (err) {
