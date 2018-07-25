@@ -149,7 +149,7 @@ class LightCurves extends React.Component {
     if (!timeSeries.loading && prevProps.timeSeries.loading) {
       let nextState = this.processResults(false, timeSeries.results);
       // districts have centerlines
-      if (region.district === timeSeries.adminName && !centerline) {
+      if (region.district === timeSeries.adminName && !this.state.centerline) {
         nextState.centerline = processSeries(timeSeries.results, this.props.smoothing);
       } else if (!region.district && this.state.centerline) {
         nextState.centerline = null;
