@@ -40,6 +40,7 @@ render(
   document.getElementById('site-canvas')
 );
 
+/*
 // When the user selects a region (`key`), go to the appropriate route.
 Actions.select.listen(function (key) {
   let params = router.getCurrentParams();
@@ -109,3 +110,4 @@ function setVillages (villages) {
   let route = routes[routes.length - 1].name;
   router.transitionTo(route, router.getCurrentParams(), Object.assign(router.getCurrentQuery(), { v: villages }));
 }
+*/
