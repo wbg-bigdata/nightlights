@@ -1,27 +1,21 @@
+// Modules
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+
+// Components
+import Header from './components/header';
 
 class App extends Component {
-  componentDidMount() {
-    let a = 1;
-    a = a+ 1;
-    console.log(a);
-  }
-
   render() {
     return (
       <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1 className="App-title">Welcome to React</h1>
-        </header>
-        <p className="App-intro">
-          To get started, edit <code>src/App.js</code> and save to reload.
-        </p>
+        <Header />
+        <main id='site-body' role='main'>
+          {this.props.children}
+        </main>
       </div>
     );
   }
 }
+
 
 export default App;
