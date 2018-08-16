@@ -1,0 +1,51 @@
+// PRINT STYLES
+
+@page {
+  margin: 1cm 1.5cm;
+}
+
+@media print {
+  * {
+    color: $base-color;
+  }
+  a, a:visited {
+  	color: $base-color;
+  }
+  .no-print,
+  .now-showing,
+  .region-detail,
+  .light-map,
+  .light-curves,
+  .no-data {
+    display: none;
+  }
+  #site-header {
+  	position: static;
+  	margin-bottom: 1rem;
+  }
+  #site-title {
+  	float: right;
+  }
+  .page-header {
+  	padding-top: 0;
+  	padding-bottom: 0;
+  	margin-bottom: 0;
+  }
+  .page-body {
+  	padding-top: 1rem;
+  }
+  .modal.destroyed {
+    position: static;
+    display: block;
+    opacity: 1;
+    .modal-content {
+      width: 90%;
+      margin: 2rem 0 0 0;
+      padding: 0;
+    }
+    .close-modal,
+    h1 {
+      display: none;
+    }
+  }
+}

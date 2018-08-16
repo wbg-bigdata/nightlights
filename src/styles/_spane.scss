@@ -1,0 +1,421 @@
+// SPANE
+
+.spane {
+  position: absolute;
+  top: 3.4rem;
+  left: 0;
+  z-index: 50;
+  width: 100%;
+  padding: .1rem 2rem .6rem;
+  @extend %base-box-skin;
+}
+
+.spane-header {
+  position: relative;
+  margin-right: 1.5rem;
+  width: 40%;
+  float: left;
+  max-width: 300px;
+  > *:last-child { 
+    margin-bottom: 0;
+  }
+}
+
+.title-wrapper {
+  position: relative;
+}
+
+.spane-title {
+  @include heading(1rem);
+  font-weight: 700;
+  float: left;
+  small {
+    @extend .hd-sup;
+    display: inline;
+    margin-right: 1em;
+  }
+  span {
+    margin-right: .5em;
+    margin-top: .1em;
+    display: inline-block;
+  }
+  .region-detail & {
+    @extend .visually-hidden;
+  }
+}
+
+.spane-body {
+  //margin: 1rem -1rem -1rem -1rem;
+  //padding: 1rem;
+  width: 40%;
+  float: left;
+}
+
+.spane-details {
+  margin: 0;
+  padding: 0;
+  clear: left;
+
+  li { 
+    float: left;
+    margin-right: 1em;
+  }
+  // box-shadow: inset 0 1px 0 0 $brdr-ghost;
+  @extend .clearfix;
+  dt, dd {
+    //float: left;
+    //margin: 0;
+    //padding: 0.5rem 0;
+    box-shadow: inset 0 1px 0 0 $brdr-ghost;
+    display: block;
+    &:first-of-type {
+      box-shadow: none;
+    }
+  }
+  dt, .spane-details-title {
+    //width: 50%;
+    //clear: left;
+    //padding: 0.5rem 0.5rem 0.5rem 0;
+    @extend .hd-sup;
+    margin-bottom: 0em;
+  }
+  dd, .spane-details-description {
+    //width: 50%;
+    //text-align: right;
+    //padding-left: 0.5rem;
+    font-weight: $base-font-bold;
+    font-size: .9em;
+    color: #C9C8C8;
+    sup {
+      vertical-align: top;
+      top: 0;
+    }
+  }
+}
+
+.breadcrumbs {
+  position: relative; // needed for icon placement
+  display: inline-block;
+  font-size: .8em;
+  margin-bottom: .5em;
+  position: relative;
+  a {
+
+  }
+  & + &:before {
+    content: '/';
+    padding: 0 0.5em;
+  }
+}
+
+.bttn-search, .bttn-clear-search {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  text-align: center;
+  @include transform(translate(0, -50%));
+  &:visited, & {
+    color: inherit;
+  }
+  &:active{
+    outline: none;
+    margin-top: 1px;
+    @include transform(translate(0, -50%));
+  }
+}
+
+.bttn-center-map {
+  color: #C9C8C8;
+  &:after {
+    @extend .icon-target-alt;
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 0.75em;
+    padding-left: 0.5em;
+    padding-bottom: 1px;
+  }
+}
+
+.bttn-search, .bttn-clear-search {
+  width: 2rem;
+  height: 1.5rem;
+  line-height: 1.5em;
+  font-size: 1rem;
+  span {
+    @extend .visually-hidden;
+  }
+}
+
+.bttn-clear-search {
+  right: 2.2em;
+  margin-right: .3em;
+  padding-right: .3em;
+  border-right: 1px solid grey;
+  &:before {
+    display: block;
+    @extend .icon-s-cancel;
+  }
+}
+
+.bttn-search { 
+  right: .18em;
+  &:before {
+    display: block;
+    @extend .icon-search-left;
+  }
+}
+
+.now-showing {
+  padding: .2rem 2rem .6rem;
+  position: absolute;
+  width: 100%;
+  top: 0rem;
+  z-index: 110;
+  .spane-details {
+    margin-top: .7em;
+  }
+  .bttn-prev,
+  .bttn-next {
+    display: block;
+    &:before {
+      display: block;
+      height: 2rem;
+      line-height: 2;
+      width: 1.5rem;
+      text-align: center;
+      font-size: 1rem;
+    }
+    span { @extend .visually-hidden; }
+    &:visited, & {
+      color: inherit;
+    }
+  }
+  .bttn-prev:before { @extend .icon-arr-left; }
+  .bttn-next:before { @extend .icon-arr-right; }
+  .bttn-prev.inactive:before { color: #333; }
+  .bttn-next.inactive:before { color: #333; }
+  .bttn-info {
+    color: rgba(#fff, 0.24);
+    font-size: .9rem;
+    //position: absolute;
+    //right: 0.5rem;
+    //top: 0.5rem;
+    z-index: 1;
+    line-height: 1.2rem;
+    &:before { @extend .icon-circle-info; }
+    span { @extend .visually-hidden; }
+  }
+
+  .bttn-compare { 
+    font-size: .9rem;
+    margin-left: 1.5em;
+    margin-top: .4em;
+    display: inline-block;
+    border-bottom: 1px solid $primary-color;
+  }
+
+  .browse-date { 
+    float: right;
+    margin-left: .5em;
+  }
+
+  .info-box {
+    @extend %base-box-skin;
+    position: absolute;
+    left: 12rem;
+    top: 0rem;
+    z-index: 200;
+    width: 15rem;
+    font-size: 1rem;
+    font-weight: normal;
+    padding: 1rem;
+    display: none;
+
+    &:before {
+      @extend .icon-triangle-left;
+      position: absolute;
+      top: 0.5rem;
+      left: -11px;
+      z-index: 10;
+      line-height: 1;
+      color: rgba($base-color, 0.80);
+    }
+  }
+
+  .bttn-info:hover + .info-box {
+    display: block;
+  }
+}
+
+.browse-date {
+  //position: absolute;
+  //top: 2.5rem;
+  //right: 1.5rem;
+  li {
+    float: left;
+  }
+}
+
+.village-detail {
+  position: absolute;
+  top: 8rem;
+  left: 0;
+  z-index: 100;
+  width: 14rem;
+  padding: 1.5rem 2rem;
+  @extend %base-box-skin;
+
+  margin-top: 1rem;
+  h1, .bttn-clear-selection {
+    @extend .hd-sup;
+    display: block;
+    margin: 0.5rem 0;
+  }
+  ul {
+    box-shadow: inset 0 1px 0 0 $brdr-ghost;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    max-height: 12rem;
+    overflow-y: auto;
+  }
+
+  li {
+    cursor: default;
+    color: $selected-color;
+    &.active { color: $emphasis-color; }
+  }
+}
+
+.bttn-cancel {
+  font-size: 0.5rem;
+  line-height: 1.5rem;
+  height: 1.5rem;
+  padding-left: 0.25rem;
+
+  span { @extend .visually-hidden; }
+  &:before { @extend .icon-cancel; }
+  &:visited, & {
+    color: inherit;
+  }
+}
+
+.no-data {
+  @extend %base-box-skin;
+  position: absolute;
+  text-align: left;
+  top: 13rem;
+  left: -14rem;
+  width: 14rem;
+  padding: 1.5rem 2rem;
+  z-index: 10;
+
+  -webkit-transition-delay: .4s;
+  transition-delay: .4s;
+  transition: left .2s ease-in-out;
+
+  &.active {
+    left: 0;
+  }
+}
+
+// Search box
+
+.search {
+  label {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    z-index: 3;
+    font-size: 1rem;
+    line-height: 2rem;
+    height: 2rem;
+    width: 2rem;
+    text-align: center;
+    @include transform(translate(0, -50%));
+    span {
+      @extend .visually-hidden;
+    }
+  }
+
+  &.no-results {
+    @include animation(bounce-x 0.25s ease-in-out 0s);
+  }
+}
+
+#search-input {
+  position: relative;
+  display: block;
+  z-index: 2;
+  background: rgba(#fff, 0.08);
+  font-family: $base-font-family;
+  font-weight: normal;
+  white-space: nowrap;
+  border-radius: $global-radius/2;
+  border: 0;
+  color: $base-font-color;
+  box-shadow: inset 0 0 0 1px tint($base-color, 16%);
+  width: 100%;
+  line-height: 1.5rem;
+  font-size: 1rem;
+  padding: 0.25rem 2rem .3rem .8rem;
+
+  @include transform(translateZ(0));
+  @include transition(box-shadow 0.2s ease 0s);
+
+  &:focus {
+    outline: 0;
+    box-shadow: inset 0 0 0 1px tint($base-color, 32%);
+  }
+
+  @include placeholder {
+    color: tint($base-color, 64%);
+    font-family: $base-font-family;
+    font-weight: $base-font-weight;
+  }
+}
+
+// https://github.com/moroshko/react-autosuggest#styling
+.react-autosuggest {
+  position: relative;
+
+  &__suggestions {
+    border-radius: $global-radius/2;
+    @extend %base-box-skin;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    margin: 2px 0 0 0;
+    padding: 0;
+    list-style-type: none;
+    z-index: 2;
+    max-height: 16rem;
+    overflow: auto;
+    box-shadow: inset 0 0 0 1px tint($base-color, 12%);
+    background: rgba($base-color, 0.92);
+
+    &-section {
+
+      &-name {
+        padding: 10px 0 0 10px;
+        font-size: 12px;
+        text-transform: uppercase;
+        border-top: 1px dashed #ccc;
+      }
+
+      &-suggestions {
+        margin: 0;
+        padding: 0;
+        list-style-type: none;
+      }
+    }
+  }
+
+  &__suggestion {
+    cursor: pointer;
+    padding: 0.5rem 1rem;
+
+    &--focused {
+      background: rgba(#fff, 0.08);
+    }
+  }
+}

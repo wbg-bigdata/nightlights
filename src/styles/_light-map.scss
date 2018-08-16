@@ -1,0 +1,74 @@
+// MAP
+
+
+.map-inner {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+}
+
+.light-map {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  overflow: hidden;
+
+  // side-by-side layout
+  .compare & { width: 50%; }
+  .compare & + & { 
+    left: 50%; 
+    border-left: 1px solid #484848;
+    .legend {
+      display: none;
+    }
+  }
+
+  canvas {
+    outline: none;
+  }
+
+  .loader {
+    z-index: 20;
+  }
+
+  // the little arrow
+  .mapboxgl-popup-tip {
+    border-top-color: rgba($base-color, 0.64);
+    cursor: pointer;
+  }
+  // the content container
+  .mapboxgl-popup-content {
+    background: rgba($base-color, 0.84);
+    padding: 4px 6px 4px;
+    cursor: pointer;
+  }
+  // the close button
+  .mapboxgl-popup-close-button { display: none; }
+
+  .mapboxgl-ctrl-top-right { top: 140px; }
+  .mapboxgl-ctrl-group {
+    background: rgba(#fff, 0.2);
+  }
+  .mapboxgl-ctrl-icon.mapboxgl-ctrl-zoom-in { 
+    background-image: none;
+    border-bottom-color: rgba(#fff, .1);
+    &:before { @extend .icon-s-add; }
+  }
+  .mapboxgl-ctrl-icon.mapboxgl-ctrl-zoom-out { 
+    background-image: none;
+    border-bottom: 0;
+    &:after { @extend .icon-s-subtract; }
+  }
+  // hide the compass button, because we keep orientation locked
+  .mapboxgl-ctrl-compass { display: none; }
+}
+
+.light-map_left .mapboxgl-ctrl-group { display: none; }
+
+.mapboxgl-ctrl-attrib {
+  background: transparent;
+  opacity: 0.32;
+}
