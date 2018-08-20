@@ -1,10 +1,8 @@
-'use strict';
-const { combineReducers } = require('redux');
-const region = require('./region');
-const timeSeries = require('./time-series');
-const village = require('./village');
-module.exports = combineReducers({
-  region,
-  timeSeries,
-  village
-})
+import { combineReducers } from "redux";
+import region from "./region";
+import context from "./context";
+
+export default combineReducers({
+  context,
+  region
+});

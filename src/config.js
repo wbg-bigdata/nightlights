@@ -25,7 +25,7 @@ module.exports = {
     // 'F18': 1.18883
   },
   dataThreshold: 400,
-  welcome: {
+  welcomeText: {
     title: <h1>Twenty Years of India at Night</h1>,
     body: (
       <div>
