@@ -1,10 +1,12 @@
 import { createStore, applyMiddleware, compose } from "redux";
 import { connectRouter, routerMiddleware } from "connected-react-router";
 import thunk from "redux-thunk";
-import rootReducer from "./reducers";
-
 import { persistStore, persistReducer } from "redux-persist";
 import storage from "redux-persist/lib/storage";
+
+// Reducers and Actions
+import rootReducer from "./reducers";
+import { initRegionList } from "./reducers/region-list";
 
 import createHistory from "history/createBrowserHistory";
 export const history = createHistory();
@@ -42,6 +44,8 @@ export default function configureStore() {
   );
 
   let persistor = persistStore(store);
+
+  store.dispatch(initRegionList());
 
   return { store, persistor };
 }

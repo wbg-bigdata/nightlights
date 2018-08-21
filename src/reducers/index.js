@@ -1,8 +1,10 @@
 import { combineReducers } from "redux";
-import region from "./region";
 import context from "./context";
+import selectedRegion from "./selected-region";
+import regionList from "./region-list";
 
 export default combineReducers({
   context,
-  region
+  selectedRegion,
+  regionList
 });
