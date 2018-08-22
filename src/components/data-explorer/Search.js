@@ -23,6 +23,11 @@ class Search extends React.Component {
         include: ["score"]
       })
     };
+
+    // Bindings
+    this.onSuggestionSelected = this.onSuggestionSelected.bind(this);
+    this.onClear = this.onClear.bind(this);
+    this.onBlur = this.onBlur.bind(this);
   }
 
   getSuggestions = input => {
@@ -37,7 +42,12 @@ class Search extends React.Component {
 
   onClear = e => {
     e.preventDefault();
-    this.setState({ suggestions: [] });
+
+    // Set suggestions based on current value
+    const suggestions = this.state.fuse.search(this.state.value);
+    this.setState({ value: "", suggestions });
+
+    // Focus input
     const node = findDOMNode(this);
     node.querySelector("#search-input").focus();
   };
@@ -48,22 +58,33 @@ class Search extends React.Component {
     });
   };
 
-  onSuggestionsFetchRequested = ({ value }) => {
-    this.setState({
-      suggestions: this.getSuggestions(value)
-    });
+  onSuggestionsFetchRequested = ({ value, reason }) => {
+    if (reason !== 'suggestion-selected') {
+      this.setState({
+        suggestions: this.getSuggestions(value)
+      });
+    }
   };
-
-  onChange = (event, { newValue }) => {
+  
+  onBlur = () => {
     this.setState({
-      value: newValue
+      value: this.props.selectedRegion.name
     });
+  }
+
+  onChange = (event, { newValue, method }) => {
+    if (method !== 'click') {
+      this.setState({
+        value: newValue
+      });
+    }
   };
 
   onSuggestionSelected = (event, { suggestion }) => {
     this.props.setSelectedRegion(suggestion);
     this.setState({
-      value: suggestion.value
+      value: suggestion.name,
+      suggestions: []
     });
   };
 
@@ -100,11 +121,12 @@ class Search extends React.Component {
           onSuggestionSelected={this.onSuggestionSelected}
           getSuggestionValue={suggestion => suggestion.name}
           renderSuggestion={suggestion => suggestion.name}
+          alwaysRenderSuggestions={true}
           inputProps={{
             id: "search-input",
-            value: value || "",
+            value,
             placeholder: "Enter region...",
-            role: 'listbox',
+            onBlur: this.onBlur,
             onChange: this.onChange
           }}
         />
