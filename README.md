@@ -24,7 +24,7 @@ Clone this repository locally and run:
 
 Start server with live code reload at [http://localhost:9000](http://localhost:9000):
 
-    yarn serve
+    yarn start
   
 The default API endpoint is `http://api.nightlights.io`. Set the `API_URL` environment variable to use a custom API. For example:
 
