@@ -4,6 +4,7 @@ import classnames from "classnames";
 
 // Components
 import Breadcrumbs from "./Breadcrumbs";
+import LightMap from "./light-map";
 
 class DataExplorer extends React.Component {
   render() {
@@ -11,6 +12,7 @@ class DataExplorer extends React.Component {
     return (
       <div className={classnames("data-container", { compare: !!compare })}>
         <Breadcrumbs />
+        <LightMap />
       </div>
     );
   }
