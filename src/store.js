@@ -6,7 +6,7 @@ import storage from "redux-persist/lib/storage";
 
 // Reducers and Actions
 import rootReducer from "./reducers";
-import { initRegionList } from "./reducers/region-list";
+import { initRegionList } from "./actions/regions";
 
 import createHistory from "history/createBrowserHistory";
 export const history = createHistory();

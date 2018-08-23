@@ -138,7 +138,7 @@ class Search extends React.Component {
 const mapStateToProps = state => {
   return {
     selectedRegion: state.selectedRegion,
-    regions: _.values(state.regionList)
+    regions: _.values(state.regions)
   };
 };
 
