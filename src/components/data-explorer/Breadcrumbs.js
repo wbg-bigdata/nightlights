@@ -25,7 +25,7 @@ class Breadcrumbs extends React.Component {
           className="bttn-center-map"
           title={"Recenter map on " + name}
         >
-          <span>{name}</span>
+          <span>{level === "district" ?  name.split(' / ')[1] : name}</span>
         </a>
       </span>
     );

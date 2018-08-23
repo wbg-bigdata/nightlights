@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import classnames from "classnames";
 
 // Components
-import Breadcrumbs from "./breadcrumbs";
+import Breadcrumbs from "./Breadcrumbs";
 
 class DataExplorer extends React.Component {
   render() {

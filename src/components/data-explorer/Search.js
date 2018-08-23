@@ -59,21 +59,21 @@ class Search extends React.Component {
   };
 
   onSuggestionsFetchRequested = ({ value, reason }) => {
-    if (reason !== 'suggestion-selected') {
+    if (reason !== "suggestion-selected") {
       this.setState({
         suggestions: this.getSuggestions(value)
       });
     }
   };
-  
+
   onBlur = () => {
     this.setState({
       value: this.props.selectedRegion.name
     });
-  }
+  };
 
   onChange = (event, { newValue, method }) => {
-    if (method !== 'click') {
+    if (method !== "click") {
       this.setState({
         value: newValue
       });
