@@ -1,8 +1,7 @@
-let React = require('react');
-let Router = require('react-router');
-import Autosuggest from 'react-autosuggest';
-let RegionListStore = require('../store/region-list');
-let Fuse = require('fuse.js');
+const React = require('react');
+const t = require('prop-types');
+const RegionListStore = require('../store/region-list');
+const Fuse = require('fuse.js');
 
 function fuse (data) {
   return new Fuse(data.regions, {
@@ -12,38 +11,37 @@ function fuse (data) {
   });
 }
 
-let Search = React.createClass({
-  displayName: 'Search',
-  propTypes: {
-    children: React.PropTypes.node,
-    initialValue: React.PropTypes.string
-  },
+class Search extends React.Component {
+  // mixins: [Router.State, Router.Navigation],
 
-  mixins: [Router.State, Router.Navigation],
-
-  getInitialState () {
-    return {
+  constructor (props) {
+    super(props);
+    this.state = {
       active: true,
       currentValue: '',
       fuse: fuse(RegionListStore.getInitialState())
     };
-  },
+  }
 
   componentDidMount () {
     this.unsubscribe = [];
     this.unsubscribe.push(RegionListStore.listen((data) => {
       /* eslint react/no-did-mount-set-state: [2, "allow-in-func"] */
-      this.setState({ fuse: fuse(data) });
+      // this.setState({ fuse: fuse(data) });
     }));
-  },
+  }
 
-  componentDidUnmount () { this.unsubscribe.forEach((u) => u()); },
+  componentWillUnMount () {
+    this.unsubscribe.forEach(u => u());
+  }
+
   onClick () {
-    this.setState({active: true});
-  },
+    // this.setState({active: true});
+  }
+
   componentWillReceiveProps (nextProps) {
-    this.setState({currentValue: nextProps.initialValue});
-  },
+    // this.setState({currentValue: nextProps.initialValue});
+  }
 
   onKeyPress (event) {
     if (event.which === 13) {
@@ -60,7 +58,7 @@ let Search = React.createClass({
         this.setState({currentValue: best.name});
       }
     }
-  },
+  }
 
   onNotFound () {
     var node = React.findDOMNode(this.refs.search);
@@ -68,24 +66,24 @@ let Search = React.createClass({
     node.className = node.className.replace(/ ?no-results/, '');
     // Add it back on next tick so that css animation is triggered.
     setTimeout(function () { node.className += ' no-results'; }, 1);
-  },
+  }
 
   onClear (e) {
     e.preventDefault();
     this.setState({currentValue: ''});
     let node = React.findDOMNode(this);
     node.querySelector('#search-input').focus();
-  },
+  }
 
   onReset () {
     this.setState({currentValue: this.props.initialValue});
-  },
+  }
 
   onSubmit () {
     let best = this.getSuggestions(this.state.currentValue)[0];
     if (!best || !best.name) { return this.onNotFound(); }
     this.go(best);
-  },
+  }
 
   getSuggestions (input, callback) {
     let suggestions = this.state.fuse.search(input);
@@ -99,7 +97,7 @@ let Search = React.createClass({
       callback(null, suggestions);
     }
     return suggestions;
-  },
+  }
 
   go (region) {
     let {year, month} = this.getParams();
@@ -110,7 +108,7 @@ let Search = React.createClass({
       district: region.type === 'state' ? undefined : region.key
     };
     this.transitionTo(region.type, params, this.getQuery());
-  },
+  }
 
   render () {
     return (
@@ -124,6 +122,18 @@ let Search = React.createClass({
           <span>Search</span>
         </a>
         <label htmlFor='search-input'><span>Where</span></label>
+      </div>
+    );
+  }
+};
+
+Search.propTypes = {
+  children: t.node,
+  initialValue: t.string
+};
+
+// this was lifted from the render component
+/*
         <Autosuggest suggestions={this.getSuggestions}
           suggestionRenderer={getName}
           suggestionValue={getName}
@@ -140,10 +150,7 @@ let Search = React.createClass({
             onBlur: this.onReset
           }}
           />
-      </div>
-    );
-  }
-});
+*/
 
 function getName (s) { return s.name; }
 

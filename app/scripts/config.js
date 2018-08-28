@@ -1,3 +1,4 @@
+const React = require('react');
 /* eslint-disable react/react-in-jsx-scope */
 module.exports = {
   mapboxAccessToken: 'pk.eyJ1IjoiZGV2c2VlZCIsImEiOiJnUi1mbkVvIn0.018aLhX0Mb0tdtaT2QNe2Q',

@@ -1,24 +1,36 @@
-let React = require('react');
-let Router = require('react-router');
-let titlecase = require('titlecase');
-let numeral = require('numeral');
-let classnames = require('classnames');
-let TimeSeriesStore = require('../store/time-series');
-let VillageStore = require('../store/village');
-let VillageCurveStore = require('../store/village-curve');
-let RegionStore = require('../store/region');
-let Search = require('./search');
-let VillageDetail = require('./village-detail');
-let LightMap = require('./light-map');
-let LightCurves = require('./light-curves');
-let Modal = require('./modal');
-let NoData = require('./no-data');
-let Actions = require('../actions');
-let timespan = require('../lib/timespan');
-let syncMaps = require('../lib/sync-maps');
-let config = require('../config');
-let dataThreshold = config.dataThreshold;
-let welcomeText = config.welcome;
+'use strict';
+const url = require('url');
+const React = require('react');
+const titlecase = require('titlecase');
+const numeral = require('numeral');
+const classnames = require('classnames');
+const { connect } = require('react-redux');
+const t = require('prop-types');
+const d3 = require('d3');
+
+const TimeSeriesStore = require('../store/time-series');
+const VillageStore = require('../store/village');
+const VillageCurveStore = require('../store/village-curve');
+const RegionStore = require('../store/region');
+
+const Search = require('./search');
+const VillageDetail = require('./village-detail');
+const LightMap = require('./light-map');
+const LightCurves = require('./light-curves');
+const DateControl = require('./date-control');
+const Modal = require('./modal');
+const NoData = require('./no-data');
+const Actions = require('../actions');
+const timespan = require('../lib/timespan');
+const { interval, dataThreshold, welcome: welcomeText } = require('../config');
+const syncMaps = require('../lib/sync-maps');
+
+const {
+  queryRegionBoundaries,
+  queryRegionTimeseries,
+  clearVillageDistricts,
+  queryVillageDistrict,
+} = require('../actions');
 
 /**
  * The data explorer.  This is basically a wrapper for the:
@@ -28,92 +40,60 @@ let welcomeText = config.welcome;
  *  - RegionDetail (info box)
  *  - ChartBox (light curves)
  */
-let DataExplorer = React.createClass({
-  displayName: 'DataExplorer',
-  propTypes: {
-    params: React.PropTypes.object
-  },
-
-  mixins: [ Router.State ],
-
-  statics: {
-    willTransitionTo: function (transition, params, query) {
-      let valid = timespan.getValid(params);
-      if (+valid.year !== +params.year || +valid.month !== +params.month) {
-        // TODO: redirect to the desired region.  The problem is that
-        // because of how react-router works, we don't actually know which
-        // route was being attempted at this point.
-        transition.redirect('nation', valid, {});
-      }
-      RegionStore.setRegion(params, query);
-      VillageCurveStore.setSelectedVillages(query.v || []);
-    }
-  },
-
-  getInitialState () {
-    return {
-      region: RegionStore.getInitialState(),
-      timeSeries: TimeSeriesStore.getInitialState(),
-      villages: VillageStore.getInitialState(),
+class DataExplorer extends React.Component {
+  constructor (props) {
+    super(props);
+    this.state = {
       villageCurves: VillageCurveStore.getInitialState()
     };
-  },
-
-  componentWillMount () {
     this.maps = [];
-  },
+  }
 
   componentDidMount () {
-    this.unsubscribe = [];
-    this.unsubscribe.push(RegionStore.listen(this.onRegion));
-    this.unsubscribe.push(VillageStore.listen(this.onVillages));
-    this.unsubscribe.push(VillageCurveStore.listen(this.onVillageCurves));
-    this.unsubscribe.push(TimeSeriesStore.listen(this.onTimeSeries));
-    this.unsubscribe.push(Actions.toggleRggvy.listen(this.onToggleRggvy));
-    // HACK: willTransitionTo is not getting called when _just_ the query param
-    // changes, so we have to listen for that case specially
-    this.unsubscribe.push(Actions.selectDate.listen(function ({compare}) {
-      if (typeof compare !== 'undefined') {
-        setTimeout(function () {
-          RegionStore.setRegion(this.getParams(), this.getQuery());
-        }.bind(this));
+    this.updateOnUrlChange(this.props.match.params, this.props.location.search);
+  }
+
+  componentDidUpdate (prevProps, prevState) {
+    if (this.props.location.pathname !== prevProps.location.pathname) {
+      this.updateOnUrlChange(this.props.match.params, this.props.location.search);
+    }
+  }
+
+  updateOnUrlChange (params, query) {
+    const valid = timespan.getValid(params);
+    if (+valid.year !== +params.year || +valid.month !== +params.month) {
+      this.props.history.push(url.resolve('/nation', `${valid.year}/${valid.month}`));
+    } else {
+      // RegionStore.setRegion(params);
+      this.props.queryRegionBoundaries(params);
+      this.props.queryRegionTimeseries(params);
+      if (params.district) {
+        this.props.queryVillageDistrict(params);
+      } else {
+        this.props.clearVillageDistricts();
       }
-    }.bind(this)));
-  },
-
-  componentWillUnmount () {
-    this.unsubscribe.forEach((unsub) => unsub());
-  },
-
-  onRegion (regionState) {
-    this.setState({region: regionState});
-  },
-
-  onVillages (villages) {
-    this.setState({villages});
-  },
+      VillageCurveStore.setSelectedVillages(query || []);
+    }
+  }
 
   onVillageCurves (villageCurves) {
     this.setState({villageCurves});
-  },
-
-  onTimeSeries (timeSeries) {
-    this.setState({timeSeries});
-  },
+  }
 
   onToggleRggvy () {
     this.setState({rggvyFocus: !this.state.rggvyFocus});
-  },
+  }
 
   onChangeDate (params) {
     Actions.selectDate(params);
-  },
+  }
 
   onChangeCompareDate (params) {
     Actions.selectDate(Object.assign({compare: true}, params));
-  },
+  }
 
   onMapCreated (map) {
+    /*
     this.maps.push(map);
     if (this.maps.length === 2) {
       syncMaps(this.maps[0], this.maps[1]);
@@ -123,7 +103,8 @@ let DataExplorer = React.createClass({
       if (i >= 0) { this.maps.splice(i, 1); }
       map.remove();
     }.bind(this);
-  },
+    */
+  }
 
   hasNoData (region, villages, year, month) {
     // Decide if we need to show the no-data indicator.
@@ -140,29 +121,35 @@ let DataExplorer = React.createClass({
     } else if (region.district && villages[date] && !villages[date].loading) {
       noData = villages[date].data.features.length === 0;
     }
-
-    return noData;
-  },
+    // region median
+    let median;
+    if (!this.props.timeSeries.loading && !this.props.timeSeries.error && region.level !== 'nation') {
+      let nowData = this.props.timeSeries.results.filter(d =>
+        +d.year === year && +d.month === month && d.key === region.key);
+      median = d3.mean(nowData, d => d.vis_median);
+    }
+  }
 
   selectParent (e) {
     e.preventDefault();
     Actions.selectParent();
-  },
+  }
 
   selectNation (e) {
     e.preventDefault();
     Actions.select();
-  },
+  }
 
   render () {
-    let {region, timeSeries, villages, villageCurves} = this.state;
+    const {region, timeSeries, villages} = this.props;
+    let {villageCurves} = this.state;
     // get year and month from router params
-    let { year, month, interval } = this.getParams();
+    let { year, month, interval } = this.props.match.params;
     year = +year;
     month = +month;
     let date = `${year}.${month}`;
 
-    let query = this.getQuery();
+    let query = this.props.location.search;
     let compare;
     if (query.compare) {
       var [cy, cm] = query.compare.split('.');
@@ -229,7 +216,7 @@ let DataExplorer = React.createClass({
         />
         <section className='spane region-detail'>
           <ul>
-            {breadcrumbs.map((b) => <li className='breadcrumbs'>{b}</li>)}
+            {breadcrumbs.map((b, i) => <li key={`breadcrumb-${i}`} className='breadcrumbs'>{b}</li>)}
           </ul>
           <div className='spane-header'>
             <h1 className='spane-title'>{name}</h1>
@@ -298,6 +285,33 @@ let DataExplorer = React.createClass({
       </div>
     );
   }
+};
+
+DataExplorer.propTypes = {
+  match: t.object,
+  location: t.object,
+
+  queryRegionBoundaries: t.func,
+  queryRegionTimeseries: t.func,
+  clearVillageDistricts: t.func,
+  queryVillageDistrict: t.func,
+
+  region: t.object,
+  timeSeries: t.object,
+  villages: t.object
+}
+
+const select = (state) => ({
+  region: state.region.boundaries,
+  timeSeries: state.timeSeries.months,
+  villages: state.village.districts
 });
 
-module.exports = DataExplorer;
+const dispatch = {
+  queryRegionBoundaries,
+  queryRegionTimeseries,
+  clearVillageDistricts,
+  queryVillageDistrict,
+}
+
+module.exports = connect(select, dispatch)(DataExplorer);

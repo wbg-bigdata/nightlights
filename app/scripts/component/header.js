@@ -1,11 +1,10 @@
-var React = require('react');
-var Link = require('react-router').Link;
+const React = require('React');
+const { Link } = require('react-router-dom');
 
 class Header extends React.Component {
-
   render () {
     return (
-      <header id='site-header' class="clearfix" role='banner'>
+      <header id='site-header' className="clearfix" role='banner'>
         <h1 id='site-title'><a href='#/' title='Twenty Years of India Lights'><span>Twenty Years of India Lights</span></a></h1>
         <nav id='site-prime-nav' role='navigation'>
           <ul className='global-menu'>
@@ -19,7 +18,5 @@ class Header extends React.Component {
     );
   }
 }
-
-Header.displayName = 'Header';
 
 module.exports = Header;

@@ -1,102 +1,56 @@
 {
-  "name": "project-seed",
+  "name": "nightlights",
   "version": "0.1.0",
-  "description": "A basic project starting template.",
+  "description": "A map of nights lights.",
   "repository": {
     "type": "git",
-    "url": "https://github.com/developmentseed/project-seed.git"
+    "url": "https://github.com/wbg-bigdata/nightlights.git"
   },
+  "homepage": "https://github.com/wbg-bigdata/nightlights",
   "author": {
     "name": "Development Seed",
     "url": "https://developmentseed.org"
   },
   "license": "BSD",
   "bugs": {
-    "url": "https://github.com/developmentseed/project-seed/issues"
-  },
-  "homepage": "https://github.com/developmentseed/project-seed",
-  "main": "app/scripts/main.js",
-  "scripts": {
-    "serve": "gulp serve",
-    "build": "gulp",
-    "lint": "semistandard app/scripts/**/*.js",
-    "test": "echo no other tests yet!"
-  },
-  "devDependencies": {
-    "autoprefixer-core": "^4.0.2",
-    "babel": "^5.4.7",
-    "babelify": "^6.1.1",
-    "brfs": "^1.4.0",
-    "browser-sync": "^1.8.2",
-    "browserify": "^10.1.2",
-    "browserify-shim": "^3.8.6",
-    "del": "^1.1.1",
-    "envify": "^3.4.0",
-    "gulp": "^3.6.0",
-    "gulp-cache": "^0.2.2",
-    "gulp-csso": "^0.2.6",
-    "gulp-exit": "0.0.2",
-    "gulp-if": "^1.2.1",
-    "gulp-imagemin": "^2.0.0",
-    "gulp-jshint": "^1.5.3",
-    "gulp-load-plugins": "^0.8.0",
-    "gulp-minify-html": "^0.1.6",
-    "gulp-postcss": "^3.0.0",
-    "gulp-rev": "^3.0.1",
-    "gulp-rev-replace": "^0.4.0",
-    "gulp-sass": "^2.0",
-    "gulp-size": "^1.1.0",
-    "gulp-sourcemaps": "^1.3.0",
-    "gulp-uglify": "^1.0.1",
-    "gulp-useref": "^1.0.2",
-    "gulp-util": "^3.0.4",
-    "jshint-stylish": "^1.0.0",
-    "lodash.assign": "^3.1.0",
-    "node-neat": "^1.7.2",
-    "opn": "^1.0.0",
-    "semistandard": "^7.0.4",
-    "vinyl-buffer": "^1.0.0",
-    "vinyl-source-stream": "^1.1.0",
-    "watchify": "^3.2.1"
-  },
-  "browserify": {
-    "transform": [
-      [
-        "babelify",
-        {}
-      ],
-      "brfs",
-      "envify",
-      "browserify-shim"
-    ]
-  },
-  "browserify-shim": {
-    "d3": "global:d3"
+    "url": "https://github.com/wbg-bigdata/nightlights/issues"
   },
   "dependencies": {
-    "classnames": "^2.1.1",
-    "cookie-cutter": "^0.1.1",
-    "fuse.js": "^1.3.1",
-    "lodash.debounce": "^3.1.0",
-    "lodash.difference": "^3.2.1",
-    "lodash.throttle": "^3.0.3",
-    "lodash.union": "^3.1.0",
-    "mapbox-gl": "^0.11.2",
-    "mapbox.js": "^2.2.1",
-    "nets": "^3.1.0",
-    "numeral": "^1.5.3",
-    "object-assign": "^2.0.0",
-    "queue-async": "^1.0.7",
-    "react": "^0.13.3",
-    "react-autosuggest": "github:moroshko/react-autosuggest#785ee38a752a929cceacec0e9207175592446a1a",
-    "react-router": "^0.13.3",
-    "reflux": "^0.2.7",
-    "remarkable": "^1.6.0",
-    "simple-statistics": "^1.0.0",
-    "titlecase": "^1.0.2",
-    "topojson": "^1.6.19",
-    "turf-centroid": "^1.1.2",
-    "turf-extent": "^1.0.4",
-    "uniq": "^1.0.1"
+    "@turf/bbox": "^6.0.1",
+    "classnames": "^2.2.6",
+    "connected-react-router": "^4.4.1",
+    "cookie-cutter": "^0.2.0",
+    "d3": "^5.5.0",
+    "fuse.js": "^3.2.1",
+    "mapbox-gl": "^0.47.0",
+    "nets": "^3.2.0",
+    "node-bourbon": "^4.2.8",
+    "node-neat": "^2.0.0-beta.0",
+    "node-sass-chokidar": "^1.3.3",
+    "npm-run-all": "^4.1.3",
+    "numeral": "^2.0.6",
+    "queue-async": "^1.2.1",
+    "react": "^16.4.2",
+    "react-autosuggest": "^9.4.0",
+    "react-dom": "^16.4.2",
+    "react-redux": "^5.0.7",
+    "react-router-dom": "^4.3.1",
+    "react-scripts": "1.1.4",
+    "redux": "^4.0.0",
+    "redux-persist": "^5.10.0",
+    "redux-thunk": "^2.3.0",
+    "simple-statistics": "^6.1.0",
+    "titlecase": "^1.1.2",
+    "topojson": "^3.0.2"
+  },
+  "scripts": {
+    "build-css": "node-sass-chokidar --include-path ./src --include-path ./node_modules src/ -o src/",
+    "watch-css": "npm run build-css && node-sass-chokidar --include-path ./src --include-path ./node_modules src/ -o src/ --watch --recursive",
+    "start-js": "react-scripts start",
+    "start": "npm-run-all -p watch-css start-js",
+    "build-js": "react-scripts build",
+    "build": "npm-run-all build-css build-js",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
   }
 }

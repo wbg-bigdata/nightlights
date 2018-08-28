@@ -35,7 +35,7 @@ module.exports = Reflux.createStore({
       loading: true,
       emphasized: []
     };
-    this.listenTo(Actions.emphasize, this.onEmphasize.bind(this));
+    // this.listenTo(Actions.emphasize, this.onEmphasize.bind(this));
   },
 
   getInitialState () {

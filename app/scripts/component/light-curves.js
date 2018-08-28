@@ -1,18 +1,17 @@
-let d3 = require('d3');
-let numeral = require('numeral');
-let React = require('react');
-let Router = require('react-router');
-let classnames = require('classnames');
-let debounce = require('lodash.debounce');
-let assign = require('object-assign');
-let Actions = require('../actions');
-let LineChart = require('./line-chart');
-let Legend = require('./legend');
-let Loading = require('./loading');
-let DateControl = require('./date-control');
-let smooth = require('../lib/moving-average');
-let {satelliteAdjustment} = require('../config');
-let Link = Router.Link;
+const d3 = require('d3');
+const numeral = require('numeral');
+const React = require('react');
+const t = require('prop-types');
+const classnames = require('classnames');
+const debounce = require('lodash.debounce');
+const assign = require('object-assign');
+const Actions = require('../actions');
+const LineChart = require('./line-chart');
+const Legend = require('./legend');
+const Loading = require('./loading');
+const DateControl = require('./date-control');
+const smooth = require('../lib/moving-average');
+const {satelliteAdjustment} = require('../config');
 
 /*
  * Data Accessor Functions
@@ -77,8 +76,8 @@ function processSeries (values, doSmoothing) {
  */
 class LightCurves extends React.Component {
 
-  constructor ({expanded}) {
-    super();
+  constructor (props) {
+    super(props);
     this.state = {
       timeSeries: {},
       villageCurves: {},
@@ -90,32 +89,16 @@ class LightCurves extends React.Component {
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
-      expanded: !!expanded
+      expanded: !!props.expanded
     };
-
     this.toggleCompareMode = this.toggleCompareMode.bind(this);
     this.toggle = this.toggle.bind(this);
     this.selectDate = this.selectDate.bind(this);
+    this.handleResize = this.handleResize.bind(this);
   }
 
   componentDidMount () {
-    let self = this;
-
     // capture initial height (presumably set in css)
-    let node = React.findDOMNode(self);
-    self.setState({ height: node.offsetHeight });
-
-    // mimick width: 100% using resize handler
-    function handleResize () {
-      let node = React.findDOMNode(self);
-      self.setState(self._calcScales(assign({}, self.state, {
-        width: node.offsetWidth,
-        height: node.offsetHeight
-      })));
-    }
-
-    this.handleResize = debounce(handleResize, 100);
-
     window.addEventListener('resize', this.handleResize);
     this._handleData(this.props);
     this.handleResize(this.state);
@@ -142,12 +125,59 @@ class LightCurves extends React.Component {
     window.removeEventListener('resize', this.handleResize);
   }
 
-  componentWillReceiveProps (props) {
-    let {expanded} = props;
-    if (typeof expanded !== 'undefined' && this.state.expanded !== expanded) {
-      Actions.toggleChartExpanded();
+  handleResize () {
+    const node = this.refs.node;
+    this.setState(this._calcScales(Object.assign({}, this.state, {
+      width: node.offsetWidth,
+      height: node.offsetHeight
+    })));
+  }
+
+  toggle (e) {
+    if (e) { e.preventDefault(); }
+    this.setState({ expanded: !this.state.expanded });
+  }
+
+  componentDidUpdate (prevProps, prevState) {
+    const { expanded } = this.state;
+    if (expanded !== prevState.expanded) {
+      this.handleResize();
     }
-    this._handleData(props);
+
+    // TODO consider using getDerivedStateFromProps for this
+    const { timeSeries, villageCurves, region } = this.props;
+    if (!timeSeries.loading && prevProps.timeSeries.loading) {
+      let nextState = this.processResults(false, timeSeries.results);
+      // districts have centerlines
+      if (region.district === timeSeries.adminName && !this.state.centerline) {
+        nextState.centerline = processSeries(timeSeries.results, this.props.smoothing);
+      } else if (!region.district && this.state.centerline) {
+        nextState.centerline = null;
+      }
+      Object.assign(nextState, this._calcScales({
+        margins: this.props.margins,
+        width: this.state.width,
+        height: this.state.height,
+        data: nextState.data,
+        centerline: nextState.centerline
+      }));
+      this.setState(nextState);
+    }
+  }
+
+  processResults (isDistrict, _data) {
+    // filter out Delhi, it totally screws up the scale
+    const data = _data.filter(d => d.key !== 'delhi');
+    // group the flat data per subregion
+    const series = d3.nest().key(d => isDistrict ? d.villagecode : d.key)
+    .entries(data);
+
+    let processed = [];
+    series.forEach(entry => {
+      entry.values = processSeries(entry.values, this.props.smoothing);
+      processed.push(...entry.values);
+    });
+    return { series, data: processed };
   }
 
   /*
@@ -155,10 +185,8 @@ class LightCurves extends React.Component {
    * for any processing and transforming of the incoming data that's
    * needed before rendering it.
    */
-  _handleData ({timeSeries, villageCurves, region, margins, smoothing}) {
-    // If we're waiting for data, don't try doing any data processing.
-    if (timeSeries.loading) { return; }
-
+  _handleData () {
+    let {timeSeries, villageCurves, region, margins, smoothing} = this.props;
     let {series, centerline, data, rawData} = this.state;
 
     // set this flag if we handle any new data, because in that case, we
@@ -223,8 +251,8 @@ class LightCurves extends React.Component {
    */
   _calcScales ({data, centerline, width, height}) {
     // set up scales
-    let {margins} = this.props;
-    let {expanded} = this.state;
+    const {margins} = this.props;
+    const {expanded} = this.state;
 
     let allData = (data || []).concat(centerline || []);
     let ydata = [];
@@ -289,7 +317,7 @@ class LightCurves extends React.Component {
   }
 
   render () {
-    let {
+    const {
       timeSeries,
       villageCurves,
       villages,
@@ -297,7 +325,7 @@ class LightCurves extends React.Component {
       margins
     } = this.props;
 
-    let {
+    const {
       series,
       centerline,
       scales,
@@ -356,7 +384,7 @@ class LightCurves extends React.Component {
       acc('smoothedQuintile4')
     ] : undefined;
 
-    return (<div className={classnames('container-light-curves', {expanded})}>
+    return (<div ref='node' className={classnames('container-light-curves', {expanded})}>
       <div className={classnames('light-curves', region.level)}>
         <div className='now-showing'>
           <DateControl year={this.props.year} month={this.props.month}
@@ -378,21 +406,20 @@ class LightCurves extends React.Component {
             : ''}
 
           <ul className='spane-details'>
-          {median ? [
-            <li>
-              <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
-              <span className='spane-details-description' key='median-value'>{median}</span>
-            </li>
-          ] : []}
-
-          {region.district && allVillages.length ? [
-            <li>
-              <h5 className='spane-details-title'>Villages in Electification Program
-                (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
-              </h5>
-              <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
-            </li>
-          ] : []}
+            {median ? (
+              <li>
+                <h5 className='spane-details-title' key='median-label'>Median Light Output</h5>
+                <span className='spane-details-description' key='median-value'>{median}</span>
+              </li>
+            ) : null}
+            {region.district && allVillages.length ? (
+              <li>
+                <h5 className='spane-details-title'>Villages in Electification Program
+                  (<Link to='story' params={{story: 'rggvy'}}>?</Link>)
+                </h5>
+                <span className='spane-details-description'>{rggvy.length} / {allVillages.length} {highlightButton}</span>
+              </li>
+            ) : null}
           </ul>
         </div>
 
@@ -437,24 +464,23 @@ class LightCurves extends React.Component {
   }
 }
 
-LightCurves.displayName = 'LightCurves';
 LightCurves.propTypes = {
-  year: React.PropTypes.number,
-  month: React.PropTypes.number,
-  interval: React.PropTypes.string,
-  compareMode: React.PropTypes.oneOf(['left', 'right', false]),
-  onChangeDate: React.PropTypes.func,
-  timeSeries: React.PropTypes.object,
-  villages: React.PropTypes.object,
-  villageCurves: React.PropTypes.object,
-  rggvyFocus: React.PropTypes.bool,
-  margins: React.PropTypes.object,
-  region: React.PropTypes.object,
-  expanded: React.PropTypes.bool,
-  showCenterlineEnvelope: React.PropTypes.bool,
-  showAllEnvelopes: React.PropTypes.bool,
-  smoothing: React.PropTypes.bool,
-  legend: React.PropTypes.node
+  year: t.number,
+  month: t.number,
+  interval: t.string,
+  compareMode: t.oneOf(['left', 'right', false]),
+  onChangeDate: t.func,
+  timeSeries: t.object,
+  villages: t.object,
+  villageCurves: t.object,
+  rggvyFocus: t.bool,
+  margins: t.object,
+  region: t.object,
+  expanded: t.bool,
+  showCenterlineEnvelope: t.bool,
+  showAllEnvelopes: t.bool,
+  smoothing: t.bool,
+  legend: t.node
 };
 LightCurves.defaultProps = {
   showCenterlineEnvelope: true,
