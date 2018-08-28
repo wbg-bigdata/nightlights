@@ -1,6 +1,7 @@
 const React = require('react');
+
 /* eslint-disable react/react-in-jsx-scope */
-module.exports = {
+export default {
   mapboxAccessToken: 'pk.eyJ1IjoiZGV2c2VlZCIsImEiOiJnUi1mbkVvIn0.018aLhX0Mb0tdtaT2QNe2Q',
   apiUrl: process.env.API_URL || 'http://api.nightlights.io',
   interval: '1993.01-2013.12',

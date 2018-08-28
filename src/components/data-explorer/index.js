@@ -4,7 +4,7 @@ import classnames from "classnames";
 
 // Components
 import Breadcrumbs from "./Breadcrumbs";
-import LightMap from "./light-map";
+import LightMap from "./LightMap";
 
 class DataExplorer extends React.Component {
   render() {

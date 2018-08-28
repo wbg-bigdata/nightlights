@@ -9,9 +9,7 @@ import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 import App from "./App";
 
 // Components
-import About from "./components/about";
 import DataExplorer from "./components/data-explorer/";
-import StoryHub from "./components/story-hub";
 
 // Libraries
 import configureStore from "./store";
@@ -20,6 +18,7 @@ import registerServiceWorker from "./registerServiceWorker";
 // Styles
 import "./index.css";
 
+// Store
 const { store, persistor } = configureStore();
 
 const DefaultRoute = ({ ...args }) => (
@@ -50,9 +49,6 @@ ReactDOM.render(
               path="/state/:state/district/:district/:year/:month"
               component={DataExplorer}
             />
-            <Route name="stories" path="/stories" component={StoryHub} />
-            <Route name="story" path="/stories/:story" component={StoryHub} />
-            <Route name="about" path="/about" component={About} />
             <Route component={DefaultRoute} />
           </Switch>
         </App>

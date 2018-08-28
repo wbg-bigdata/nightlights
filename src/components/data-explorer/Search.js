@@ -6,7 +6,7 @@ import Autosuggest from "react-autosuggest";
 import Fuse from "fuse.js";
 
 // Dispach
-import { setSelectedRegion } from "../../reducers/selected-region";
+import { setActiveRegion } from "../../actions/regions";
 
 class Search extends React.Component {
   constructor(props) {
@@ -81,7 +81,7 @@ class Search extends React.Component {
   };
 
   onSuggestionSelected = (event, { suggestion }) => {
-    this.props.setSelectedRegion(suggestion);
+    this.props.setActiveRegion(suggestion);
     this.setState({
       value: suggestion.name,
       suggestions: []
@@ -143,7 +143,7 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = {
-  setSelectedRegion
+  setActiveRegion
 };
 
 export default connect(

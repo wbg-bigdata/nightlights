@@ -1,10 +1,9 @@
-import getRegion from "../lib/getRegion";
-
-export const SET_SELECTED_REGION = "region/SET_SELECTED_REGION";
-
-export const QUERY_REGION_REQUEST = "region/QUERY_REGION_REQUEST";
-export const QUERY_REGION_FAILURE = "region/QUERY_REGION_FAILURE";
-export const QUERY_REGION_SUCCESS = "region/QUERY_REGION_SUCCESS";
+import {
+  SET_SELECTED_REGION,
+  QUERY_REGION_FAILURE,
+  QUERY_REGION_REQUEST,
+  QUERY_REGION_SUCCESS
+} from "../actions/regions";
 
 // Initially just one region if defined, when user se
 const initialState = {
@@ -37,39 +36,12 @@ export default (state = initialState, action) => {
     case QUERY_REGION_SUCCESS:
       return {
         ...state,
+        ...action.region,
         loading: false,
         error: null,
-        results: action.results,
         initialLoad: true
       };
     default:
       return state;
   }
-};
-
-export const setSelectedRegion = region => dispatch => {
-  dispatch({
-    type: SET_SELECTED_REGION,
-    region
-  })
-};
-
-
-export const setRegion = query => dispatch => {
-  dispatch({ type: QUERY_REGION_REQUEST });
-  return getRegion(query)
-    .then(results =>
-      dispatch({
-        type: QUERY_REGION_SUCCESS,
-        query,
-        results
-      })
-    )
-    .error(error =>
-      dispatch({
-        type: QUERY_REGION_SUCCESS,
-        query,
-        error
-      })
-    );
 };

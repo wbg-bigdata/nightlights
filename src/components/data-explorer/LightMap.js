@@ -1,23 +1,82 @@
 import React from "react";
+import { connect } from "react-redux";
 import classnames from "classnames";
 import t from "prop-types";
+import bbox from "@turf/bbox";
+
+// Config
 import config from "../../config";
+
+// Styles: MapboxGL CSS is conflicting with current app styles, leaving comented for now
+// import 'mapbox-gl/dist/mapbox-gl.css';
 
 // Mapbox GL
 import mapboxgl from "mapbox-gl";
 mapboxgl.accessToken = config.mapboxAccessToken;
 
 class LightMap extends React.Component {
+  constructor(props) {
+    super(props);
 
-  componentDidMount(){
+    this.state = {
+      previousSelectedRegionName: ""
+    };
+
+    // Bindings
+    this.flyToNation = this.flyToNation.bind(this);
+    this.flyToRegion = this.flyToRegion.bind(this);
+  }
+
+  flyToNation() {
+    this.map.flyTo({
+      center: [79.667, 20.018],
+      zoom: 3.5,
+      speed: 1.2,
+      curve: 1.42
+    });
+  }
+
+  flyToRegion(region) {
+    if (region.boundary) {
+      this.flyToFeature({ type: "Feature", geometry: region.boundary });
+    } else {
+      this.flyToNation();
+    }
+  }
+
+  flyToFeature(feature) {
+    let [minx, miny, maxx, maxy] = bbox(feature);
+    this.map.fitBounds([[minx, miny], [maxx, maxy]], {
+      speed: 1.2,
+      curve: 1.42
+    });
+  }
+
+  static getDerivedStateFromProps = (props, state) => {
+    if (props.selectedRegion.name !== state.previousSelectedRegionName) {
+      const newName = props.selectedRegion.name;
+      return {
+        ...state,
+        previousSelectedRegionName: newName,
+        value: newName
+      };
+    }
+    return null;
+  };
+
+  componentDidUpdate() {
+    this.flyToRegion(this.props.selectedRegion);
+  }
+
+  componentDidMount() {
     // check for GL support
-    if (!mapboxgl.supported({failIfMajorPerformanceCaveat: true})) {
-      this.setState({unsupported: true});
-      console.log('mapbox gl unsupported');
+    if (!mapboxgl.supported({ failIfMajorPerformanceCaveat: true })) {
+      this.setState({ unsupported: true });
+      console.log("mapbox gl unsupported");
       return;
     }
 
-    const map = window.glMap = this.map = new mapboxgl.Map({
+    const map = (window.glMap = this.map = new mapboxgl.Map({
       container: this.refs.node,
       center: [79.667, 20.018],
       zoom: 2.5,
@@ -26,8 +85,16 @@ class LightMap extends React.Component {
       dragRotate: false,
       doubleClickZoom: false,
       attributionControl: false,
-      style: 'mapbox://styles/devseed/cigvhb50e00039om3c86zjyco'
+      style: "mapbox://styles/devseed/cigvhb50e00039om3c86zjyco"
+    }));
+
+    map.on("load", () => {
+      this.flyToRegion(this.props.selectedRegion);
     });
+  }
+
+  componentWillUnmount() {
+    this.map.remove();
   }
 
   render() {
@@ -55,7 +122,18 @@ LightMap.propTypes = {
 
   // rggvyFocus: t.bool,
   // onMapCreated: t.func.isRequired,
-  compareMode: t.oneOf(['left', 'right', false])
+  compareMode: t.oneOf(["left", "right", false])
 };
 
-export default LightMap;
+const mapStateToProps = state => {
+  return {
+    selectedRegion: state.selectedRegion
+  };
+};
+
+const mapDispatchToProps = {};
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(LightMap);
