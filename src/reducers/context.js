@@ -1,3 +1,5 @@
+import { REHYDRATE } from "redux-persist";
+
 export const CONTEXT_UPDATE = "context/UPDATE";
 
 // Initially just one region if defined, when user se
@@ -17,6 +19,12 @@ export default (state = initialState, action) => {
                 ...action.data
               }
             : action.data
+      };
+    }
+    case REHYDRATE: {
+      return {
+        ...action.payload.context,
+        rehydrated: true
       };
     }
     default:

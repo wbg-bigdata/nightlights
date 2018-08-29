@@ -45,7 +45,13 @@ export default function configureStore() {
 
   let persistor = persistStore(store);
 
-  store.dispatch(initRegionList());
+  // Init store tasks after it is rehydrated
+  const unsubscribe = store.subscribe(() => {
+    if (store.getState().context.rehydrated) {
+      unsubscribe();
+      store.dispatch(initRegionList());
+    }
+  });
 
   return { store, persistor };
 }
