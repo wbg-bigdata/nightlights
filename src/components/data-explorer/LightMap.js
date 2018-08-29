@@ -19,7 +19,7 @@ class LightMap extends React.Component {
     super(props);
 
     this.state = {
-      previousSelectedRegionName: ""
+      previousActiveRegionName: ""
     };
 
     // Bindings
@@ -53,11 +53,11 @@ class LightMap extends React.Component {
   }
 
   static getDerivedStateFromProps = (props, state) => {
-    if (props.selectedRegion.name !== state.previousSelectedRegionName) {
-      const newName = props.selectedRegion.name;
+    if (props.activeRegion.name !== state.previousActiveRegionName) {
+      const newName = props.activeRegion.name;
       return {
         ...state,
-        previousSelectedRegionName: newName,
+        previousActiveRegionName: newName,
         value: newName
       };
     }
@@ -65,7 +65,7 @@ class LightMap extends React.Component {
   };
 
   componentDidUpdate() {
-    this.flyToRegion(this.props.selectedRegion);
+    this.flyToRegion(this.props.activeRegion);
   }
 
   componentDidMount() {
@@ -89,7 +89,7 @@ class LightMap extends React.Component {
     }));
 
     map.on("load", () => {
-      this.flyToRegion(this.props.selectedRegion);
+      this.flyToRegion(this.props.activeRegion);
     });
   }
 
@@ -127,7 +127,7 @@ LightMap.propTypes = {
 
 const mapStateToProps = state => {
   return {
-    selectedRegion: state.selectedRegion
+    activeRegion: state.activeRegion
   };
 };
 

@@ -13,8 +13,8 @@ class Search extends React.Component {
     super(props);
 
     this.state = {
-      value: this.props.selectedRegion.name,
-      previousSelectedRegionName: this.props.selectedRegion.name,
+      value: this.props.activeRegion.name,
+      previousActiveRegionName: this.props.activeRegion.name,
       suggestions: [],
       fuse: new Fuse(this.props.regions, {
         keys: ["name"],
@@ -68,7 +68,7 @@ class Search extends React.Component {
 
   onBlur = () => {
     this.setState({
-      value: this.props.selectedRegion.name
+      value: this.props.activeRegion.name
     });
   };
 
@@ -89,11 +89,11 @@ class Search extends React.Component {
   };
 
   static getDerivedStateFromProps = (props, state) => {
-    if (props.selectedRegion.name !== state.previousSelectedRegionName) {
-      const newName = props.selectedRegion.name;
+    if (props.activeRegion.name !== state.previousActiveRegionName) {
+      const newName = props.activeRegion.name;
       return {
         ...state,
-        previousSelectedRegionName: newName,
+        previousActiveRegionName: newName,
         value: newName
       };
     }
@@ -137,7 +137,7 @@ class Search extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    selectedRegion: state.selectedRegion,
+    activeRegion: state.regions[state.activeRegion.key],
     regions: _.values(state.regions)
   };
 };

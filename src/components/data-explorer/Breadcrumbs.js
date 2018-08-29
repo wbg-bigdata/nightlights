@@ -58,7 +58,7 @@ class Breadcrumbs extends React.Component {
 
 const mapStateToProps = state => {
   return {
-    region: state.selectedRegion
+    region: state.regions[state.activeRegion.key]
   };
 };
 
