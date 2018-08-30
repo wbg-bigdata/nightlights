@@ -118,6 +118,8 @@ export const queryRegionBoundaries = function(region) {
 
       return {
         key,
+        name: properties.name,
+        state_key: properties.state_key,
         properties,
         level,
         boundary,

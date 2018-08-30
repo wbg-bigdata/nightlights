@@ -1,12 +1,19 @@
 import React from "react";
 import { connect } from "react-redux";
+import numeral from "numeral";
 
 // Components
 import Search from "./Search";
 
 class Breadcrumbs extends React.Component {
   render() {
-    const { level, stateName, name, population } = this.props.region;
+    const { level, name, properties } = this.props.activeRegion;
+
+    // Get population
+    let population = "Unknown";
+    if (properties && !isNaN(properties.tot_pop)) {
+      population = numeral(properties.tot_pop).format("0,0");
+    }
 
     // Init breadcrumbs in an array to enable styling per hierarchy
     let breadcrumbs = [];
@@ -16,16 +23,13 @@ class Breadcrumbs extends React.Component {
     }
 
     if (level === "district") {
-      breadcrumbs.push(<a>{stateName}</a>);
+      breadcrumbs.push(<a>{this.props.state.name}</a>);
     }
 
     breadcrumbs.push(
       <span>
-        <a
-          className="bttn-center-map"
-          title={"Recenter map on " + name}
-        >
-          <span>{level === "district" ?  name.split(' / ')[1] : name}</span>
+        <a className="bttn-center-map" title={"Recenter map on " + name}>
+          <span>{name}</span>
         </a>
       </span>
     );
@@ -57,8 +61,12 @@ class Breadcrumbs extends React.Component {
 }
 
 const mapStateToProps = state => {
+  const { activeRegion } = state;
+  const { state_key } = activeRegion;
+
   return {
-    region: state.regions[state.activeRegion.key]
+    activeRegion,
+    state: state_key && state.regions[state_key] // Populate state when key is defined
   };
 };
 
