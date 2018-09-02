@@ -2,7 +2,7 @@ import { createStore, applyMiddleware, compose } from "redux";
 import { connectRouter, routerMiddleware } from "connected-react-router";
 import thunk from "redux-thunk";
 import { persistStore, persistReducer } from "redux-persist";
-import storage from "redux-persist/lib/storage";
+import localForage from 'localforage';
 
 // Reducers and Actions
 import rootReducer from "./reducers";
@@ -11,9 +11,14 @@ import { initRegionList } from "./actions/regions";
 import createHistory from "history/createBrowserHistory";
 export const history = createHistory();
 
+const localStore = localForage.createInstance({
+  name: 'root'
+});
+
+
 const persistConfig = {
   key: "root",
-  storage
+  storage: localStore
 };
 
 export default function configureStore() {
