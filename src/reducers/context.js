@@ -22,8 +22,11 @@ export default (state = initialState, action) => {
       };
     }
     case REHYDRATE: {
+      const context = action.payload ? action.payload.context : {};
+
       return {
-        ...action.payload.context,
+        ...state,
+        ...context,
         rehydrated: true
       };
     }
