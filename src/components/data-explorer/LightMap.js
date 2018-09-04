@@ -1,31 +1,66 @@
 import React from "react";
 import { connect } from "react-redux";
-import { times, throttle } from "lodash";
+import { render } from "react-dom";
 import classnames from "classnames";
 import t from "prop-types";
 import bbox from "@turf/bbox";
-import mapboxgl from "mapbox-gl";
+import mgl from "mapbox-gl";
+import extent from "turf-extent";
+import centroid from "turf-centroid";
 
 // Config
 import config from "../../config";
+
+// Actions
+import { emphasize } from "../../actions/regions";
+
+// Components
+import Tooltip from "./Tooltip";
+
+// Helper functions
+const { showLayer } = require("../../lib/mgl-util");
+const lightStyles = require("../../lib/light-styles");
+function cloneVillageLayer(base, id, source, color) {
+  let layer = lightStyles.clone(base);
+  Object.assign(layer, { id, source });
+  layer.paint = Object.assign({}, layer.paint, {
+    "circle-color": color,
+    "circle-opacity": 1,
+    "circle-blur": 0
+  });
+  layer.paint["circle-radius"] = Object.assign(
+    {},
+    layer.paint["circle-radius"]
+  );
+  layer.paint["circle-radius"].stops = layer.paint["circle-radius"].stops.map(
+    stop => [stop[0], stop[1] * 0.667]
+  );
+  return layer;
+}
+
+// Get stops
 const stops = config.villageLightStops;
-mapboxgl.accessToken = config.mapboxAccessToken;
 
 // Styles: MapboxGL CSS is conflicting with current app styles, leaving comented for now
 // import 'mapbox-gl/dist/mapbox-gl.css';
+mgl.accessToken = config.mapboxAccessToken;
 
 class LightMap extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {
-      previousActiveRegionKey: "not set"
+      previousActiveRegionKey: "not set",
+      loaded: false
     };
+    
+    this.mapQueue = [];
 
     // Bindings
-    this.onMouseMove = this.onMouseMove.bind(this);
+    this.callOnMap = this.callOnMap.bind(this);
     this.flyToNation = this.flyToNation.bind(this);
     this.flyToRegion = this.flyToRegion.bind(this);
+    this.onMouseMove = this.onMouseMove.bind(this);
   }
 
   static getDerivedStateFromProps = (props, state) => {
@@ -40,13 +75,13 @@ class LightMap extends React.Component {
 
   componentDidMount() {
     // check for GL support
-    if (!mapboxgl.supported({ failIfMajorPerformanceCaveat: true })) {
+    if (!mgl.supported({ failIfMajorPerformanceCaveat: true })) {
       this.setState({ unsupported: true });
       console.log("mapbox gl unsupported");
       return;
     }
 
-    const map = (window.glMap = this.map = new mapboxgl.Map({
+    const map = (window.glMap = this.map = new mgl.Map({
       container: this.refs.node,
       center: [79.667, 20.018],
       zoom: 2.5,
@@ -59,6 +94,10 @@ class LightMap extends React.Component {
     }));
 
     map.on("load", () => {
+      // Interaction handlers
+      map.on("mousemove", this.onMouseMove);
+      map.on("click", this.onClick);
+
       // Setup a GeoJSON source to use to power the emphasized (hover) feature
       // styling.
       const emphasizedFeatureSource = {
@@ -85,59 +124,113 @@ class LightMap extends React.Component {
       };
       map.addSource("selected-villages-source", selectedVillagesSource);
 
-      // Disable default "villages-base" layer
-      map.setLayoutProperty("villages-base", "visibility", "none");
+      // Monkey-patch some fill layers.
+      // Newer versions of GL don't recognize mouseover events on line layers,
+      // unless you're actually hovering over the line.
+      const boundarySource = {
+        type: "vector",
+        url: "mapbox://devseed.08hn3z6b"
+      };
 
-      const villageBaseLayer = map
-        .getStyle()
-        .layers.filter(layer => layer.id === "villages-base")[0];
+      map.addLayer(
+        {
+          id: "states-fill",
+          type: "fill",
+          source: Object.assign({}, boundarySource),
+          "source-layer": "states",
+          paint: {
+            "fill-opacity": 0
+          }
+        },
+        "states"
+      );
+
+      map.addLayer(
+        {
+          id: "current-state-districts-fill",
+          type: "fill",
+          source: Object.assign({}, boundarySource),
+          "source-layer": "districts",
+          paint: {
+            "fill-opacity": 0
+          }
+        },
+        "current-state-districts"
+      );
+
+      // Setup the color scale for the village light visualization: this is
+      // actually a series of N separate layers, each with a different color.
+      // `setFilters` makes it so that each one only applies to points with
+      // the relevant range of `vis_median` values.
+
+      let base = Object.assign({}, map.getLayer("villages-base"));
+
+      // The new mapbox GL spec doesn't return a valid paint object, instead
+      // populating it with internal values, so replace it.
+      base.paint = {
+        "circle-color": "#efc20d",
+        "circle-blur": {
+          base: 1,
+          stops: [[5, 0.666], [8, 1.25]]
+        },
+        "circle-radius": {
+          base: 1,
+          stops: [[0, 2.5], [3, 5], [10, 8]]
+        }
+      };
+      showLayer(map, "villages-base", false);
 
       // 1. the 'lightsX' layers, which style the vector tile village points
       // used in national and state view.
-      times(stops.length, i => {
-        const lightsXLayer = Object.assign({}, villageBaseLayer);
-        lightsXLayer.id = "lights" + i;
-        lightsXLayer.paint["circle-opacity"] = (i + 1) / stops.length;
-        map.addLayer(lightsXLayer, "cities");
-      });
+      lightStyles
+        .create(base, "lights", {}, stops.length)
+        .forEach(layer => map.addLayer(layer, "cities"));
+      this.setLightFilters();
 
       // 2. the 'district-lightsX' layers, which will style the geojson source
       // of villages in district view.
-      times(stops.length, i => {
-        const districtLightsXLayer = Object.assign({}, villageBaseLayer);
-        districtLightsXLayer.id = "district-lights" + i;
-        delete districtLightsXLayer["source-layer"];
-        districtLightsXLayer["source"] = "district-villages";
-        districtLightsXLayer.paint["circle-opacity"] = (i + 1) / stops.length;
-        map.addLayer(districtLightsXLayer, "cities");
-      });
+      lightStyles
+        .create(
+          base,
+          "district-lights",
+          {
+            source: "district-villages"
+          },
+          stops.length
+        )
+        .forEach(layer => {
+          layer.interactive = true;
+          // since this is a geojson layer, remove the source-layer
+          delete layer["source-layer"];
+          map.addLayer(layer, "cities");
+        });
 
       // 3. the 'rggvy-lightsX' layers, which will style the same geojson
       // source as 2, but filtered only for rggvy villages.
-      times(stops.length, i => {
-        const rggyLightsXLayer = Object.assign({}, villageBaseLayer);
-        rggyLightsXLayer.id = "rggvy-lights" + i;
-        delete rggyLightsXLayer["source-layer"];
-        rggyLightsXLayer["source"] = "district-villages";
-        rggyLightsXLayer.paint["circle-opacity"] = (i + 1) / stops.length;
-        map.addLayer(rggyLightsXLayer, "cities");
-      });
+      lightStyles
+        .create(
+          base,
+          "rggvy-lights",
+          {
+            source: "district-villages",
+            visibility: "none"
+          },
+          stops.length
+        )
+        .forEach(layer => {
+          delete layer["source-layer"];
+          map.addLayer(layer, "cities");
+        });
 
       // Add style for selected villages
-      const selectedVillagesLayer = Object.assign({}, villageBaseLayer);
-      selectedVillagesLayer.id = "selected-villages";
-      delete selectedVillagesLayer["source-layer"];
-      selectedVillagesLayer["source"] = "selected-villages-source";
-      selectedVillagesLayer.paint["circle-color"] = "#e64b3b";
-      selectedVillagesLayer.paint["circle-opacity"] = 1;
-      selectedVillagesLayer.paint["circle-blur"] = 0;
-      selectedVillagesLayer.paint[
-        "circle-radius"
-      ].stops = selectedVillagesLayer.paint["circle-radius"].stops.map(stop => [
-        stop[0],
-        stop[1] * 0.667
-      ]);
-      map.addLayer(selectedVillagesLayer, "cities");
+      var selectedVillages = cloneVillageLayer(
+        base,
+        "selected-villages",
+        "selected-villages-source",
+        "#e64b3b"
+      );
+      delete selectedVillages["source-layer"];
+      map.addLayer(selectedVillages, "cities");
 
       // Add style for emphasized features
       map.addLayer(
@@ -156,34 +249,34 @@ class LightMap extends React.Component {
         "cities"
       );
 
-      // Add style for selected villages
-      const emphasisVillagesLayer = Object.assign({}, villageBaseLayer);
-      emphasisVillagesLayer.id = "emphasis-villages";
-      delete emphasisVillagesLayer["source-layer"];
-      emphasisVillagesLayer["source"] = "emphasis-features";
-      emphasisVillagesLayer.paint["circle-color"] = "#fff";
-      emphasisVillagesLayer.paint["circle-opacity"] = 1;
-      emphasisVillagesLayer.paint["circle-blur"] = 0;
-      emphasisVillagesLayer.paint[
-        "circle-radius"
-      ].stops = emphasisVillagesLayer.paint["circle-radius"].stops.map(stop => [
-        stop[0],
-        stop[1] * 0.667
-      ]);
-      map.addLayer(emphasisVillagesLayer, "cities");
+      var emVillages = cloneVillageLayer(
+        base,
+        "emphasis-villages",
+        "emphasis-features",
+        "#fff"
+      );
+      delete emVillages["source-layer"];
+      map.addLayer(emVillages, "cities");
 
-      map.on("mousemove", throttle(this.onMouseMove, 100));
-
-      this.updateMap();
-
-      this.flyToRegion(this.props.activeRegion);
+      if (this.mapQueue.length) {
+        this.mapQueue.forEach(fn => fn.call(this));
+      }
+      this.mapQueue = null;
+      this.setState({ loaded: true });
     });
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.activeRegion.key !== prevProps.activeRegion.key) {
-      this.updateMap();
-      this.flyToRegion(this.props.activeRegion);
+    const { activeRegion } = this.props;
+    if (activeRegion.key !== prevProps.activeRegion.key) {
+      this.callOnMap(() => {
+        this.setRegionStyles(activeRegion);
+        this.flyToRegion(activeRegion);
+      });
+    }
+
+    if (activeRegion.emphasized !== prevProps.activeRegion.emphasized) {
+      this.setEmphasized(activeRegion);
     }
   }
 
@@ -191,13 +284,83 @@ class LightMap extends React.Component {
     this.map.remove();
   }
 
-  onMouseMove(e) {
-    const bbox = [[e.point.x - 5, e.point.y - 5], [e.point.x + 5, e.point.y + 5]];
-    const features = this.map.queryRenderedFeatures(bbox, {
-      layer: "states",
-      // filter: ["all", ["==", "key", "west-bengal"]]
-    });
-    console.log(features);
+  setLightFilters() {
+    // const { year, month } = this.props.match.params;
+    // const regionFilter = this.props.activeRegion.state
+    //   ? [["==", "skey", this.props.activeRegion.state]]
+    //   : [];
+    // const property = `${year}-${month}`;
+    // lightStyles.setFilters(this.map, "lights", stops, property, regionFilter);
+  }
+
+  /**
+   * Takes either a screen coordinate (e.g. from a mouse event) or a
+   * GeoJSON Feature (e.g. a polygon) as the location at which to show
+   * the tooltip
+   */
+  showTooltip(pointOrFeature) {
+    // determine location for the popup
+    // let point;
+    // if (pointOrFeature.type === "Feature") {
+    //   let cent = centroid(pointOrFeature);
+    //   point = cent.geometry.coordinates;
+    // } else if (
+    //   pointOrFeature.type === "FeatureCollection" &&
+    //   (pointOrFeature.features || []).length > 0
+    // ) {
+    //   let cent = centroid(pointOrFeature);
+    //   point = cent.geometry.coordinates;
+    // } else {
+    //   if (
+    //     !this.props.activeRegion.emphasized ||
+    //     this.props.activeRegion.emphasized.length === 0
+    //   ) {
+    //     return;
+    //   }
+    //   point = this.map.unproject(pointOrFeature);
+    // }
+    // // remove old popup if it exists
+    // if (this._tooltip) {
+    //   this._tooltip.remove();
+    //   this._tooltip = null;
+    // }
+    // // add tooltip
+    // let content = document.createElement("div");
+    // render(
+    //   <Tooltip region={this.props.activeRegion} villages={this.state.villages} />,
+    //   content
+    // );
+    // this._tooltip = new mgl.Popup({ closeOnClick: false })
+    //   .setLngLat(point)
+    //   .setDOMContent(content.children[0]);
+    // this._tooltip.addTo(this.map);
+  }
+
+  onMouseMove({ point }) {
+    const { activeRegion } = this.props;
+    let subregionPattern = {
+      nation: /^states-fill/,
+      state: /^current-state-districts-fill/,
+      district: /^(district-lights|rggvy-lights)/
+    }[activeRegion.level];
+    const features = this.map.queryRenderedFeatures(point);
+    if (features.length) {
+      let subregionFeatures = features.filter(feat =>
+        subregionPattern.test(feat.layer.id)
+      );
+      this.props.emphasize(subregionFeatures.map(feat => feat.properties.key));
+      // if any of these features have a key that maches the current region,
+      // then we know that the mouse is within the current activeRegion.
+      let currentRegionHover = features
+        .map(f => f.properties.key && f.properties.key === activeRegion.key)
+        .reduce((a, b) => a || b, false);
+
+      this.setState({ currentRegionHover });
+
+      if (subregionFeatures.length > 0) {
+        this.showTooltip(point);
+      }
+    }
   }
 
   flyToNation() {
@@ -225,8 +388,6 @@ class LightMap extends React.Component {
     });
   }
 
-  updateEmphasized() {}
-
   updateMap() {
     const { activeRegion } = this.props;
 
@@ -251,6 +412,78 @@ class LightMap extends React.Component {
     console.log(this.map.getStyle());
   }
 
+  callOnMap(fn) {
+    if (this.state.loaded) {
+      fn.call(this);
+    } else {
+      this.mapQueue.push(fn);
+    }
+  }
+
+  /**
+   * Set the appropriate map styles for the given region.  This is a lower-
+   * level method that does NOT check whether we're already at the given
+   * region
+   */
+  setRegionStyles(region) {
+    const visibility = {
+      "current-state-districts": ["district", "state"],
+      states: ["nation", "state"]
+    };
+    for (let layer in visibility) {
+      let visible = visibility[layer].indexOf(region.level) >= 0;
+      showLayer(this.map, layer, visible);
+    }
+    if (region.state) {
+      // Distinguish districts of the current state, or just the current
+      // district if we're in district view.
+      let filters = [["==", "state_key", region.state]];
+      if (region.level === "district") {
+        filters.push(["==", "key", region.district]);
+      }
+      this.map.setFilter("districts", ["none"].concat(filters));
+      this.map.setFilter("current-state-districts", ["all"].concat(filters));
+    }
+
+    lightStyles.forEach("lights", stops, layer => {
+      showLayer(this.map, layer, !region.district);
+    });
+  }
+
+  /**
+   * Update the emphasized region source
+   */
+  setEmphasized(region) {
+    const { district, emphasized, subregions } = region;
+    const key =
+      Array.isArray(emphasized) && emphasized.length ? emphasized[0] : null;
+    const type = "FeatureCollection";
+    const source = this.map.getSource("emphasis-features");
+    if (!key) {
+      this.callOnMap(() => {
+        source.setData({ type, features: [] });
+      });
+    } else {
+      if (district && this.state.villages.data) {
+        const { features } = this.state.villages.data;
+        this.callOnMap(() => {
+          source.setData({
+            type,
+            features: features.filter(
+              f => emphasized.indexOf(f.properties.key) >= 0
+            )
+          });
+          showLayer(this.map, "emphasis-villages", true);
+          showLayer(this.map, "emphasis", false);
+        });
+      } else if (subregions[key]) {
+        source.setData({ type: "Feature", geometry: subregions[key].geometry });
+        showLayer(this.map, "emphasis-villages", false);
+        showLayer(this.map, "emphasis", true);
+      }
+    }
+  }
+
   render() {
     const cn = classnames("light-map", {
       ["light-map_" + this.props.compareMode]: this.props.compareMode
@@ -268,10 +501,8 @@ LightMap.propTypes = {
   // time: t.object.isRequired,
   // match: t.object,
 
-  // emphasize: t.func,
   // select: t.func,
 
-  // region: t.object,
   // villages: t.object,
 
   // rggvyFocus: t.bool,
@@ -285,7 +516,9 @@ const mapStateToProps = state => {
   };
 };
 
-const mapDispatchToProps = {};
+const mapDispatchToProps = {
+  emphasize
+};
 
 export default connect(
   mapStateToProps,

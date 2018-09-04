@@ -11,6 +11,7 @@ export const INIT_REGION_LIST_REQUEST = "INIT_REGION_LIST_REQUEST";
 export const INIT_REGION_LIST_SUCCESS = "INIT_REGION_LIST_SUCCESS";
 
 export const SET_SELECTED_REGION = "SET_SELECTED_REGION";
+export const EMPHASIZE = "EMPHASIZE";
 
 export const QUERY_REGION_REQUEST = "QUERY_REGION_REQUEST";
 export const QUERY_REGION_FAILURE = "QUERY_REGION_FAILURE";
@@ -149,3 +150,7 @@ export const setActiveRegion = region => dispatch => {
       })
     );;
 };
+
+export const emphasize = keys => dispatch => {
+  dispatch({ type: EMPHASIZE, keys });  
+}
