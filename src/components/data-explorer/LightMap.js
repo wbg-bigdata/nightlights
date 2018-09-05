@@ -1,6 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
-import { withRouter } from 'react-router';
+import { withRouter } from "react-router";
 import { render } from "react-dom";
 import classnames from "classnames";
 import t from "prop-types";
@@ -17,6 +17,8 @@ import { emphasize } from "../../actions/regions";
 
 // Components
 import Tooltip from "./Tooltip";
+import Modal from "../modal";
+import Loading from "./Loading";
 
 // Helper functions
 const { showLayer } = require("../../lib/mgl-util");
@@ -54,7 +56,7 @@ class LightMap extends React.Component {
       previousActiveRegionKey: "not set",
       loaded: false
     };
-    
+
     this.mapQueue = [];
 
     // Bindings
@@ -65,10 +67,11 @@ class LightMap extends React.Component {
   }
 
   static getDerivedStateFromProps = (props, state) => {
-    if (props.activeRegion.key !== state.previousActiveRegionKey) {
+    const { activeRegion } = props;
+    if (activeRegion.key !== state.previousActiveRegionKey) {
       return {
         ...state,
-        previousActiveRegionKey: props.activeRegion.key
+        previousActiveRegionKey: activeRegion.key
       };
     }
     return null;
@@ -268,8 +271,12 @@ class LightMap extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    const { activeRegion } = this.props;
-    if (activeRegion.key !== prevProps.activeRegion.key) {
+    const { activeRegion, match } = this.props;
+
+    if (
+      !activeRegion.loading &&
+      activeRegion.key !== prevProps.activeRegion.key
+    ) {
       this.callOnMap(() => {
         this.setRegionStyles(activeRegion);
         this.flyToRegion(activeRegion);
@@ -278,6 +285,12 @@ class LightMap extends React.Component {
 
     if (activeRegion.emphasized !== prevProps.activeRegion.emphasized) {
       this.setEmphasized(activeRegion);
+    }
+
+    const { year, month } = match.params;
+    const prev = prevProps.match.params;
+    if (year !== prev.year || month !== prev.month) {
+      this.setLightFilters();
     }
   }
 
@@ -486,12 +499,46 @@ class LightMap extends React.Component {
   }
 
   render() {
+    const { activeRegion} = this.props;
+
     const cn = classnames("light-map", {
       ["light-map_" + this.props.compareMode]: this.props.compareMode
     });
 
+    if (this.state.unsupported) {
+      return (
+        <div className={cn}>
+          <Modal
+            isOn
+            isPermanent
+            content={{
+              title: <h1>WebGL Not Supported</h1>,
+              body: (
+                <p>
+                  The visualizations on this site require a browser with WebGL
+                  rendering capabilities. Please try viewing it with a newer
+                  version of <a href="http://www.google.com/chrome/">Chrome</a>,{" "}
+                  <a href="https://www.mozilla.org/en-US/firefox/new/">
+                    Firefox
+                  </a>
+                  , or Safari.
+                </p>
+              )
+            }}
+          />
+        </div>
+      );
+    }
+
+    let loading = !this.state.loaded || activeRegion.loading;
+    let errors =
+      !activeRegion || !this.state.villages
+        ? []
+        : [activeRegion, this.state.villages].map(s => s.error);
+
     return (
       <div className={cn}>
+        {loading ? <Loading errors={errors} /> : ""}
         <div className="map-inner" ref="node" />
       </div>
     );
@@ -521,7 +568,9 @@ const mapDispatchToProps = {
   emphasize
 };
 
-export default withRouter(connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(LightMap));
+export default withRouter(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(LightMap)
+);
