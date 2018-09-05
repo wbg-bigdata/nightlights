@@ -1,12 +1,10 @@
 import React from "react";
 import { findDOMNode } from "react-dom";
 import { connect } from "react-redux";
+import { withRouter } from "react-router";
 import _ from "lodash";
 import Autosuggest from "react-autosuggest";
 import Fuse from "fuse.js";
-
-// Dispach
-import { setActiveRegion } from "../../actions/regions";
 
 class Search extends React.Component {
   constructor(props) {
@@ -81,7 +79,27 @@ class Search extends React.Component {
   };
 
   onSuggestionSelected = (event, { suggestion }) => {
-    this.props.setActiveRegion(suggestion);
+    const { push, location } = this.props.history;
+    const { level } = suggestion;
+
+    // Push new suggestion via URL
+    let path = ["/explore/india"];
+    
+    if (level === "state") {
+      path.push(`state/${suggestion.key}`);
+    } else if (level === "district") {
+      path.push(`state/${suggestion.state}/district/${suggestion.key}`);
+    }
+    
+    path.push("2006/12");
+
+    path = path.join('/');
+    
+    // Only push if URL changed
+    if (path !== location.pathname) {
+      push(path);
+    }
+
     this.setState({
       value: suggestion.name,
       suggestions: []
@@ -143,10 +161,11 @@ const mapStateToProps = state => {
 };
 
 const mapDispatchToProps = {
-  setActiveRegion
 };
 
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Search);
+export default withRouter(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(Search)
+);

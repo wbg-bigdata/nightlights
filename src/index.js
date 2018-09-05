@@ -3,7 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { BrowserRouter, Route, Switch, Redirect } from "react-router-dom";
+import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 
 // App
 import App from "./App";
@@ -24,31 +24,31 @@ const { store, persistor } = configureStore();
 ReactDOM.render(
   <Provider store={store}>
     <PersistGate loading={null} persistor={persistor}>
-      <BrowserRouter>
+      <HashRouter>
         <App>
           <Switch>
             <Route
               exact
               name="nation"
-              path="/nation/:year/:month"
+              path="/explore/:nation/:year/:month"
               component={DataExplorer}
             />
             <Route
               exact
               name="state"
-              path="/state/:state/:year/:month"
+              path="/explore/:nation/state/:state/:year/:month"
               component={DataExplorer}
             />
             <Route
               exact
               name="district"
-              path="/state/:state/district/:district/:year/:month"
+              path="/explore/:nation/state/:state/district/:district/:year/:month"
               component={DataExplorer}
             />
-            <Redirect exact from="/" to="/nation/2006/12" />
+            <Redirect from="/" to="/explore/india/2006/12" />
           </Switch>
         </App>
-      </BrowserRouter>
+      </HashRouter>
     </PersistGate>
   </Provider>,
   document.getElementById("root")
