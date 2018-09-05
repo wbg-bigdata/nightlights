@@ -1,5 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
+import { withRouter } from 'react-router';
 import { render } from "react-dom";
 import classnames from "classnames";
 import t from "prop-types";
@@ -520,7 +521,7 @@ const mapDispatchToProps = {
   emphasize
 };
 
-export default connect(
+export default withRouter(connect(
   mapStateToProps,
   mapDispatchToProps
-)(LightMap);
+)(LightMap));
