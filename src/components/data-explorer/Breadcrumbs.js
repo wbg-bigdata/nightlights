@@ -1,5 +1,6 @@
 import React from "react";
 import { connect } from "react-redux";
+import {Link} from "react-router-dom";
 import numeral from "numeral";
 
 // Components
@@ -7,7 +8,7 @@ import Search from "./Search";
 
 class Breadcrumbs extends React.Component {
   render() {
-    const { level, name, properties } = this.props.activeRegion;
+    const { level, name, properties, state_key } = this.props.activeRegion;
 
     // Get population
     let population = "Unknown";
@@ -19,11 +20,11 @@ class Breadcrumbs extends React.Component {
     let breadcrumbs = [];
 
     if (level !== "nation") {
-      breadcrumbs.push(<a>India</a>);
+      breadcrumbs.push(<Link to='/explore/india/2006/12'>India</Link>);
     }
 
     if (level === "district") {
-      breadcrumbs.push(<a>{this.props.state.name}</a>);
+      breadcrumbs.push(<Link to={`/explore/india/state/${state_key}/2006/12`}>{this.props.state.name}</Link>);
     }
 
     breadcrumbs.push(
