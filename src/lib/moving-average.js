@@ -1,4 +1,4 @@
-let config = require('../config');
+import config from '../config';
 /**
  * Computes a moving average of series arr.map(accesor) and attaches it
  * as arr[...][property]
@@ -6,11 +6,11 @@ let config = require('../config');
  * TODO: the size of the window should really be a parameter, not taken from
  * the app config
  */
-module.exports = function (arr, accessor, property) {
+export default function (arr, accessor, property) {
   property = property || 'movingAverage';
 
   // number of items to look ahead and behind.
-  let distance = config.movingAverageWindow;
+  const distance = config.movingAverageWindow;
 
   // pre-fill an initial sum with values up to,
   // but not including the value $distance away.

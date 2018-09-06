@@ -2,7 +2,7 @@ import {
   QUERY_TIME_SERIES_FAILURE,
   QUERY_TIME_SERIES_REQUEST,
   QUERY_TIME_SERIES_SUCCESS
-} from "../actions/time-series";
+} from "../actions/regions";
 
 const initialState = {
   loading: true,
@@ -25,10 +25,9 @@ export default (state = initialState, action) => {
     case QUERY_TIME_SERIES_SUCCESS:
       return {
         ...state,
-        ...action.region,
+        ...action.results,
         loading: false,
-        error: null,
-        initialLoad: true
+        error: null
       };
     default:
       return state;

@@ -16,6 +16,10 @@ export const QUERY_REGION_REQUEST = "QUERY_REGION_REQUEST";
 export const QUERY_REGION_FAILURE = "QUERY_REGION_FAILURE";
 export const QUERY_REGION_SUCCESS = "QUERY_REGION_SUCCESS";
 
+export const QUERY_TIME_SERIES_REQUEST = "QUERY_TIME_SERIES_REQUEST";
+export const QUERY_TIME_SERIES_FAILURE = "QUERY_TIME_SERIES_FAILURE";
+export const QUERY_TIME_SERIES_SUCCESS = "QUERY_TIME_SERIES_SUCCESS";
+
 export const initRegionList = () => dispatch => {
   dispatch({ type: INIT_REGION_LIST_REQUEST });
   return fetch(url.resolve(config.apiUrl, "districts"))
@@ -136,7 +140,53 @@ export const queryRegionBoundaries = function(region) {
     });
 };
 
+export const queryRegionTimeseries = region => {
+  const { state, district } = region;
+  let timeseriesPath = ["months", config.interval];
+  let adminType = "nation";
+  let adminName = "india";
+  if (!state) {
+    timeseriesPath.push("states");
+  } else if (!district) {
+    timeseriesPath.push("states", state, "districts");
+    adminType = "state";
+    adminName = state;
+  } else {
+    timeseriesPath.push("districts", district);
+    adminType = "district";
+    adminName = district;
+  }
+
+  const requests = [
+    fetch(url.resolve(config.apiUrl, timeseriesPath.join("/"))).then(response =>
+      response.json()
+    )
+  ];
+
+  if (adminType === "state") {
+    requests.push(
+      fetch(
+        url.resolve(config.apiUrl, timeseriesPath.slice(0, -1).join("/"))
+      ).then(response => response.json())
+    );
+  }
+
+  return Promise.all(requests).then(values => {
+    return {
+      error: null,
+      // interval: interval,
+      loading: false,
+      results: values[0],
+      emphasized: [],
+      adminType: adminType,
+      adminName: adminName,
+      // url: timeseriesApi
+    }
+  });
+};
+
 export const setActiveRegion = region => dispatch => {
+  // Query region boundaries
   dispatch({ type: QUERY_REGION_REQUEST });
   queryRegionBoundaries(region)
     .then(results => {
@@ -148,6 +198,22 @@ export const setActiveRegion = region => dispatch => {
     .catch(error =>
       dispatch({
         type: QUERY_REGION_FAILURE,
+        error
+      })
+    );
+
+  // Query region time series
+  dispatch({ type: QUERY_TIME_SERIES_REQUEST });
+  queryRegionTimeseries(region)
+    .then(results => {
+      dispatch({
+        type: QUERY_TIME_SERIES_SUCCESS,
+        results
+      });
+    })
+    .catch(error =>
+      dispatch({
+        type: QUERY_TIME_SERIES_FAILURE,
         error
       })
     );

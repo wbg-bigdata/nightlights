@@ -423,7 +423,6 @@ class LightMap extends React.Component {
     this.map.setFilter("districts", ["none"].concat(filters));
     this.map.setFilter("current-state-districts", ["all"].concat(filters));
 
-    console.log(this.map.getStyle());
   }
 
   callOnMap(fn) {

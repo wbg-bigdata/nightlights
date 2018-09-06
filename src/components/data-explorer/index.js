@@ -48,11 +48,14 @@ class DataExplorer extends React.Component {
 
   render() {
     const { compare } = this.props;
+
+    const margins = {left: 36, right: 36, top: 48, bottom: 48};
+
     return (
       <div className={classnames("data-container", { compare: !!compare })}>
         <Breadcrumbs />
         <LightMap />
-        <LightCurves />
+        <LightCurves margins={margins}/>
       </div>
     );
   }
