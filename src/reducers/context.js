@@ -4,7 +4,9 @@ export const CONTEXT_UPDATE = "context/UPDATE";
 
 // Initially just one region if defined, when user se
 const initialState = {
-  welcomeModalIsOpen: true
+  welcomeModalIsOpen: true,
+  year: 2006,
+  month: 12
 };
 
 export default (state = initialState, action) => {

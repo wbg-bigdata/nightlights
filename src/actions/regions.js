@@ -1,10 +1,9 @@
 import url from "url";
 import titlecase from "titlecase";
 import * as topojson from "topojson";
-
 import config from "../config";
 
-import sampleCount from '../data/sample-counts.json';
+import sampleCount from "../data/sample-counts.json";
 
 export const INIT_REGION_LIST_FAILURE = "INIT_REGION_LIST_FAILURE";
 export const INIT_REGION_LIST_REQUEST = "INIT_REGION_LIST_REQUEST";
@@ -86,7 +85,7 @@ export const queryRegionBoundaries = function(region) {
         ? url.resolve(config.apiUrl, "boundaries/states/" + key)
         : url.resolve(config.apiUrl, "boundaries/districts/" + key);
 
-  return fetch(boundariesApi) 
+  return fetch(boundariesApi)
     .then(response => response.json())
     .then(result => {
       let boundary, properties, subregions;
@@ -100,22 +99,26 @@ export const queryRegionBoundaries = function(region) {
       if (result.objects.subregions) {
         let fc = topojson.feature(result, result.objects.subregions);
         subregions = {};
-        fc.features.forEach(feat => subregions[feat.properties.key] = feat);
+        fc.features.forEach(feat => (subregions[feat.properties.key] = feat));
 
         // Add up states' populations to get a total for the nation
-        if (level === 'nation') {
+        if (level === "nation") {
           properties = {
-            name: 'India',
-            tot_pop: fc.features.reduce((memo, feat) =>
-              memo + (+feat.properties.tot_pop), 0)
+            name: "India",
+            tot_pop: fc.features.reduce(
+              (memo, feat) => memo + +feat.properties.tot_pop,
+              0
+            )
           };
         }
       }
 
-      let admin = level === 'nation' ? 'nation' : key;
-      var count = sampleCount.map((obj) => {
-        return obj.key === admin ? obj : null;
-      }).filter((a) => a);
+      let admin = level === "nation" ? "nation" : key;
+      var count = sampleCount
+        .map(obj => {
+          return obj.key === admin ? obj : null;
+        })
+        .filter(a => a);
 
       return {
         key,
@@ -126,16 +129,15 @@ export const queryRegionBoundaries = function(region) {
         boundary,
         count,
         subregions
-      }
+      };
     })
     .catch(err => {
-      console.log('err', err);
+      console.log("err", err);
     });
-
 };
 
 export const setActiveRegion = region => dispatch => {
-  dispatch({ type: QUERY_REGION_REQUEST });  
+  dispatch({ type: QUERY_REGION_REQUEST });
   queryRegionBoundaries(region)
     .then(results => {
       dispatch({
@@ -148,9 +150,9 @@ export const setActiveRegion = region => dispatch => {
         type: QUERY_REGION_FAILURE,
         error
       })
-    );;
+    );
 };
 
 export const emphasize = keys => dispatch => {
-  dispatch({ type: EMPHASIZE, keys });  
-}
+  dispatch({ type: EMPHASIZE, keys });
+};

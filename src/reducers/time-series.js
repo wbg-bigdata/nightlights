@@ -1,33 +1,36 @@
-'use strict';
-const { combineReducers } = require('redux');
-const { inflight, failed, success } = require('./util');
-
-/**
- * @property {object} error - API or transport error.
- * @property {boolean} loading - true if waiting on any API response
- * @property {string} interval - time interval to show plot 'yyyy.mm-yyyy.mm'
- * @property {array} results - time series query results
- *
-*/
+import {
+  QUERY_TIME_SERIES_FAILURE,
+  QUERY_TIME_SERIES_REQUEST,
+  QUERY_TIME_SERIES_SUCCESS
+} from "../actions/time-series";
 
 const initialState = {
   loading: true,
-  results: [],
+  results: []
 };
 
-function months (state = initialState, action) {
+export default (state = initialState, action) => {
   switch (action.type) {
-    case 'query-region-timeseries-inflight':
-      state = inflight(state);
-      break;
-    case 'query-region-timeseries-failed':
-      state = failed(state, action);
-      break;
-    case 'query-region-timeseries-success':
-      state = Object.assign(success(state, action), action.context);
-      break;
+    case QUERY_TIME_SERIES_REQUEST:
+      return {
+        ...state,
+        loading: true
+      };
+    case QUERY_TIME_SERIES_FAILURE:
+      return {
+        ...state,
+        loading: false,
+        error: action.error
+      };
+    case QUERY_TIME_SERIES_SUCCESS:
+      return {
+        ...state,
+        ...action.region,
+        loading: false,
+        error: null,
+        initialLoad: true
+      };
+    default:
+      return state;
   }
-  return state;
-}
-
-module.exports = combineReducers({ months });
+};

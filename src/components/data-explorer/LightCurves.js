@@ -1,5 +1,6 @@
-// Modules
 import { Link } from "react-router-dom";
+import { connect } from "react-redux";
+import { withRouter } from "react-router";
 
 const d3 = require('d3');
 const numeral = require('numeral');
@@ -8,13 +9,12 @@ const t = require('prop-types');
 const classnames = require('classnames');
 const debounce = require('lodash.debounce');
 const assign = require('object-assign');
-const Actions = require('../actions');
-const LineChart = require('./line-chart');
-const Legend = require('./legend');
-const Loading = require('./loading');
-const DateControl = require('./date-control');
-const smooth = require('../lib/moving-average');
-const {satelliteAdjustment} = require('../config');
+const LineChart = require('./LineChart');
+const Legend = require('./../legend');
+const Loading = require('./Loading');
+const DateControl = require('./../date-control');
+const smooth = require('../../lib/moving-average');
+const {satelliteAdjustment} = require('../../config');
 
 /*
  * Data Accessor Functions
@@ -88,7 +88,7 @@ class LightCurves extends React.Component {
       data: null,
       centerline: null,
       series: [],
-      scales: {x: d3.scale.linear(), y: d3.scale.linear()},
+      scales: {x: d3.scaleLinear(), y: d3.scaleLinear()},
       domains: { x: [0, 0], y: [0, 0] },
       width: 0,
       height: 0,
@@ -106,22 +106,22 @@ class LightCurves extends React.Component {
     this._handleData(this.props);
     this.handleResize(this.state);
 
-    Actions.toggleChartExpanded.listen(function () {
-      this.setState({
-        expanded: !this.state.expanded
-      });
+    // Actions.toggleChartExpanded.listen(function () {
+    //   this.setState({
+    //     expanded: !this.state.expanded
+    //   });
 
-      // HACK: since we know that changing the `expanded` state will
-      // cause a height change post-render, we trigger handleResize
-      // to force a second call to render after the container has its
-      // new height so that the line chart is rendered with the correct
-      // height too
-      setTimeout(this.handleResize);
-    }.bind(this));
-    // same as the above hack, but for toggling split screen mode
-    Actions.toggleCompareMode.listen(function () {
-      setTimeout(this.handleResize);
-    }.bind(this));
+    //   // HACK: since we know that changing the `expanded` state will
+    //   // cause a height change post-render, we trigger handleResize
+    //   // to force a second call to render after the container has its
+    //   // new height so that the line chart is rendered with the correct
+    //   // height too
+    //   setTimeout(this.handleResize);
+    // }.bind(this));
+    // // same as the above hack, but for toggling split screen mode
+    // Actions.toggleCompareMode.listen(function () {
+    //   setTimeout(this.handleResize);
+    // }.bind(this));
   }
 
   componentWillUnmount () {
@@ -307,12 +307,12 @@ class LightCurves extends React.Component {
 
   toggle (e) {
     if (e) { e.preventDefault(); }
-    Actions.toggleChartExpanded();
+    // Actions.toggleChartExpanded();
   }
 
   toggleCompareMode (e) {
     if (e) { e.preventDefault(); }
-    Actions.toggleCompareMode();
+    // Actions.toggleCompareMode();
   }
 
   selectDate ([date]) {
@@ -356,7 +356,9 @@ class LightCurves extends React.Component {
     let allVillages = features.map((feat) => feat.properties.key);
     let highlightButton = region.district && rggvy.length ? (
       <a className='bttn-select-rggvy'
-        onClick={function () { Actions.toggleRggvy(); }}>
+        onClick={function () { 
+          // Actions.toggleRggvy(); 
+          }}>
         <div>{this.props.rggvyFocus ? 'Show All' : 'Highlight'}</div>
       </a>
     ) : '';
@@ -434,7 +436,7 @@ class LightCurves extends React.Component {
           </g>
 
           <LineChart
-            Actions={Actions}
+            // Actions={Actions}
             series={series}
             center={centerline}
             envelope={envelope}
@@ -495,4 +497,23 @@ LightCurves.y = y;
 LightCurves.formatDate = formatDate;
 LightCurves.parseDate = parseDate;
 
-export default LightCurves;
+const mapStateToProps = state => {
+  return {
+    year: state.context.year,
+    month: state.context.month,
+    timeSeries: state.timeSeries,
+    villages: state.villages,
+    villageCurves: state.villageCurves,
+    region: state.activeRegion
+  };
+};
+
+const mapDispatchToProps = {
+};
+
+export default withRouter(
+  connect(
+    mapStateToProps,
+    mapDispatchToProps
+  )(LightCurves)
+);

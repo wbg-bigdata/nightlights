@@ -6,6 +6,7 @@ import classnames from "classnames";
 // Components
 import Breadcrumbs from "./Breadcrumbs";
 import LightMap from "./LightMap";
+import LightCurves from "./LightCurves";
 
 // Actions
 import { setActiveRegion } from "../../actions/regions";
@@ -51,6 +52,7 @@ class DataExplorer extends React.Component {
       <div className={classnames("data-container", { compare: !!compare })}>
         <Breadcrumbs />
         <LightMap />
+        <LightCurves />
       </div>
     );
   }

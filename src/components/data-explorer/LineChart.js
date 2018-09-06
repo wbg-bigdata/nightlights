@@ -1,10 +1,10 @@
 const React = require('react');
 const t = require('prop-types');
 const d3 = require('d3');
-const compose = require('../lib/compose');
-const Line = require('./line');
-const Axis = require('./axis');
-const LineMarker = require('./line-marker');
+const compose = require('../../lib/compose');
+const Line = require('./chart/Line');
+const Axis = require('./chart/Axis');
+const LineMarker = require('./chart/LineMarker');
 
 class LineChart extends React.Component {
   constructor (props) {

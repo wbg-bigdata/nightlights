@@ -2,8 +2,8 @@ const React = require('react');
 const t = require('prop-types');
 const d3 = require('d3');
 const classnames = require('classnames');
-const AccessorType = require('../lib/accessor-type');
-const config = require('../config');
+const AccessorType = require('../../../lib/accessor-type');
+const config = require('../../../config');
 
 class Line extends React.Component {
   constructor (props) {
